@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ping</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Auth gate (shown when ROOM_CODE is set and user hasn't authenticated) -->
+    <div id="auth-gate" class="hidden">
+      <div id="auth-box">
+        <h1>&#9656; PING_</h1>
+        <form id="auth-form">
+          <input
+            type="password"
+            id="auth-input"
+            placeholder="Ange rumskod..."
+            autocomplete="off"
+          />
+          <button type="submit">&gt; ANSLUT</button>
+        </form>
+        <div id="auth-error" class="hidden">Fel kod. F&ouml;rs&ouml;k igen.</div>
+      </div>
+    </div>
+
+    <!-- Main app (hidden until authenticated) -->
+    <div id="app" class="hidden">
+      <header>
+        <h1>&#9656; PING_</h1>
+        <div id="presence">ansluter...</div>
+      </header>
+
+      <main>
+        <div id="drop-zone">
+          <div id="drop-zone-inner">
+            <span class="drop-icon">&darr;</span>
+            <p>
+              Sl&auml;pp filer h&auml;r eller
+              <label for="file-input" class="file-label">klicka</label> f&ouml;r att ladda upp
+            </p>
+          </div>
+          <input type="file" id="file-input" multiple hidden />
+        </div>
+        <div id="board"></div>
+      </main>
+
+      <footer>
+        <form id="text-form">
+          <input
+            type="text"
+            id="text-input"
+            placeholder="Skriv ett meddelande eller klistra in en l&auml;nk..."
+            autocomplete="off"
+          />
+          <button type="submit">&gt; SKICKA</button>
+        </form>
+      </footer>
+    </div>
+
+    <audio id="ping-sound" preload="auto">
+      <source src="ping.wav" type="audio/wav" />
+    </audio>
+
+    <script src="app.js"></script>
+  </body>
+</html>
