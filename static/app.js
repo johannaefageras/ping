@@ -54,26 +54,34 @@ let contactsChannel = null;
 // ============================================================
 
 async function init() {
-  const res = await fetch("/config");
-  const { supabaseUrl, supabaseAnonKey } = await res.json();
-  sb = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+  try {
+    const res = await fetch("/config");
+    if (!res.ok) throw new Error(`Server error: ${res.status}`);
+    const { supabaseUrl, supabaseAnonKey } = await res.json();
+    if (!supabaseUrl || !supabaseAnonKey) throw new Error("Missing Supabase config");
+    sb = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
 
-  const {
-    data: { session },
-  } = await sb.auth.getSession();
-  if (session) {
-    await enterApp(session.user);
-  } else {
-    showAuthScreen();
-  }
-
-  sb.auth.onAuthStateChange((event, session) => {
-    if (event === "PASSWORD_RECOVERY") {
-      showResetPasswordScreen();
-    } else if (!session) {
-      exitApp();
+    const {
+      data: { session },
+    } = await sb.auth.getSession();
+    if (session) {
+      await enterApp(session.user);
+    } else {
+      showAuthScreen();
     }
-  });
+
+    sb.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        showResetPasswordScreen();
+      } else if (!session) {
+        exitApp();
+      }
+    });
+  } catch (err) {
+    console.error("Init failed:", err);
+    authScreen.classList.remove("hidden");
+    showAuthError("Kunde inte ansluta till servern. Försök igen senare.");
+  }
 }
 
 // ============================================================
