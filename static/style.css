@@ -418,6 +418,7 @@ body {
 #contacts-section {
   flex: 1;
   overflow-y: auto;
+  min-height: 0;
 }
 
 .contact-item {
