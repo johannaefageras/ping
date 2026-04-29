@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 
 load_dotenv()
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
@@ -26,6 +26,16 @@ async def config():
         "supabaseUrl": SUPABASE_URL,
         "supabaseAnonKey": SUPABASE_ANON_KEY,
     })
+
+
+@app.get("/privacy")
+async def privacy():
+    return FileResponse("static/privacy.html")
+
+
+@app.get("/terms")
+async def terms():
+    return FileResponse("static/terms.html")
 
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
