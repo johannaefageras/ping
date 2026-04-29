@@ -1,11 +1,10 @@
 import os
-from html import escape
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 
 load_dotenv()
-from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
@@ -14,23 +13,6 @@ if not SUPABASE_URL or not SUPABASE_ANON_KEY:
     raise RuntimeError("Missing SUPABASE_URL / SUPABASE_ANON_KEY")
 
 app = FastAPI()
-
-
-SITEMAP_PATHS = (
-    {"path": "/", "priority": "1.0"},
-    {"path": "/app", "priority": "0.8"},
-    {"path": "/privacy", "priority": "0.3"},
-    {"path": "/terms", "priority": "0.3"},
-)
-
-
-def public_origin(request: Request) -> str:
-    scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
-    host = request.headers.get(
-        "x-forwarded-host",
-        request.headers.get("host", request.url.netloc),
-    )
-    return f"{scheme.split(',')[0].strip()}://{host.split(',')[0].strip()}"
 
 
 @app.get("/config")
@@ -44,25 +26,6 @@ async def config():
         "supabaseUrl": SUPABASE_URL,
         "supabaseAnonKey": SUPABASE_ANON_KEY,
     })
-
-
-@app.get("/sitemap.xml", include_in_schema=False)
-async def sitemap(request: Request):
-    origin = public_origin(request).rstrip("/")
-    urls = "\n".join(
-        "  <url>\n"
-        f"    <loc>{escape(origin + item['path'])}</loc>\n"
-        f"    <priority>{item['priority']}</priority>\n"
-        "  </url>"
-        for item in SITEMAP_PATHS
-    )
-    xml = (
-        '<?xml version="1.0" encoding="UTF-8"?>\n'
-        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-        f"{urls}\n"
-        "</urlset>\n"
-    )
-    return Response(content=xml, media_type="application/xml")
 
 
 @app.get("/")
