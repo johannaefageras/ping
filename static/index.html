@@ -12,6 +12,14 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("ping-theme");
+          if (t) document.documentElement.setAttribute("data-theme", t);
+          var f = localStorage.getItem("ping-font");
+          if (f) document.documentElement.setAttribute("data-font", f);
+        } catch (e) {}
+      })();
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           navigator.serviceWorker.register("/sw.js").catch(() => {});
@@ -155,6 +163,24 @@
         <div id="contacts-section">
           <h3>Kontakter</h3>
           <div id="contacts-list"></div>
+        </div>
+
+        <div id="font-picker" role="radiogroup" aria-label="Typsnitt">
+          <button class="font-btn" data-font="argon" style="font-family:'Monaspace Argon',ui-monospace,monospace" title="Argon">Aa</button>
+          <button class="font-btn" data-font="krypton" style="font-family:'Monaspace Krypton',ui-monospace,monospace" title="Krypton">Aa</button>
+          <button class="font-btn" data-font="neon" style="font-family:'Monaspace Neon',ui-monospace,monospace" title="Neon">Aa</button>
+          <button class="font-btn" data-font="radon" style="font-family:'Monaspace Radon',ui-monospace,monospace" title="Radon">Aa</button>
+          <button class="font-btn" data-font="xenon" style="font-family:'Monaspace Xenon',ui-monospace,monospace" title="Xenon">Aa</button>
+        </div>
+
+        <div id="theme-picker" role="radiogroup" aria-label="F&auml;rgtema">
+          <button class="swatch" data-theme="green" style="--swatch:#33ff99" aria-label="Gr&ouml;n" title="Gr&ouml;n"></button>
+          <button class="swatch" data-theme="amber" style="--swatch:#ffb000" aria-label="Amber" title="Amber"></button>
+          <button class="swatch" data-theme="cyan" style="--swatch:#33ccff" aria-label="Cyan" title="Cyan"></button>
+          <button class="swatch" data-theme="pink" style="--swatch:#ff66cc" aria-label="Rosa" title="Rosa"></button>
+          <button class="swatch" data-theme="red" style="--swatch:#ff4444" aria-label="R&ouml;d" title="R&ouml;d"></button>
+          <button class="swatch" data-theme="paper" style="--swatch:#e8e8e8" aria-label="Paper" title="Paper"></button>
+          <button class="swatch" data-theme="purple" style="--swatch:#cc99ff" aria-label="Lila" title="Lila"></button>
         </div>
 
         <footer id="sidebar-footer">

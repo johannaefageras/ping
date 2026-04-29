@@ -816,5 +816,59 @@ function playPing() {
   pingSound.play().catch(() => {});
 }
 
+// --- Theme picker ---
+function initThemePicker() {
+  const picker = document.getElementById("theme-picker");
+  if (!picker) return;
+  const swatches = picker.querySelectorAll(".swatch");
+  const saved = localStorage.getItem("ping-theme") || "green";
+  applyTheme(saved, swatches);
+  swatches.forEach((s) => {
+    s.addEventListener("click", () => {
+      const theme = s.dataset.theme;
+      localStorage.setItem("ping-theme", theme);
+      applyTheme(theme, swatches);
+    });
+  });
+}
+
+function applyTheme(theme, swatches) {
+  if (theme === "green") {
+    document.documentElement.removeAttribute("data-theme");
+  } else {
+    document.documentElement.setAttribute("data-theme", theme);
+  }
+  swatches.forEach((s) => s.classList.toggle("active", s.dataset.theme === theme));
+}
+
+initThemePicker();
+
+// --- Font picker ---
+function initFontPicker() {
+  const picker = document.getElementById("font-picker");
+  if (!picker) return;
+  const buttons = picker.querySelectorAll(".font-btn");
+  const saved = localStorage.getItem("ping-font") || "radon";
+  applyFont(saved, buttons);
+  buttons.forEach((b) => {
+    b.addEventListener("click", () => {
+      const font = b.dataset.font;
+      localStorage.setItem("ping-font", font);
+      applyFont(font, buttons);
+    });
+  });
+}
+
+function applyFont(font, buttons) {
+  if (font === "radon") {
+    document.documentElement.removeAttribute("data-font");
+  } else {
+    document.documentElement.setAttribute("data-font", font);
+  }
+  buttons.forEach((b) => b.classList.toggle("active", b.dataset.font === font));
+}
+
+initFontPicker();
+
 // --- Start ---
 init();

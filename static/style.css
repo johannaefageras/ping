@@ -77,6 +77,16 @@
   --border: #222;
   --self-bg: #0d1a12;
   --other-bg: #0d1219;
+  --font-primary: 'Monaspace Radon', ui-monospace, monospace;
+  --font-weight-xlight: 200;
+  --font-weight-light: 300;
+  --font-weight-book: 350;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-xbold: 750;
+  --font-weight-heavy: 800;
 }
 
 [data-theme='amber'] {
@@ -115,8 +125,24 @@
   --accent: #5bc97f;
 }
 
+[data-font='argon'] {
+  --font-primary: 'Monaspace Argon', ui-monospace, monospace;
+}
+
+[data-font='krypton'] {
+  --font-primary: 'Monaspace Krypton', ui-monospace, monospace;
+}
+
+[data-font='neon'] {
+  --font-primary: 'Monaspace Neon', ui-monospace, monospace;
+}
+
+[data-font='xenon'] {
+  --font-primary: 'Monaspace Xenon', ui-monospace, monospace;
+}
+
 body {
-  font-family: 'Monaspace Radon', monospace;
+  font-family: var(--font-primary);
   font-weight: 350;
   background: var(--bg);
   color: var(--fg);
@@ -306,6 +332,76 @@ body {
 
 #auth-footer a:hover {
   color: var(--fg-dim);
+}
+
+#font-picker {
+  display: flex;
+  gap: 6px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  justify-content: center;
+}
+
+#font-picker .font-btn {
+  width: 40px;
+  height: 35px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: none;
+  color: var(--fg-dim);
+  font-size: 1.05rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    transform 0.15s;
+}
+
+#font-picker .font-btn:hover {
+  color: var(--fg);
+  transform: scale(1.05);
+}
+
+#font-picker .font-btn.active {
+  color: var(--fg);
+  border-color: var(--fg-dim);
+  box-shadow: 0 0 0 1px var(--fg-dim);
+}
+
+#theme-picker {
+  display: flex;
+  gap: 7px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  justify-content: center;
+}
+
+#theme-picker .swatch {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--swatch);
+  cursor: pointer;
+  opacity: 0.55;
+  transition:
+    opacity 0.15s,
+    transform 0.15s,
+    border-color 0.15s;
+}
+
+#theme-picker .swatch:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+#theme-picker .swatch.active {
+  opacity: 1;
+  border-color: var(--swatch);
+  box-shadow: 0 0 0 1px var(--swatch);
 }
 
 #sidebar-footer {
