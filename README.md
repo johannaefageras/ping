@@ -28,7 +28,7 @@ want a quick way to swap a URL or a file without going through a chat app.
 ## Project layout
 
 ```
-server.py               FastAPI app — serves /config, /privacy, /terms, static
+server.py               FastAPI app — serves /, /app, /config, /privacy, /terms, static
 requirements.txt        Python deps
 render.yaml             Render.com deploy config
 static/                 Frontend (index.html, app.js, style.css, fonts, icons)
@@ -81,7 +81,8 @@ state on the backend, so a single small instance is enough.
 
 ## Routes
 
-- `/` — the app (auth screen + chat board)
+- `/` — public landing page (describes the app, links to privacy/terms)
+- `/app` — the app itself (auth screen + chat board)
 - `/config` — returns Supabase URL + anon key as JSON
 - `/privacy` — Integritetspolicy
 - `/terms` — Användarvillkor

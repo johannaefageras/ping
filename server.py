@@ -28,6 +28,16 @@ async def config():
     })
 
 
+@app.get("/")
+async def landing():
+    return FileResponse("static/landing.html")
+
+
+@app.get("/app")
+async def app_page():
+    return FileResponse("static/index.html")
+
+
 @app.get("/privacy")
 async def privacy():
     return FileResponse("static/privacy.html")
