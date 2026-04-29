@@ -8,8 +8,20 @@
       name="description"
       content="Ping &auml;r en liten webbapp f&ouml;r att snabbt dela texter, l&auml;nkar och filer med en v&auml;n. Inget socialt n&auml;tverk &mdash; bara skapa konto, l&auml;gg till en kontakt och b&ouml;rja pinga."
     />
+    <meta name="theme-color" content="#0a0a0a" />
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="icons.css" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/sw.js").catch(() => {});
+        });
+      }
+    </script>
     <style>
       body {
         overflow: auto;

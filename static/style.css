@@ -79,6 +79,42 @@
   --other-bg: #0d1219;
 }
 
+[data-theme='amber'] {
+  --fg: #ffb000;
+  --fg-dim: #996600;
+  --accent: #c97f5b;
+}
+
+[data-theme='cyan'] {
+  --fg: #33ccff;
+  --fg-dim: #1a6699;
+  --accent: #c95b9f;
+}
+
+[data-theme='pink'] {
+  --fg: #ff66cc;
+  --fg-dim: #99336b;
+  --accent: #5bc9bf;
+}
+
+[data-theme='red'] {
+  --fg: #ff4444;
+  --fg-dim: #992626;
+  --accent: #c9a05b;
+}
+
+[data-theme='paper'] {
+  --fg: #e8e8e8;
+  --fg-dim: #888888;
+  --accent: #5b9fc9;
+}
+
+[data-theme='purple'] {
+  --fg: #cc99ff;
+  --fg-dim: #663d99;
+  --accent: #5bc97f;
+}
+
 body {
   font-family: 'Monaspace Radon', monospace;
   font-weight: 350;
