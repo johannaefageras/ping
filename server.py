@@ -1,0 +1,96 @@
+import os
+
+from dotenv import load_dotenv
+from fastapi import FastAPI, Request
+
+load_dotenv()
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
+SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "")
+if not SUPABASE_URL or not SUPABASE_ANON_KEY:
+    raise RuntimeError("Missing SUPABASE_URL / SUPABASE_ANON_KEY")
+
+# The frontend talks directly to Supabase over HTTPS (REST/storage) and a
+# websocket (realtime), so both must be allowed by connect-src. Derive the
+# wss:// origin from the configured project URL.
+_supabase_ws = SUPABASE_URL.replace("https://", "wss://").replace("http://", "ws://")
+
+# sha256 hashes of the two static inline <script> blocks (theme bootstrap +
+# service-worker registration) in index.html and landing.html. Allowing them by
+# hash means script-src needs no 'unsafe-inline'. If either inline block is
+# edited, recompute its hash or the script will be blocked.
+_INLINE_SCRIPT_HASHES = (
+    "'sha256-9gzr4b1GCYEvdAQT/SkW1lYKOAmuMLJXGndSzMY3WYQ='"
+    " 'sha256-P3upB5nSJgaMZ66JypQ23kO70VzvIaT2MSedNexWFNk='"
+)
+
+CSP = (
+    "default-src 'self'; "
+    f"script-src 'self' https://cdn.jsdelivr.net {_INLINE_SCRIPT_HASHES}; "
+    "style-src 'self' 'unsafe-inline'; "
+    "font-src 'self'; "
+    "img-src 'self' data: blob:; "
+    "media-src 'self'; "
+    f"connect-src 'self' {SUPABASE_URL} {_supabase_ws}; "
+    "object-src 'none'; "
+    "base-uri 'self'; "
+    "form-action 'self'; "
+    "frame-ancestors 'none'"
+)
+
+SECURITY_HEADERS = {
+    "Content-Security-Policy": CSP,
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "X-Frame-Options": "DENY",
+    "Permissions-Policy": "geolocation=(), microphone=(), camera=(), interest-cohort=()",
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+}
+
+app = FastAPI()
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    for header, value in SECURITY_HEADERS.items():
+        response.headers.setdefault(header, value)
+    return response
+
+
+@app.get("/config")
+async def config():
+    """Return Supabase connection info to the frontend.
+
+    These are safe to expose — the anon key is designed to be public
+    and security is enforced by RLS policies in the database.
+    """
+    return JSONResponse({
+        "supabaseUrl": SUPABASE_URL,
+        "supabaseAnonKey": SUPABASE_ANON_KEY,
+    })
+
+
+@app.get("/")
+async def landing():
+    return FileResponse("static/landing.html")
+
+
+@app.get("/app")
+async def app_page():
+    return FileResponse("static/index.html")
+
+
+@app.get("/privacy")
+async def privacy():
+    return FileResponse("static/privacy.html")
+
+
+@app.get("/terms")
+async def terms():
+    return FileResponse("static/terms.html")
+
+
+app.mount("/", StaticFiles(directory="static", html=True), name="static")

@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ping &mdash; dela texter, l&auml;nkar och filer med en v&auml;n</title>
+    <meta
+      name="description"
+      content="Ping &auml;r en liten webbapp f&ouml;r att snabbt dela texter, l&auml;nkar och filer med en v&auml;n. Inget socialt n&auml;tverk &mdash; bara skapa konto, l&auml;gg till en kontakt och b&ouml;rja pinga."
+    />
+    <meta name="theme-color" content="#0a0a0a" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="icons.css" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/sw.js").catch(() => {});
+        });
+      }
+    </script>
+    <style>
+      body {
+        overflow: auto;
+        height: auto;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .landing {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 48px 24px 32px;
+        flex: 1;
+        width: 100%;
+      }
+
+      .landing header {
+        border: none;
+        padding: 0 0 24px 0;
+        height: auto;
+        margin-bottom: 32px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .landing header .brand {
+        color: var(--fg);
+        font-size: 1.1rem;
+        font-weight: 600;
+        letter-spacing: 2px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .landing h1 {
+        font-size: 2rem;
+        font-weight: 600;
+        letter-spacing: 1px;
+        margin: 24px 0 12px;
+      }
+
+      .landing .lede {
+        color: #c7c7c7;
+        font-size: 1rem;
+        line-height: 1.6;
+        margin-bottom: 32px;
+      }
+
+      .landing h2 {
+        color: var(--fg);
+        font-size: 1rem;
+        font-weight: 550;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin: 40px 0 12px;
+      }
+
+      .landing p,
+      .landing li {
+        color: #c7c7c7;
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+
+      .landing ul {
+        padding-left: 22px;
+        margin: 8px 0 12px;
+      }
+
+      .landing li {
+        margin: 6px 0;
+      }
+
+      .landing strong {
+        color: var(--fg-dim);
+        font-weight: 550;
+      }
+
+      .landing a {
+        color: var(--accent);
+      }
+
+      .cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 16px;
+        padding: 12px 20px;
+        background: transparent;
+        color: var(--fg);
+        border: 1px solid var(--fg-dim);
+        text-decoration: none;
+        font-family: inherit;
+        font-size: 0.95rem;
+        font-weight: 550;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+
+      .cta:hover {
+        background: var(--fg-dim);
+        color: var(--bg);
+      }
+
+      .landing-footer {
+        max-width: 720px;
+        margin: 0 auto;
+        width: 100%;
+        padding: 16px 24px 32px;
+        border-top: 1px solid var(--border);
+        font-size: 0.8rem;
+        color: #777;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .landing-footer a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      .landing-footer a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="landing">
+      <header>
+        <span class="brand"><i class="pi-caret-right"></i> PING_</span>
+      </header>
+
+      <h1>Dela texter, l&auml;nkar och filer &mdash; med en v&auml;n.</h1>
+      <p class="lede">
+        Ping &auml;r en liten webbapp f&ouml;r att snabbt skicka texter,
+        l&auml;nkar och filer till en kontakt. Inget socialt n&auml;tverk,
+        ingen feed, inga annonser. Skapa ett konto, l&auml;gg till en kontakt
+        via anv&auml;ndarnamn, och b&ouml;rja pinga.
+      </p>
+
+      <a class="cta" href="/app">
+        <i class="pi-arrow-right-to-bracket"></i>
+        &Ouml;ppna appen
+      </a>
+
+      <h2>Vad du kan g&ouml;ra</h2>
+      <ul>
+        <li>
+          <strong>Skicka texter och l&auml;nkar</strong> &mdash; klistra in en
+          URL eller skriv ett kort meddelande.
+        </li>
+        <li>
+          <strong>Skicka filer</strong> &mdash; dra och sl&auml;pp, eller
+          v&auml;lj fr&aring;n disken. Lagras privat.
+        </li>
+        <li>
+          <strong>L&auml;gg till kontakter via anv&auml;ndarnamn</strong>
+          &mdash; b&aring;da m&aring;ste acceptera innan ni kan pinga
+          varandra.
+        </li>
+        <li>
+          <strong>Ta bort fr&aring;n din sida</strong> &mdash; n&auml;r b&aring;da
+          har avf&auml;rdat ett ping raderas det &auml;ven fr&aring;n lagringen.
+        </li>
+      </ul>
+
+      <h2>Vem &auml;r det f&ouml;r</h2>
+      <p>
+        Ping &auml;r byggt f&ouml;r tv&aring; personer som vill ha ett enkelt
+        s&auml;tt att skicka en l&auml;nk eller en fil till varandra utan att
+        g&aring; via en chatt-app eller mejl. Det &auml;r ett litet privat
+        projekt, inte en kommersiell tj&auml;nst.
+      </p>
+
+      <h2>Integritet</h2>
+      <p>
+        Vi samlar bara in det som beh&ouml;vs f&ouml;r att tj&auml;nsten ska
+        fungera: e-post, anv&auml;ndarnamn, kontakter och de pings du skickar
+        eller tar emot. L&auml;s mer i v&aring;r
+        <a href="/privacy">integritetspolicy</a> och i v&aring;ra
+        <a href="/terms">anv&auml;ndarvillkor</a>.
+      </p>
+
+      <a class="cta" href="/app">
+        <i class="pi-arrow-right-to-bracket"></i>
+        Logga in eller skapa konto
+      </a>
+    </div>
+
+    <footer class="landing-footer">
+      <a href="/privacy">Integritetspolicy</a>
+      <span aria-hidden="true">&middot;</span>
+      <a href="/terms">Anv&auml;ndarvillkor</a>
+      <span aria-hidden="true">&middot;</span>
+      <a href="mailto:johannaefageras26@gmail.com">Kontakt</a>
+    </footer>
+  </body>
+</html>
