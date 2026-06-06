@@ -1,4 +1,4 @@
-const CACHE = "ping-shell-v5";
+const CACHE = "ping-shell-v6";
 
 const SHELL = [
   "/",
@@ -45,6 +45,11 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
   if (url.pathname === "/config") return;
+  // Link previews are dynamic and per-URL. Never SW-cache them: caching the
+  // /preview JSON would defeat the server's 10-minute TTL and pin transient
+  // "no preview" (204) results forever; the image proxy sets its own
+  // Cache-Control for normal browser caching.
+  if (url.pathname === "/preview" || url.pathname === "/preview/image") return;
 
   if (req.mode === "navigate") {
     event.respondWith(

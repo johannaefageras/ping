@@ -787,6 +787,12 @@ function renderPing(ping, animate = true) {
     });
   }
 
+  // Text pings: render a link preview card for the first URL, if any.
+  if (ping.type === "text") {
+    const url = firstUrl(ping.content);
+    if (url) renderLinkPreview(el, url);
+  }
+
   // Dismiss button
   el.querySelector(".dismiss-btn").addEventListener("click", () => dismissPing(el, ping));
 
@@ -1055,6 +1061,74 @@ function linkify(text) {
   }
   out += escapeHtml(text.slice(last));
   return out;
+}
+
+// Extracts the first URL from text using the same pattern linkify uses.
+function firstUrl(text) {
+  const m = text.match(/(https?:\/\/[^\s]+)/);
+  return m ? m[0] : null;
+}
+
+// Builds a link-preview card under a text ping element and fills it from
+// /preview. Silently removes the card on any failure so the plain linkified
+// URL in the message body still stands. Mirrors the image-thumb lifecycle:
+// bails if the ping was dismissed while the fetch was in flight.
+function renderLinkPreview(el, url) {
+  const card = document.createElement("a");
+  card.className = "link-preview loading";
+  card.target = "_blank";
+  card.rel = "noopener";
+  card.href = url;
+  el.appendChild(card);
+
+  fetch("/preview?url=" + encodeURIComponent(url))
+    .then((res) => (res.status === 200 ? res.json() : null))
+    .then((meta) => {
+      if (el._dismissed) {
+        card.remove();
+        return;
+      }
+      if (!meta) {
+        card.remove();
+        return;
+      }
+      card.href = meta.url || url;
+      card.classList.remove("loading");
+
+      let imageHtml = "";
+      if (meta.image) {
+        imageHtml = `<img class="link-preview__image" alt="" />`;
+      }
+      const descHtml = meta.description
+        ? `<div class="link-preview__desc">${escapeHtml(meta.description)}</div>`
+        : "";
+      const faviconHtml = meta.favicon
+        ? `<img class="link-preview__favicon" alt="" width="14" height="14" />`
+        : "";
+
+      card.innerHTML = `
+        ${imageHtml}
+        <div class="link-preview__body">
+          <div class="link-preview__domain">${faviconHtml}<span>${escapeHtml(meta.domain || "")}</span></div>
+          <div class="link-preview__title">${escapeHtml(meta.title || "")}</div>
+          ${descHtml}
+        </div>
+      `;
+
+      // CSP forbids inline onerror; attach in JS. A broken proxied image (or
+      // favicon) just hides that element and degrades to a text-only card.
+      const img = card.querySelector(".link-preview__image");
+      if (img) {
+        img.addEventListener("error", () => img.remove(), { once: true });
+        img.src = meta.image;
+      }
+      const fav = card.querySelector(".link-preview__favicon");
+      if (fav) {
+        fav.addEventListener("error", () => fav.remove(), { once: true });
+        fav.src = meta.favicon;
+      }
+    })
+    .catch(() => card.remove());
 }
 
 // Maps a filename to a colored file-type SVG under /icons/filetypes/.
