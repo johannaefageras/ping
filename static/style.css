@@ -256,6 +256,183 @@ body {
   color: #555;
 }
 
+/* command switcher (restyled #auth-tabs) */
+#auth-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+#auth-tabs .tab {
+  background: none;
+  border: none;
+  color: #555;
+  font-family: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+  padding: 2px 0;
+  transition: color 0.15s;
+}
+
+/* bracket the labels: [ logga in ] */
+#auth-tabs .tab::before {
+  content: "[ ";
+  color: #333;
+}
+#auth-tabs .tab::after {
+  content: " ]";
+  color: #333;
+}
+
+#auth-tabs .tab.active {
+  color: var(--fg);
+}
+#auth-tabs .tab.active::before,
+#auth-tabs .tab.active::after {
+  color: var(--fg-dim);
+}
+
+#auth-tabs .tab:hover:not(.active) {
+  color: var(--fg-dim);
+}
+
+#auth-tabs .tab:focus-visible {
+  outline: 1px solid var(--fg-dim);
+  outline-offset: 2px;
+}
+
+/* forms */
+#login-form,
+#signup-form,
+#forgot-form,
+#reset-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* field row: > prefix + input */
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #101010;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0 12px;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.field-row .field-prefix {
+  color: var(--fg-dim);
+  font-size: 0.85rem;
+}
+
+.field-row input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--fg);
+  padding: 11px 0;
+  font-family: inherit;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.field-row input::placeholder {
+  color: #383838;
+}
+
+/* focus moves to the wrapper via :focus-within */
+.field-row:focus-within {
+  border-color: var(--fg-dim);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--fg) 10%, transparent);
+}
+
+/* submit buttons */
+#login-form button[type="submit"],
+#signup-form button[type="submit"],
+#forgot-form button[type="submit"],
+#reset-form button[type="submit"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--fg-dim);
+  color: var(--bg);
+  border: none;
+  padding: 11px 18px;
+  font-family: inherit;
+  font-weight: 550;
+  font-size: 0.78rem;
+  letter-spacing: 1px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+#login-form button[type="submit"]:hover,
+#signup-form button[type="submit"]:hover,
+#forgot-form button[type="submit"]:hover,
+#reset-form button[type="submit"]:hover {
+  background: var(--fg);
+}
+
+/* sub-links */
+#forgot-link,
+#forgot-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--fg-dim);
+  font-size: 0.7rem;
+  text-decoration: none;
+  transition: color 0.15s;
+  margin-top: 2px;
+}
+
+#forgot-link:hover,
+#forgot-back-link:hover {
+  color: var(--fg);
+}
+
+/* error / success */
+#auth-error {
+  color: #ff5555;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+#auth-error.success {
+  color: var(--fg);
+}
+
+/* footer (pinned bottom) */
+#auth-footer {
+  position: absolute;
+  bottom: 16px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #2a2a2a;
+}
+
+#auth-footer a {
+  color: #444;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+#auth-footer a:hover {
+  color: var(--fg-dim);
+}
+
 #font-picker {
   display: flex;
   gap: 6px;
