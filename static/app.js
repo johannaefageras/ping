@@ -128,6 +128,7 @@ authTabs.forEach((tab) => {
     const target = tab.dataset.tab;
     loginForm.classList.toggle("hidden", target !== "login");
     signupForm.classList.toggle("hidden", target !== "signup");
+    setAuthState(target);
     hideAuthError();
   });
 });
@@ -145,6 +146,52 @@ function showAuthError(msg, isSuccess = false) {
 
 function hideAuthError() {
   authError.classList.add("hidden");
+}
+
+// Per-state terminal chrome: title path + boot/greeting line.
+// Updates #auth-path and #auth-boot to match the visible form.
+const AUTH_STATES = {
+  login: {
+    path: "~/login",
+    cmd: "$ ping --auth",
+    status: "&check; ansluten.",
+    greeting: "välkommen tillbaka.",
+  },
+  signup: {
+    path: "~/signup",
+    cmd: "$ ping --auth",
+    status: "&check; ansluten.",
+    greeting: "skapa ett konto för att börja pinga.",
+  },
+  forgot: {
+    path: "~/recover",
+    cmd: "$ ping --recover",
+    status: "",
+    greeting: "ange din e-post så skickar vi en återställningslänk.",
+  },
+  reset: {
+    path: "~/reset",
+    cmd: "$ ping --reset",
+    status: "",
+    greeting: "välj ett nytt lösenord.",
+  },
+};
+
+function setAuthState(state) {
+  const s = AUTH_STATES[state];
+  if (!s) return;
+  const pathEl = document.getElementById("auth-path");
+  const bootEl = document.getElementById("auth-boot");
+  if (pathEl) pathEl.textContent = s.path;
+  if (bootEl) {
+    const statusHtml = s.status
+      ? `<span class="boot-status">${s.status}</span> `
+      : "";
+    bootEl.innerHTML =
+      `<span class="boot-cmd">${s.cmd}</span><br />` +
+      statusHtml +
+      `<span class="boot-greeting">${s.greeting}</span>`;
+  }
 }
 
 loginForm.addEventListener("submit", async (e) => {
@@ -228,6 +275,7 @@ forgotLink.addEventListener("click", (e) => {
   signupForm.classList.add("hidden");
   forgotForm.classList.remove("hidden");
   document.getElementById("auth-tabs").classList.add("hidden");
+  setAuthState("forgot");
 });
 
 forgotBackLink.addEventListener("click", (e) => {
@@ -239,6 +287,7 @@ forgotBackLink.addEventListener("click", (e) => {
   // Re-activate login tab
   authTabs.forEach((t) => t.classList.remove("active"));
   authTabs[0].classList.add("active");
+  setAuthState("login");
 });
 
 forgotForm.addEventListener("submit", async (e) => {
@@ -297,6 +346,7 @@ function showResetPasswordScreen() {
   forgotForm.classList.add("hidden");
   resetForm.classList.remove("hidden");
   document.getElementById("auth-tabs").classList.add("hidden");
+  setAuthState("reset");
   hideAuthError();
 }
 
