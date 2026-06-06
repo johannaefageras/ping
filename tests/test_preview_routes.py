@@ -176,3 +176,31 @@ def test_image_proxy_404_on_fetch_error(client, monkeypatch):
     r = client.get("/preview/image",
                    params={"url": "https://cdn.example.com/p.png"})
     assert r.status_code == 404
+
+
+def test_image_proxy_404_when_too_large(client, monkeypatch):
+    oversized = b"\x89PNG" + b"\x00" * (server.IMAGE_MAX_BYTES + 1)
+    _mock_image_get(monkeypatch, content=oversized, content_type="image/png")
+    r = client.get("/preview/image",
+                   params={"url": "https://cdn.example.com/huge.png"})
+    assert r.status_code == 404
+
+
+def test_preview_served_from_cache_without_refetch(client, monkeypatch):
+    """A second request for the same URL is served from preview_cache and does
+    not hit httpx again."""
+    html = '<html><head><meta property="og:title" content="Cached"></head></html>'
+    _mock_get(monkeypatch, html=html)
+
+    first = client.get("/preview", params={"url": "https://example.com/article"})
+    assert first.status_code == 200
+    assert first.json()["title"] == "Cached"
+
+    # Make any further httpx fetch blow up; a cache hit must avoid it entirely.
+    async def boom(self, url, *args, **kwargs):
+        raise AssertionError("cache miss: httpx was called on a cached URL")
+    monkeypatch.setattr(server.httpx.AsyncClient, "get", boom)
+
+    second = client.get("/preview", params={"url": "https://example.com/article"})
+    assert second.status_code == 200
+    assert second.json()["title"] == "Cached"
