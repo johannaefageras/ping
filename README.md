@@ -31,7 +31,8 @@ want a quick way to swap a URL or a file without going through a chat app.
 server.py               FastAPI app — serves /, /app, /config, /privacy, /terms, static
 requirements.txt        Python deps
 render.yaml             Render.com deploy config
-static/                 Frontend (index.html, app.js, style.css, fonts, icons)
+scripts/                Small maintenance/generation scripts
+static/                 Frontend shell plus assets, fonts, icons, and pages
 supabase/schema.sql     Full Supabase schema: tables, RLS, triggers, RPC
 ```
 

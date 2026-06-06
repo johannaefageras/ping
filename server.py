@@ -18,9 +18,11 @@ if not SUPABASE_URL or not SUPABASE_ANON_KEY:
 _supabase_ws = SUPABASE_URL.replace("https://", "wss://").replace("http://", "ws://")
 
 # sha256 hashes of the two static inline <script> blocks (theme bootstrap +
-# service-worker registration) in index.html and landing.html. Allowing them by
-# hash means script-src needs no 'unsafe-inline'. If either inline block is
-# edited, recompute its hash or the script will be blocked.
+# service-worker registration) in index.html. Allowing them by hash means
+# script-src needs no 'unsafe-inline'. If either inline block is edited,
+# recompute its hash or the script will be blocked. (privacy.html / terms.html
+# load their theme bootstrap from /assets/scripts/theme-init.js, which is
+# covered by script-src 'self' and needs no hash.)
 _INLINE_SCRIPT_HASHES = (
     "'sha256-9gzr4b1GCYEvdAQT/SkW1lYKOAmuMLJXGndSzMY3WYQ='"
     " 'sha256-P3upB5nSJgaMZ66JypQ23kO70VzvIaT2MSedNexWFNk='"
@@ -74,23 +76,25 @@ async def config():
 
 
 @app.get("/")
-async def landing():
-    return FileResponse("static/landing.html")
+async def root():
+    return FileResponse("static/index.html")
 
 
 @app.get("/app")
 async def app_page():
+    # Alias for "/". Kept so existing links and the OAuth / password-reset
+    # redirects (redirectTo: origin + "/app") keep working.
     return FileResponse("static/index.html")
 
 
 @app.get("/privacy")
 async def privacy():
-    return FileResponse("static/privacy.html")
+    return FileResponse("static/pages/privacy.html")
 
 
 @app.get("/terms")
 async def terms():
-    return FileResponse("static/terms.html")
+    return FileResponse("static/pages/terms.html")
 
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")

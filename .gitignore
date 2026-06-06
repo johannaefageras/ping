@@ -34,3 +34,12 @@ uploads/
 
 # Brainstorm visual companion
 .superpowers/
+docs/
+
+.claude/
+
+package-lock.json
+
+.DS_Store
+
+FIXES.md
