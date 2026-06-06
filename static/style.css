@@ -450,7 +450,7 @@ body {
 
 /* blinking cursor on the focused field's prefix */
 .field-row:focus-within .field-prefix {
-  animation: auth-blink 1.1s steps(1) infinite;
+  animation: auth-blink 1.1s steps(1, end) infinite;
 }
 
 @keyframes auth-blink {
