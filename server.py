@@ -160,4 +160,40 @@ async def preview(url: str):
     return JSONResponse(meta)
 
 
+@app.get("/preview/image")
+async def preview_image(url: str):
+    """Fetch and stream a single remote image so the browser keeps talking
+    only to our origin (img-src 'self'). Rejects anything that isn't an
+    image."""
+    try:
+        validate_public_http_url(url)
+    except UrlValidationError:
+        return JSONResponse({"error": "invalid url"}, status_code=400)
+
+    try:
+        async with httpx.AsyncClient(
+            timeout=PREVIEW_TIMEOUT, follow_redirects=True
+        ) as cx:
+            resp = await cx.get(url, headers={"User-Agent": "PingLinkPreview/1.0"})
+    except httpx.HTTPError:
+        return Response(status_code=404)
+
+    if resp.status_code >= 400:
+        return Response(status_code=404)
+
+    content_type = resp.headers.get("content-type", "")
+    if not content_type.startswith("image/"):
+        return JSONResponse({"error": "not an image"}, status_code=400)
+
+    data = resp.content
+    if len(data) > IMAGE_MAX_BYTES:
+        return Response(status_code=404)
+
+    return Response(
+        content=data,
+        media_type=content_type,
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
+
+
 app.mount("/", StaticFiles(directory="static", html=True), name="static")

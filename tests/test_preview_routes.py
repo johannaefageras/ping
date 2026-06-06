@@ -109,3 +109,70 @@ def test_preview_204_on_fetch_error(client, monkeypatch):
     monkeypatch.setattr(server.httpx.AsyncClient, "get", boom)
     r = client.get("/preview", params={"url": "https://example.com/article"})
     assert r.status_code == 204
+
+
+def _mock_image_get(monkeypatch, *, status=200, content=b"\x89PNG\r\n",
+                    content_type="image/png"):
+    from link_preview import UrlValidationError
+    from urllib.parse import urlparse
+
+    class FakeResp:
+        def __init__(self):
+            self.status_code = status
+            self.content = content
+            self.headers = {"content-type": content_type}
+            self.url = httpx.URL("https://cdn.example.com/p.png")
+
+    async def fake_get(self, url, *args, **kwargs):
+        return FakeResp()
+
+    def fake_validate(url):
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https") or not parsed.hostname:
+            raise UrlValidationError("invalid")
+        return parsed
+
+    monkeypatch.setattr(server.httpx.AsyncClient, "get", fake_get)
+    monkeypatch.setattr("server.validate_public_http_url", fake_validate)
+
+
+def test_image_proxy_rejects_private_host(client):
+    r = client.get("/preview/image", params={"url": "http://127.0.0.1/x.png"})
+    assert r.status_code == 400
+
+
+def test_image_proxy_streams_image(client, monkeypatch):
+    _mock_image_get(monkeypatch, content=b"\x89PNG\r\n", content_type="image/png")
+    r = client.get("/preview/image",
+                   params={"url": "https://cdn.example.com/p.png"})
+    assert r.status_code == 200
+    assert r.headers["content-type"] == "image/png"
+    assert r.content == b"\x89PNG\r\n"
+    assert "max-age" in r.headers.get("cache-control", "")
+
+
+def test_image_proxy_rejects_non_image(client, monkeypatch):
+    _mock_image_get(monkeypatch, content=b"<html>", content_type="text/html")
+    r = client.get("/preview/image",
+                   params={"url": "https://cdn.example.com/notimage"})
+    assert r.status_code == 400
+
+
+def test_image_proxy_404_on_fetch_error(client, monkeypatch):
+    from link_preview import UrlValidationError
+    from urllib.parse import urlparse
+
+    def fake_validate(url):
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https") or not parsed.hostname:
+            raise UrlValidationError("invalid")
+        return parsed
+
+    async def boom(self, url, *args, **kwargs):
+        raise httpx.ConnectError("nope")
+
+    monkeypatch.setattr("server.validate_public_http_url", fake_validate)
+    monkeypatch.setattr(server.httpx.AsyncClient, "get", boom)
+    r = client.get("/preview/image",
+                   params={"url": "https://cdn.example.com/p.png"})
+    assert r.status_code == 404
