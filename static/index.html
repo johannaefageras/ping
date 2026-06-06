@@ -42,6 +42,7 @@
         </div>
 
         <div id="auth-body">
+          <div id="auth-invite-banner" class="auth-invite-banner hidden"></div>
           <p id="auth-boot" aria-hidden="true">
             <span class="boot-cmd">$ ping --auth</span><br />
             <span class="boot-status">&check; ansluten.</span>
@@ -297,6 +298,10 @@
               </svg>
             </button>
           </form>
+          <button type="button" id="invite-open-btn" class="invite-open-btn">
+            <svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H5.17L4 17.17z"/><path d="M12 9v4"/><path d="M12 7h.01"/></svg>
+            Bjud in via l&auml;nk
+          </button>
           <div id="contact-search-result" class="hidden"></div>
         </div>
 
@@ -633,6 +638,36 @@
       </div>
     </div>
 
+    <!-- Invite modal: QR + link + countdown -->
+    <div
+      id="invite-modal"
+      class="hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Bjud in"
+    >
+      <div id="invite-panel">
+        <div id="invite-titlebar">
+          <span class="tb-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <h2 id="invite-title">~/invite</h2>
+          <button id="invite-close" aria-label="St&auml;ng">
+            <svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div id="invite-body">
+          <p class="invite-intro">Skanna eller dela l&auml;nken f&ouml;r att ansluta direkt.</p>
+          <div id="invite-qr" aria-hidden="true"></div>
+          <div id="invite-link-row">
+            <input id="invite-link-input" type="text" readonly aria-label="Inbjudningsl&auml;nk" />
+            <button id="invite-copy-btn" type="button">Kopiera</button>
+          </div>
+          <p id="invite-countdown" class="invite-countdown"></p>
+          <button id="invite-regen-btn" type="button" class="hidden">Skapa ny l&auml;nk</button>
+          <p id="invite-error" class="invite-error hidden"></p>
+        </div>
+      </div>
+    </div>
+
     <audio id="ping-sound" preload="auto">
       <source src="/assets/audio/ping.wav" type="audio/wav" />
     </audio>
@@ -642,6 +677,8 @@
       integrity="sha384-CQbEv3UOeYwlaBLdPF5KqEagCP39Q1KpvJC6Gwa3UGjZAwMvpA+0TFxSSnrgb4MX"
       crossorigin="anonymous"
     ></script>
+    <script src="/assets/scripts/invite-url.js"></script>
+    <script src="/assets/scripts/qrcode.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
