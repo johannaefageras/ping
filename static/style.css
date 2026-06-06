@@ -170,10 +170,10 @@ body {
   align-items: center;
   justify-content: center;
   height: 100vh;
-  /* warm halo behind the window, tinted by the active theme */
+  /* warm halo behind the window, tinted by the active accent (tracks all themes) */
   background: radial-gradient(
     130% 100% at 50% -10%,
-    var(--self-bg) 0%,
+    color-mix(in srgb, var(--fg) 7%, var(--bg)) 0%,
     var(--bg) 62%
   );
 }
@@ -237,6 +237,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  overflow: hidden;
 }
 
 /* boot / greeting line */
