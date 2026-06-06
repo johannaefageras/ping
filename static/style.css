@@ -68,6 +68,16 @@
   display: none !important;
 }
 
+/* Inline SVG icons (replaces the old icon font). Sized in em so they
+   track the surrounding text; stroke uses currentColor so they inherit
+   the text color of their context. */
+.icon {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+  vertical-align: -0.125em;
+}
+
 :root {
   --bg: #0a0a0a;
   --fg: #33ff99;
@@ -152,193 +162,103 @@ body {
   overflow: hidden;
 }
 
-/* --- Auth Screen --- */
+/* --- Auth Screen (terminal window) --- */
 
 #auth-screen {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   height: 100vh;
+  /* warm halo behind the window, tinted by the active theme */
+  background: radial-gradient(
+    130% 100% at 50% -10%,
+    var(--self-bg) 0%,
+    var(--bg) 62%
+  );
 }
 
 #auth-box {
-  text-align: center;
+  width: 300px;
+  max-width: calc(100vw - 32px);
+  text-align: left;
+}
+
+/* title bar */
+#auth-titlebar {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 24px;
-}
-
-#auth-box h1 {
-  font-size: 1.6rem;
-  font-weight: 600;
-  letter-spacing: 2px;
-}
-
-#auth-tabs {
-  display: flex;
-  gap: 4px;
-  width: 280px;
-}
-
-#auth-tabs .tab {
-  flex: 1;
-  background: none;
+  gap: 8px;
+  background: #0e0e0e;
   border: 1px solid var(--border);
-  color: #555;
-  padding: 8px 16px;
-  font-family: inherit;
-  font-size: 0.8rem;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.15s;
+  border-bottom: none;
+  border-radius: 9px 9px 0 0;
+  padding: 9px 13px;
 }
 
-#auth-tabs .tab.active {
-  color: var(--fg);
-  border-color: var(--fg-dim);
-  background: var(--self-bg);
-}
-
-#auth-tabs .tab:hover:not(.active) {
-  color: var(--fg-dim);
-}
-
-#login-form,
-#signup-form,
-#forgot-form,
-#reset-form {
+.auth-dots {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 280px;
+  gap: 6px;
 }
 
-#login-form input,
-#signup-form input,
-#forgot-form input,
-#reset-form input {
-  background: #151515;
-  border: 2px solid var(--border);
-  color: var(--fg);
-  padding: 12px 16px;
-  font-family: inherit;
-  font-size: 0.95rem;
-  border-radius: 6px;
-  outline: none;
-  transition:
-    border-color 0.2s,
-    box-shadow 0.2s;
-}
-
-#login-form input:focus,
-#signup-form input:focus,
-#forgot-form input:focus,
-#reset-form input:focus {
-  border-color: var(--fg-dim);
-  box-shadow: 0 0 0 3px rgba(51, 255, 153, 0.1);
-}
-
-#login-form input::placeholder,
-#signup-form input::placeholder,
-#forgot-form input::placeholder,
-#reset-form input::placeholder {
-  color: #383838;
-}
-
-#login-form button,
-#signup-form button,
-#forgot-form button,
-#reset-form button {
+.auth-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
   background: var(--fg-dim);
-  color: var(--bg);
-  border: none;
-  padding: 12px 22px;
-  font-family: inherit;
-  font-weight: 550;
-  font-size: 0.85rem;
-  letter-spacing: 1px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.15s;
 }
 
-#login-form button:hover,
-#signup-form button:hover,
-#forgot-form button:hover,
-#reset-form button:hover {
+.auth-dot:nth-child(1) {
+  opacity: 0.55;
+}
+.auth-dot:nth-child(2) {
+  opacity: 0.8;
+}
+.auth-dot:nth-child(3) {
   background: var(--fg);
 }
 
-#forgot-link,
-#forgot-back-link {
-  color: var(--fg-dim);
-  font-size: 0.75rem;
-  text-align: center;
-  text-decoration: none;
-  transition: color 0.15s;
-  margin-top: 4px;
+#auth-titletext {
+  font-size: 0.66rem;
+  color: #5a5a5a;
+  letter-spacing: 0.5px;
 }
 
-#forgot-link:hover,
-#forgot-back-link:hover {
+#auth-path {
+  color: var(--fg-dim);
+}
+
+/* body */
+#auth-body {
+  background: #080808;
+  border: 1px solid var(--border);
+  border-radius: 0 0 9px 9px;
+  padding: 18px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* boot / greeting line */
+#auth-boot {
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--fg-dim);
+}
+
+#auth-boot .boot-cmd,
+#auth-boot .boot-status {
   color: var(--fg);
 }
 
-#forgot-description,
-#reset-description {
-  color: #777;
-  font-size: 0.8rem;
-  text-align: center;
-  line-height: 1.4;
-}
-
-#auth-error {
-  color: #ff5555;
-  font-size: 0.8rem;
-  max-width: 280px;
-}
-
-#auth-error.success {
-  color: #50c878;
-}
-
-#auth-screen {
-  position: relative;
-}
-
-#auth-footer {
-  position: absolute;
-  bottom: 16px;
-  left: 0;
-  right: 0;
-  text-align: center;
-  font-size: 0.7rem;
-  color: #2a2a2a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: none;
-  border: none;
-  padding: 0;
-}
-
-#auth-footer a {
-  color: #444;
-  text-decoration: none;
-  transition: color 0.15s;
-}
-
-#auth-footer a:hover {
-  color: var(--fg-dim);
+#auth-boot .boot-greeting {
+  color: #555;
 }
 
 #font-picker {
   display: flex;
   gap: 6px;
-  padding: 10px 16px;
-  border-top: 1px solid var(--border);
+  padding: 6px 0;
   justify-content: center;
 }
 
@@ -373,8 +293,7 @@ body {
 #theme-picker {
   display: flex;
   gap: 7px;
-  padding: 10px 16px;
-  border-top: 1px solid var(--border);
+  padding: 6px 0;
   justify-content: center;
 }
 
@@ -451,6 +370,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
   padding: 0 16px;
   height: 60px;
   box-sizing: border-box;
@@ -458,14 +378,26 @@ body {
   font-size: 0.85rem;
 }
 
+#current-username {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 #logout-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
   background: none;
   border: 1px solid var(--border);
   color: var(--fg-dim);
   font-family: inherit;
-  font-size: 0.7rem;
-  padding: 4px 10px;
-  border-radius: 4px;
+  font-size: 0.85rem;
+  padding: 11px 16px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -673,12 +605,24 @@ body {
   height: 60px;
   box-sizing: border-box;
   border-bottom: 1px solid var(--border);
+  min-width: 0;
 }
 
 #chat-header h2 {
+  flex: 1;
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   font-size: 1rem;
   font-weight: 500;
   letter-spacing: 1px;
+  line-height: 1.15;
+}
+
+#mobile-contacts-toggle {
+  display: none;
 }
 
 #chat-main {
@@ -853,6 +797,7 @@ footer {
 
 #text-input {
   flex: 1;
+  min-width: 0;
   background: #151515;
   border: 2px solid var(--border);
   color: var(--fg);
@@ -968,13 +913,54 @@ footer {
     width: 100%;
     min-width: unset;
     max-height: 40vh;
+    flex: none;
     border-right: none;
     border-bottom: 1px solid var(--border);
     overflow-y: auto;
   }
 
+  #app.chat-active.contacts-collapsed #sidebar {
+    max-height: 60px;
+    overflow: hidden;
+  }
+
+  #app.chat-active.contacts-collapsed #add-contact,
+  #app.chat-active.contacts-collapsed #pending-requests,
+  #app.chat-active.contacts-collapsed #contacts-section,
+  #app.chat-active.contacts-collapsed #sidebar-footer {
+    display: none;
+  }
+
+  #app.chat-active #chat-area {
+    flex: 1;
+    min-height: 0;
+  }
+
   #chat-header {
     padding: 10px 14px;
+    gap: 10px;
+  }
+
+  #mobile-contacts-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 34px;
+    height: 34px;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--fg-dim);
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  #mobile-contacts-toggle[aria-expanded="true"],
+  #mobile-contacts-toggle:hover {
+    border-color: var(--fg-dim);
+    color: var(--fg);
   }
 
   #chat-main {
@@ -1136,7 +1122,7 @@ footer {
   border: 1px solid var(--fg, #33ff99);
   border-radius: 8px;
   padding: 1.25rem;
-  width: min(92vw, 420px);
+  width: min(92vw, 520px);
   max-height: 85vh;
   overflow-y: auto;
 }
@@ -1149,14 +1135,86 @@ footer {
 }
 #settings-header h2 { margin: 0; font-size: 1.1rem; }
 
+/* Icon-only, borderless close button (was an unstyled white default box).
+   The X is an inline .icon SVG, so size it in em and let it inherit color. */
+#settings-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--fg-dim);
+  font-size: 1.2rem;
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+#settings-close:hover {
+  color: var(--fg);
+}
+
 .settings-section {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
   padding: 0.75rem 0;
-  border-top: 1px solid var(--border, #222);
 }
 .settings-section > label { font-weight: bold; }
+
+/* Text/password fields and the save buttons inside the settings modal were
+   rendering as raw browser defaults (white boxes, serif text), breaking the
+   terminal aesthetic. Mirror the auth-form styling so they match the rest of
+   the app. Scoped to the specific controls so the checkbox, font-picker
+   (.font-btn), theme swatches (.swatch) and #logout-btn keep their own looks. */
+.settings-section input[type="text"],
+.settings-section input[type="password"] {
+  background: #151515;
+  border: 2px solid var(--border);
+  color: var(--fg);
+  padding: 12px 16px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  outline: none;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.settings-section input[type="text"]:focus,
+.settings-section input[type="password"]:focus {
+  border-color: var(--fg-dim);
+  /* Theme-aware focus glow: tracks the active theme's --fg (the modal is
+     where the theme is chosen, so a fixed green glow would look wrong). */
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--fg) 10%, transparent);
+}
+
+.settings-section input[type="text"]::placeholder,
+.settings-section input[type="password"]::placeholder {
+  color: #383838;
+}
+
+#display-name-save,
+#password-save {
+  background: var(--fg-dim);
+  color: var(--bg);
+  border: none;
+  padding: 12px 22px;
+  font-family: inherit;
+  font-weight: 550;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+#display-name-save:hover,
+#password-save:hover {
+  background: var(--fg);
+}
 
 .settings-subtle { opacity: 0.6; font-size: 0.85rem; }
 
@@ -1167,12 +1225,22 @@ footer {
   cursor: pointer;
 }
 
+/* Tint the native checkbox to the active theme instead of the browser
+   default blue. accent-color tracks --fg, so it follows theme switches. */
+.settings-toggle input[type="checkbox"] {
+  accent-color: var(--fg);
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+}
+
 .settings-msg { font-size: 0.85rem; }
 .settings-msg.ok { color: var(--fg, #33ff99); }
 .settings-msg.err { color: #ff4444; }
 .settings-msg.hidden { display: none; }
 
 #settings-btn {
+  flex: none;
   background: none;
   border: none;
   color: inherit;
@@ -1187,4 +1255,12 @@ footer {
   white-space: nowrap;
   max-width: 100%;
 }
-.name-secondary { font-size: 0.75rem; opacity: 0.55; }
+.name-secondary {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  font-size: 0.75rem;
+  opacity: 0.55;
+}
