@@ -448,6 +448,23 @@ body {
   color: var(--fg-dim);
 }
 
+/* blinking cursor on the focused field's prefix */
+.field-row:focus-within .field-prefix {
+  animation: auth-blink 1.1s steps(1) infinite;
+}
+
+@keyframes auth-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .field-row:focus-within .field-prefix {
+    animation: none;
+  }
+}
+
 #font-picker {
   display: flex;
   gap: 6px;
@@ -1190,19 +1207,14 @@ footer {
     padding: 10px 16px;
   }
 
-  #login-form,
-  #signup-form,
-  #forgot-form,
-  #reset-form {
+  #auth-box {
     width: 100%;
-    padding: 0 20px;
+    max-width: 360px;
+    padding: 0 16px;
   }
 
-  #login-form input,
-  #signup-form input,
-  #forgot-form input,
-  #reset-form input {
-    font-size: 16px;
+  .field-row input {
+    font-size: 16px; /* prevents iOS zoom-on-focus */
   }
 }
 
