@@ -1,4 +1,4 @@
-const CACHE = "ping-shell-v5";
+const CACHE = "ping-shell-v6";
 
 const SHELL = [
   "/",
