@@ -7,6 +7,7 @@ from link_preview import (
     UrlValidationError,
     _is_disallowed_ip,
     parse_metadata,
+    TTLCache,
 )
 
 
@@ -191,9 +192,6 @@ def test_apple_touch_icon_not_used_as_favicon():
     assert meta["favicon"] == "https://example.com/favicon.ico"
 
 
-from link_preview import TTLCache
-
-
 def test_cache_returns_stored_value():
     cache = TTLCache(ttl_seconds=100)
     cache.set("k", {"title": "x"})
@@ -205,7 +203,7 @@ def test_cache_miss_returns_none():
     assert cache.get("absent") is None
 
 
-def test_cache_expires(monkeypatch):
+def test_cache_expires():
     t = {"now": 1000.0}
     cache = TTLCache(ttl_seconds=10, now=lambda: t["now"])
     cache.set("k", "v")
