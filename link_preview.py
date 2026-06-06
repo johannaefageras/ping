@@ -4,7 +4,8 @@ parsing, and a tiny in-memory TTL cache. No FastAPI or HTTP I/O here
 
 import ipaddress
 import socket
-from urllib.parse import urlparse, ParseResult
+from html.parser import HTMLParser
+from urllib.parse import urlparse, urljoin, ParseResult
 
 
 _CGNAT = ipaddress.ip_network("100.64.0.0/10")  # RFC 6598 shared address space
@@ -57,3 +58,77 @@ def validate_public_http_url(url: str) -> ParseResult:
             raise UrlValidationError(f"host resolves to disallowed ip: {ip_str}")
 
     return parsed
+
+
+class _MetaParser(HTMLParser):
+    """Collects og:/twitter:/name meta tags, <title>, and favicon links."""
+
+    def __init__(self):
+        super().__init__()
+        self.metas = {}          # key (property or name) -> content
+        self.title = None
+        self.icon_href = None
+        self._in_title = False
+
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        if tag == "meta":
+            key = a.get("property") or a.get("name")
+            content = a.get("content")
+            if key and content and key not in self.metas:
+                self.metas[key] = content.strip()
+        elif tag == "title":
+            self._in_title = True
+        elif tag == "link":
+            rel = (a.get("rel") or "").lower()
+            if self.icon_href is None and ("icon" in rel) and a.get("href"):
+                self.icon_href = a["href"].strip()
+
+    def handle_endtag(self, tag):
+        if tag == "title":
+            self._in_title = False
+
+    def handle_data(self, data):
+        if self._in_title and self.title is None:
+            text = data.strip()
+            if text:
+                self.title = text
+
+
+def parse_metadata(html: str, base_url: str):
+    """Parse title/description/image/favicon/domain from HTML.
+
+    `base_url` is the final (post-redirect) page URL, used to resolve
+    relative image/favicon hrefs. Returns a dict, or None if no usable
+    title could be found (caller treats that as "no preview")."""
+    p = _MetaParser()
+    p.feed(html)
+
+    title = (
+        p.metas.get("og:title")
+        or p.metas.get("twitter:title")
+        or p.title
+    )
+    if not title:
+        return None
+
+    description = (
+        p.metas.get("og:description")
+        or p.metas.get("twitter:description")
+        or p.metas.get("description")
+    )
+    image_raw = p.metas.get("og:image") or p.metas.get("twitter:image")
+    image = urljoin(base_url, image_raw) if image_raw else None
+
+    favicon_raw = p.icon_href or "/favicon.ico"
+    favicon = urljoin(base_url, favicon_raw)
+
+    domain = urlparse(base_url).hostname
+
+    return {
+        "title": title,
+        "description": description,
+        "image": image,
+        "favicon": favicon,
+        "domain": domain,
+    }

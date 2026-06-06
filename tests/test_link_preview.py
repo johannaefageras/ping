@@ -80,3 +80,68 @@ def test_dns_failure_raises(monkeypatch):
 
 def test_is_disallowed_ip_rejects_non_ip():
     assert _is_disallowed_ip("not-an-ip") is True
+
+
+from link_preview import parse_metadata
+
+
+BASE = "https://example.com/article"
+
+
+def test_parses_og_tags():
+    html = """
+    <html><head>
+      <title>Fallback Title</title>
+      <meta property="og:title" content="OG Title">
+      <meta property="og:description" content="A description.">
+      <meta property="og:image" content="https://cdn.example.com/img.png">
+      <link rel="icon" href="/favicon.ico">
+    </head><body></body></html>
+    """
+    meta = parse_metadata(html, BASE)
+    assert meta["title"] == "OG Title"
+    assert meta["description"] == "A description."
+    assert meta["image"] == "https://cdn.example.com/img.png"
+    assert meta["favicon"] == "https://example.com/favicon.ico"
+    assert meta["domain"] == "example.com"
+
+
+def test_falls_back_to_title_tag():
+    html = "<html><head><title>Just A Title</title></head><body></body></html>"
+    meta = parse_metadata(html, BASE)
+    assert meta["title"] == "Just A Title"
+    assert meta["description"] is None
+    assert meta["image"] is None
+
+
+def test_resolves_relative_image_against_base():
+    html = """
+    <html><head>
+      <meta property="og:title" content="T">
+      <meta property="og:image" content="/media/pic.jpg">
+    </head></html>
+    """
+    meta = parse_metadata(html, BASE)
+    assert meta["image"] == "https://example.com/media/pic.jpg"
+
+
+def test_twitter_title_fallback():
+    html = """
+    <html><head>
+      <meta name="twitter:title" content="Tw Title">
+    </head></html>
+    """
+    meta = parse_metadata(html, BASE)
+    assert meta["title"] == "Tw Title"
+
+
+def test_default_favicon_when_absent():
+    html = "<html><head><title>T</title></head></html>"
+    meta = parse_metadata(html, BASE)
+    assert meta["favicon"] == "https://example.com/favicon.ico"
+
+
+def test_returns_none_when_no_title_anywhere():
+    html = "<html><head></head><body>no metadata</body></html>"
+    meta = parse_metadata(html, BASE)
+    assert meta is None
