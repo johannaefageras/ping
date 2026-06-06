@@ -4,6 +4,7 @@ parsing, and a tiny in-memory TTL cache. No FastAPI or HTTP I/O here
 
 import ipaddress
 import socket
+import time
 from html.parser import HTMLParser
 from urllib.parse import urlparse, urljoin, ParseResult
 
@@ -135,3 +136,27 @@ def parse_metadata(html: str, base_url: str):
         "favicon": favicon,
         "domain": domain,
     }
+
+
+class TTLCache:
+    """Minimal in-memory cache with per-entry TTL. Not thread-safe beyond
+    CPython's GIL-protected dict ops, which is fine for this low-traffic
+    single-instance use. `now` is injectable for testing."""
+
+    def __init__(self, ttl_seconds: float, now=time.monotonic):
+        self._ttl = ttl_seconds
+        self._now = now
+        self._store = {}  # key -> (expires_at, value)
+
+    def get(self, key):
+        entry = self._store.get(key)
+        if entry is None:
+            return None
+        expires_at, value = entry
+        if self._now() >= expires_at:
+            self._store.pop(key, None)
+            return None
+        return value
+
+    def set(self, key, value):
+        self._store[key] = (self._now() + self._ttl, value)

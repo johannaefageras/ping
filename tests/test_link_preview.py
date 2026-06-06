@@ -189,3 +189,27 @@ def test_apple_touch_icon_not_used_as_favicon():
     """
     meta = parse_metadata(html, BASE)
     assert meta["favicon"] == "https://example.com/favicon.ico"
+
+
+from link_preview import TTLCache
+
+
+def test_cache_returns_stored_value():
+    cache = TTLCache(ttl_seconds=100)
+    cache.set("k", {"title": "x"})
+    assert cache.get("k") == {"title": "x"}
+
+
+def test_cache_miss_returns_none():
+    cache = TTLCache(ttl_seconds=100)
+    assert cache.get("absent") is None
+
+
+def test_cache_expires(monkeypatch):
+    t = {"now": 1000.0}
+    cache = TTLCache(ttl_seconds=10, now=lambda: t["now"])
+    cache.set("k", "v")
+    t["now"] = 1005.0
+    assert cache.get("k") == "v"     # within TTL
+    t["now"] = 1011.0
+    assert cache.get("k") is None    # expired
