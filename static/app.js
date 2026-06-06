@@ -418,6 +418,11 @@ function exitApp() {
   appEl.classList.remove("chat-active", "contacts-collapsed");
   mobileContactsToggle.setAttribute("aria-expanded", "false");
 
+  // Logout can be triggered from inside the settings modal, so close it on the
+  // way out — otherwise it stays open over the auth screen. This also clears the
+  // typed-but-unsubmitted password/display-name fields.
+  closeSettings();
+
   showAuthScreen();
 }
 
