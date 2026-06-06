@@ -1,10 +1,13 @@
 """Pure helpers for link previews: URL/SSRF validation, HTML metadata
-parsing, and a tiny in-memory TTL cache. No FastAPI or network I/O here so
-the logic stays unit-testable."""
+parsing, and a tiny in-memory TTL cache. No FastAPI or HTTP I/O here
+(DNS validation aside), so the logic stays unit-testable."""
 
 import ipaddress
 import socket
 from urllib.parse import urlparse, ParseResult
+
+
+_CGNAT = ipaddress.ip_network("100.64.0.0/10")  # RFC 6598 shared address space
 
 
 class UrlValidationError(Exception):
@@ -24,6 +27,7 @@ def _is_disallowed_ip(ip_str: str) -> bool:
         or ip.is_reserved
         or ip.is_multicast
         or ip.is_unspecified
+        or ip in _CGNAT
     )
 
 
