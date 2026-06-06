@@ -187,10 +187,12 @@ function setAuthState(state) {
     const statusHtml = s.status
       ? `<span class="boot-status">${s.status}</span> `
       : "";
+    // cmd/greeting are escaped for consistency with the rest of the file;
+    // status is left raw because it intentionally carries the &check; entity.
     bootEl.innerHTML =
-      `<span class="boot-cmd">${s.cmd}</span><br />` +
+      `<span class="boot-cmd">${escapeHtml(s.cmd)}</span><br />` +
       statusHtml +
-      `<span class="boot-greeting">${s.greeting}</span>`;
+      `<span class="boot-greeting">${escapeHtml(s.greeting)}</span>`;
   }
 }
 
