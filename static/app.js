@@ -55,6 +55,15 @@ const newPasswordConfirm = document.getElementById("new-password-confirm");
 const passwordSave = document.getElementById("password-save");
 const passwordMsg = document.getElementById("password-msg");
 const muteToggle = document.getElementById("mute-toggle");
+const inviteOpenBtn = document.getElementById("invite-open-btn");
+const inviteModal = document.getElementById("invite-modal");
+const inviteClose = document.getElementById("invite-close");
+const inviteQr = document.getElementById("invite-qr");
+const inviteLinkInput = document.getElementById("invite-link-input");
+const inviteCopyBtn = document.getElementById("invite-copy-btn");
+const inviteCountdown = document.getElementById("invite-countdown");
+const inviteRegenBtn = document.getElementById("invite-regen-btn");
+const inviteError = document.getElementById("invite-error");
 
 // --- App state ---
 let sb = null; // Supabase client
@@ -1316,6 +1325,123 @@ passwordSave.addEventListener("click", async () => {
   newPasswordInput.value = "";
   newPasswordConfirm.value = "";
   showSettingsMsg(passwordMsg, "Lösenord uppdaterat!", true);
+});
+
+// ============================================================
+// INVITE LINKS
+// ============================================================
+let _inviteCountdownTimer = null;
+let _inviteLastFocus = null;
+
+function renderInviteQr(url) {
+  inviteQr.innerHTML = "";
+  try {
+    const qr = window.qrcode(0, "M"); // type 0 = auto-size, M = ~15% ECC
+    qr.addData(url);
+    qr.make();
+    // createImgTag(cellSize, margin) returns an <img> with a data: src.
+    // CSP allows img-src 'self' data:, so this renders without a CSP change.
+    inviteQr.innerHTML = qr.createImgTag(5, 2);
+  } catch (err) {
+    console.error("QR render failed:", err);
+    // The copyable link below is the source of truth; a missing QR is non-fatal.
+  }
+}
+
+function startInviteCountdown(expiresAt) {
+  clearInterval(_inviteCountdownTimer);
+  const tick = () => {
+    const ms = new Date(expiresAt).getTime() - Date.now();
+    if (ms <= 0) {
+      clearInterval(_inviteCountdownTimer);
+      inviteCountdown.textContent = "Länken har gått ut.";
+      inviteCountdown.classList.add("expired");
+      inviteRegenBtn.classList.remove("hidden");
+      inviteCopyBtn.disabled = true;
+      return;
+    }
+    const total = Math.ceil(ms / 1000);
+    const m = String(Math.floor(total / 60)).padStart(2, "0");
+    const s = String(total % 60).padStart(2, "0");
+    inviteCountdown.textContent = `Giltig i ${m}:${s}`;
+  };
+  tick();
+  _inviteCountdownTimer = setInterval(tick, 1000);
+}
+
+async function generateInvite() {
+  inviteError.classList.add("hidden");
+  inviteRegenBtn.classList.add("hidden");
+  inviteCountdown.classList.remove("expired");
+  inviteCopyBtn.disabled = false;
+  inviteCopyBtn.classList.remove("copied");
+  inviteCopyBtn.textContent = "Kopiera";
+  inviteQr.innerHTML = "";
+  inviteLinkInput.value = "";
+  inviteCountdown.textContent = "Skapar länk…";
+
+  const { data, error } = await sb.rpc("create_invite");
+  // create_invite returns a one-row table; supabase-js gives an array.
+  const row = Array.isArray(data) ? data[0] : data;
+  if (error || !row || !row.id) {
+    console.error("create_invite failed:", error);
+    inviteCountdown.textContent = "";
+    inviteError.textContent = "Kunde inte skapa länk. Försök igen.";
+    inviteError.classList.remove("hidden");
+    inviteRegenBtn.classList.remove("hidden");
+    return;
+  }
+
+  const url = window.buildInviteUrl(window.location.origin, row.id);
+  inviteLinkInput.value = url;
+  renderInviteQr(url);
+  startInviteCountdown(row.expires_at);
+}
+
+function openInvite() {
+  _inviteLastFocus = document.activeElement;
+  inviteModal.classList.remove("hidden");
+  inviteClose.focus();
+  generateInvite();
+}
+
+function closeInvite() {
+  clearInterval(_inviteCountdownTimer);
+  inviteModal.classList.add("hidden");
+  inviteQr.innerHTML = "";
+  inviteLinkInput.value = "";
+  inviteCountdown.textContent = "";
+  if (_inviteLastFocus) _inviteLastFocus.focus();
+}
+
+inviteOpenBtn.addEventListener("click", openInvite);
+inviteClose.addEventListener("click", closeInvite);
+inviteRegenBtn.addEventListener("click", generateInvite);
+inviteModal.addEventListener("click", (e) => {
+  if (e.target === inviteModal) closeInvite();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !inviteModal.classList.contains("hidden")) {
+    closeInvite();
+  }
+});
+
+inviteCopyBtn.addEventListener("click", async () => {
+  const url = inviteLinkInput.value;
+  if (!url) return;
+  try {
+    await navigator.clipboard.writeText(url);
+  } catch (err) {
+    // Fallback for browsers without async clipboard / insecure contexts.
+    inviteLinkInput.select();
+    document.execCommand("copy");
+  }
+  inviteCopyBtn.textContent = "Kopierad!";
+  inviteCopyBtn.classList.add("copied");
+  setTimeout(() => {
+    inviteCopyBtn.textContent = "Kopiera";
+    inviteCopyBtn.classList.remove("copied");
+  }, 1500);
 });
 
 function playPing() {
