@@ -1,19 +1,17 @@
-const CACHE = "ping-shell-v1";
+const CACHE = "ping-shell-v5";
 
 const SHELL = [
   "/",
   "/app",
   "/style.css",
-  "/icons.css",
   "/app.js",
-  "/ping.wav",
-  "/manifest.webmanifest",
-  "/icon-192.png",
-  "/icon-512.png",
-  "/apple-touch-icon.png",
-  "/favicon-32.png",
+  "/assets/audio/ping.wav",
+  "/assets/manifest/manifest.webmanifest",
+  "/assets/favicons/icon-192.png",
+  "/assets/favicons/icon-512.png",
+  "/assets/favicons/apple-touch-icon.png",
+  "/assets/favicons/favicon-32.png",
   "/fonts/MonaspaceRadon.woff2",
-  "/fonts/ping-icons.woff2",
 ];
 
 self.addEventListener("install", (event) => {
@@ -53,6 +51,24 @@ self.addEventListener("fetch", (event) => {
       fetch(req).catch(() =>
         caches.match("/app").then((r) => r || caches.match("/")),
       ),
+    );
+    return;
+  }
+
+  // Network-first for code/styles so edits show on reload (cache-first would
+  // serve a stale style.css/app.js until the CACHE version is bumped). Falls
+  // back to cache when offline, and refreshes the cache on every hit.
+  if (url.pathname === "/style.css" || url.pathname === "/app.js") {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res.ok && res.type === "basic") {
+            const copy = res.clone();
+            caches.open(CACHE).then((cache) => cache.put(req, copy));
+          }
+          return res;
+        })
+        .catch(() => caches.match(req)),
     );
     return;
   }

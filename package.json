@@ -1,0 +1,16 @@
+{
+  "name": "ping",
+  "version": "1.0.0",
+  "description": "A tiny web app for sharing texts, links, and files with a friend. No social media required.",
+  "private": true,
+  "license": "MIT",
+  "author": "Johanna Fagerås",
+  "homepage": "https://github.com/johannaefageras/ping#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/johannaefageras/ping.git"
+  },
+  "bugs": {
+    "url": "https://github.com/johannaefageras/ping/issues"
+  }
+}

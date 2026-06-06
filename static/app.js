@@ -32,6 +32,7 @@ const pendingList = document.getElementById("pending-list");
 const contactsList = document.getElementById("contacts-list");
 const chatPlaceholder = document.getElementById("chat-placeholder");
 const chatView = document.getElementById("chat-view");
+const mobileContactsToggle = document.getElementById("mobile-contacts-toggle");
 const chatContactName = document.getElementById("chat-contact-name");
 const chatMain = document.getElementById("chat-main");
 const board = document.getElementById("board");
@@ -49,7 +50,6 @@ const settingsClose = document.getElementById("settings-close");
 const displayNameInput = document.getElementById("display-name-input");
 const displayNameSave = document.getElementById("display-name-save");
 const displayNameMsg = document.getElementById("display-name-msg");
-const settingsUsername = document.getElementById("settings-username");
 const newPasswordInput = document.getElementById("new-password");
 const newPasswordConfirm = document.getElementById("new-password-confirm");
 const passwordSave = document.getElementById("password-save");
@@ -377,9 +377,9 @@ async function enterApp(user) {
 
   authScreen.classList.add("hidden");
   appEl.classList.remove("hidden");
+  appEl.classList.remove("chat-active", "contacts-collapsed");
   currentUsernameEl.textContent = "@" + currentUser.username;
   displayNameInput.value = currentUser.display_name || "";
-  settingsUsername.textContent = "@" + currentUser.username;
 
   await loadContacts();
   subscribeToRealtime();
@@ -415,9 +415,21 @@ function exitApp() {
   pendingList.innerHTML = "";
   chatView.classList.add("hidden");
   chatPlaceholder.classList.remove("hidden");
+  appEl.classList.remove("chat-active", "contacts-collapsed");
+  mobileContactsToggle.setAttribute("aria-expanded", "false");
 
   showAuthScreen();
 }
+
+function setMobileContactsCollapsed(collapsed) {
+  appEl.classList.toggle("contacts-collapsed", collapsed);
+  mobileContactsToggle.setAttribute("aria-expanded", String(!collapsed));
+}
+
+mobileContactsToggle.addEventListener("click", () => {
+  if (!appEl.classList.contains("chat-active")) return;
+  setMobileContactsCollapsed(!appEl.classList.contains("contacts-collapsed"));
+});
 
 logoutBtn.addEventListener("click", async () => {
   await sb.auth.signOut();
@@ -510,8 +522,8 @@ function renderContacts() {
     el.className = "pending-item";
     el.innerHTML = `
       <span class="contact-name">${contactNameHtml(c.requester.username, c.requester.display_name)}</span>
-      <button class="accept-btn" data-id="${c.id}" aria-label="Acceptera" title="Acceptera"><i class="pi-check"></i></button>
-      <button class="reject-btn" data-id="${c.id}" aria-label="Neka" title="Neka"><i class="pi-close"></i></button>
+      <button class="accept-btn" data-id="${c.id}" aria-label="Acceptera" title="Acceptera"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button>
+      <button class="reject-btn" data-id="${c.id}" aria-label="Neka" title="Neka"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     `;
     pendingList.appendChild(el);
   });
@@ -556,7 +568,7 @@ function renderContacts() {
     el.className = "contact-item outgoing";
     el.innerHTML =
       `<span class="contact-name">${contactNameHtml(c.addressee.username, c.addressee.display_name)}</span>` +
-      ` <i class="pi-hourglass" title="Väntar på svar"></i>`;
+      ` <svg class="icon" role="img" aria-label="Väntar på svar" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>Väntar på svar</title><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg>`;
     contactsList.appendChild(el);
   });
 }
@@ -646,6 +658,8 @@ async function selectContact(contactId, recipientId, username, displayName) {
 
   chatPlaceholder.classList.add("hidden");
   chatView.classList.remove("hidden");
+  appEl.classList.add("chat-active");
+  setMobileContactsCollapsed(true);
   chatContactName.innerHTML = contactNameHtml(username, selectedContact.displayName);
 
   await loadPings();
@@ -703,7 +717,7 @@ function renderPing(ping, animate = true) {
     el.innerHTML = `
       <div class="meta">${formatTime(ping.created_at)}</div>
       <div class="content">${linkify(ping.content)}</div>
-      <button class="dismiss-btn" aria-label="Avfärda"><i class="pi-close"></i></button>
+      <button class="dismiss-btn" aria-label="Avfärda"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     `;
   } else if (ping.type === "file") {
     el.className = `item ${isSelf ? "self" : "other"} file-item${animate && !isSelf ? " ping" : ""}`;
@@ -716,9 +730,9 @@ function renderPing(ping, animate = true) {
       <div class="file-info">
         ${iconOrThumb}
         <span>${escapeHtml(ping.file_name)} <span class="file-size">${formatSize(ping.file_size)}</span></span>
-        <button class="download-btn" data-path="${escapeHtml(ping.file_path)}" data-name="${escapeHtml(ping.file_name)}"><i class="pi-arrow-down-to-bracket"></i> LADDA NER</button>
+        <button class="download-btn" data-path="${escapeHtml(ping.file_path)}" data-name="${escapeHtml(ping.file_name)}"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17V3"/><path d="m6 11 6 6 6-6"/><path d="M19 21H5"/></svg> LADDA NER</button>
       </div>
-      <button class="dismiss-btn" aria-label="Avfärda"><i class="pi-close"></i></button>
+      <button class="dismiss-btn" aria-label="Avfärda"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     `;
   }
 
