@@ -93,6 +93,7 @@ async function init() {
     // so we don't flash the app for whoever was previously logged in before the
     // event arrives.
     const isPasswordRecovery = window.location.hash.includes("type=recovery");
+    const inviteToken = window.parseInviteToken(window.location.hash);
 
     const {
       data: { session },
@@ -101,11 +102,33 @@ async function init() {
       showResetPasswordScreen();
     } else if (session) {
       await enterApp(session.user);
+      if (inviteToken) {
+        await redeemInviteToken(inviteToken);
+        clearInviteHash();
+      }
     } else {
+      if (inviteToken) {
+        // Hold the token across sign-in/sign-up; redeem on SIGNED_IN below.
+        sessionStorage.setItem(INVITE_STASH_KEY, inviteToken);
+        showAuthInviteBanner();
+      }
       showAuthScreen();
     }
 
     sb.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN") {
+        const stashed = sessionStorage.getItem(INVITE_STASH_KEY);
+        if (stashed) {
+          sessionStorage.removeItem(INVITE_STASH_KEY);
+          hideAuthInviteBanner();
+          // enterApp runs via the normal login path; redeem once we're in.
+          // Defer slightly so contacts UI exists before refresh.
+          setTimeout(async () => {
+            await redeemInviteToken(stashed);
+            clearInviteHash();
+          }, 0);
+        }
+      }
       if (event === "PASSWORD_RECOVERY") {
         // Do NOT sign out here. The recovery event already swaps in a recovery
         // session that supersedes any prior login, so updateUser({ password })
@@ -1442,6 +1465,74 @@ inviteCopyBtn.addEventListener("click", async () => {
     inviteCopyBtn.textContent = "Kopiera";
     inviteCopyBtn.classList.remove("copied");
   }, 1500);
+});
+
+const INVITE_STASH_KEY = "ping.pendingInvite";
+
+const INVITE_MESSAGES = {
+  ok: (u) => "Ansluten till @" + u + "!",
+  used: () => "Länken är redan använd.",
+  expired: () => "Länken har gått ut.",
+  self: () => "Du kan inte bjuda in dig själv.",
+  not_found: () => "Ogiltig länk.",
+};
+
+// Show the redemption result. Reuses the existing contact-search-result line in
+// the sidebar (visible once inside the app).
+function showInviteResult(status, username) {
+  const msgFn = INVITE_MESSAGES[status] || INVITE_MESSAGES.not_found;
+  contactSearchResult.textContent = msgFn(username);
+  contactSearchResult.classList.remove("hidden");
+}
+
+// Redeem a token against Supabase and refresh contacts on success.
+async function redeemInviteToken(token) {
+  const { data, error } = await sb.rpc("redeem_invite", { p_token: token });
+  const row = Array.isArray(data) ? data[0] : data;
+  if (error || !row) {
+    console.error("redeem_invite failed:", error);
+    showInviteResult("not_found");
+    return;
+  }
+  showInviteResult(row.status, row.username);
+  if (row.status === "ok") {
+    await loadContacts();
+  }
+}
+
+// Strip the invite fragment so a refresh doesn't re-attempt redemption.
+function clearInviteHash() {
+  if (window.parseInviteToken(window.location.hash)) {
+    history.replaceState(null, "", window.location.pathname + window.location.search);
+  }
+}
+
+const authInviteBanner = document.getElementById("auth-invite-banner");
+
+function showAuthInviteBanner() {
+  if (!authInviteBanner) return;
+  authInviteBanner.textContent =
+    "Någon vill ansluta — logga in eller skapa ett konto för att acceptera.";
+  authInviteBanner.classList.remove("hidden");
+}
+
+function hideAuthInviteBanner() {
+  if (authInviteBanner) authInviteBanner.classList.add("hidden");
+}
+
+// Pasting an invite link into an already-open /app tab only changes the URL
+// fragment, which does NOT reload the page (so init() never re-runs). Handle
+// that here: re-run the same logged-in/logged-out invite logic on hashchange.
+window.addEventListener("hashchange", async () => {
+  const token = window.parseInviteToken(window.location.hash);
+  if (!token) return;
+  if (currentUser) {
+    await redeemInviteToken(token);
+    clearInviteHash();
+  } else {
+    sessionStorage.setItem(INVITE_STASH_KEY, token);
+    showAuthInviteBanner();
+  }
 });
 
 function playPing() {
