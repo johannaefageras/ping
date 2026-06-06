@@ -379,6 +379,14 @@ body {
   background: var(--fg);
 }
 
+#login-form button[type="submit"]:focus-visible,
+#signup-form button[type="submit"]:focus-visible,
+#forgot-form button[type="submit"]:focus-visible,
+#reset-form button[type="submit"]:focus-visible {
+  outline: 1px solid var(--fg);
+  outline-offset: 2px;
+}
+
 /* sub-links */
 #forgot-link,
 #forgot-back-link {
@@ -395,6 +403,13 @@ body {
 #forgot-link:hover,
 #forgot-back-link:hover {
   color: var(--fg);
+}
+
+#forgot-link:focus-visible,
+#forgot-back-link:focus-visible {
+  outline: 1px solid var(--fg-dim);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 /* error / success */
