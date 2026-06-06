@@ -80,7 +80,10 @@ class _MetaParser(HTMLParser):
         elif tag == "title":
             self._in_title = True
         elif tag == "link":
-            rel = (a.get("rel") or "").lower()
+            # Match the exact "icon" rel token so we don't pick up
+            # "apple-touch-icon" / "mask-icon" (which are not the favicon).
+            # "shortcut icon" still works since it tokenizes to ["shortcut", "icon"].
+            rel = (a.get("rel") or "").lower().split()
             if self.icon_href is None and ("icon" in rel) and a.get("href"):
                 self.icon_href = a["href"].strip()
 

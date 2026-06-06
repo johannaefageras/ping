@@ -2,7 +2,12 @@ import socket as _socket
 
 import pytest
 
-from link_preview import validate_public_http_url, UrlValidationError, _is_disallowed_ip
+from link_preview import (
+    validate_public_http_url,
+    UrlValidationError,
+    _is_disallowed_ip,
+    parse_metadata,
+)
 
 
 def test_accepts_public_https_url():
@@ -82,9 +87,6 @@ def test_is_disallowed_ip_rejects_non_ip():
     assert _is_disallowed_ip("not-an-ip") is True
 
 
-from link_preview import parse_metadata
-
-
 BASE = "https://example.com/article"
 
 
@@ -145,3 +147,45 @@ def test_returns_none_when_no_title_anywhere():
     html = "<html><head></head><body>no metadata</body></html>"
     meta = parse_metadata(html, BASE)
     assert meta is None
+
+
+def test_twitter_image_fallback():
+    html = """
+    <html><head>
+      <meta property="og:title" content="T">
+      <meta name="twitter:image" content="https://cdn.example.com/tw.png">
+    </head></html>
+    """
+    meta = parse_metadata(html, BASE)
+    assert meta["image"] == "https://cdn.example.com/tw.png"
+
+
+def test_description_falls_back_to_twitter_then_name():
+    twitter = """
+    <html><head>
+      <title>T</title>
+      <meta name="twitter:description" content="From twitter">
+    </head></html>
+    """
+    assert parse_metadata(twitter, BASE)["description"] == "From twitter"
+
+    plain = """
+    <html><head>
+      <title>T</title>
+      <meta name="description" content="From name meta">
+    </head></html>
+    """
+    assert parse_metadata(plain, BASE)["description"] == "From name meta"
+
+
+def test_apple_touch_icon_not_used_as_favicon():
+    # apple-touch-icon must NOT be picked up as the favicon; absent a real
+    # rel="icon" link, the default /favicon.ico is used instead.
+    html = """
+    <html><head>
+      <title>T</title>
+      <link rel="apple-touch-icon" href="/apple-180.png">
+    </head></html>
+    """
+    meta = parse_metadata(html, BASE)
+    assert meta["favicon"] == "https://example.com/favicon.ico"
