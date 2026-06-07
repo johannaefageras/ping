@@ -41,6 +41,11 @@ const fileInput = document.getElementById("file-input");
 const cameraInput = document.getElementById("camera-input");
 const attachBtn = document.getElementById("attach-btn");
 const cameraBtn = document.getElementById("camera-btn");
+const videoBtn = document.getElementById("video-btn");
+const videoMenu = document.getElementById("video-menu");
+const videoPickBtn = document.getElementById("video-pick-btn");
+const videoRecordBtn = document.getElementById("video-record-btn");
+const videoInput = document.getElementById("video-input");
 const textForm = document.getElementById("text-form");
 const textInput = document.getElementById("text-input");
 const pingSound = document.getElementById("ping-sound");
@@ -1317,6 +1322,46 @@ settingsBtn.addEventListener("click", openSettings);
 settingsClose.addEventListener("click", closeSettings);
 settingsModal.addEventListener("click", (e) => {
   if (e.target === settingsModal) closeSettings();
+});
+
+// --- Video button popup menu ---
+const canRecordVideo = !!(
+  navigator.mediaDevices &&
+  typeof navigator.mediaDevices.getUserMedia === "function" &&
+  window.MediaRecorder
+);
+if (!canRecordVideo) videoRecordBtn.classList.add("hidden");
+
+function openVideoMenu() {
+  videoMenu.classList.remove("hidden");
+  videoBtn.setAttribute("aria-expanded", "true");
+}
+
+function closeVideoMenu() {
+  videoMenu.classList.add("hidden");
+  videoBtn.setAttribute("aria-expanded", "false");
+}
+
+videoBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  if (videoMenu.classList.contains("hidden")) openVideoMenu();
+  else closeVideoMenu();
+});
+
+// Outside-click closes the menu.
+document.addEventListener("click", (e) => {
+  if (videoMenu.classList.contains("hidden")) return;
+  if (!videoMenu.contains(e.target) && e.target !== videoBtn) closeVideoMenu();
+});
+
+// Escape closes the menu.
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !videoMenu.classList.contains("hidden")) closeVideoMenu();
+});
+
+videoPickBtn.addEventListener("click", () => {
+  closeVideoMenu();
+  videoInput.click();
 });
 
 function showSettingsMsg(el, text, ok) {
