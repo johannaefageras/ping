@@ -1692,7 +1692,8 @@ function autoGrowInput() {
   textInput.style.height = textInput.scrollHeight + "px";
 }
 
-// Reset the textarea to its single-line height after sending/clearing.
+// Reset the textarea after sending/clearing. "auto" lets it collapse back to
+// the CSS rows/min-height baseline.
 function resetInputHeight() {
   textInput.style.height = "auto";
 }
@@ -1726,7 +1727,8 @@ textInput.addEventListener("keydown", (e) => {
   }
 
   // Menu closed: Enter sends, Shift+Enter inserts a newline.
-  if (e.key === "Enter" && !e.shiftKey) {
+  // !e.isComposing prevents sending mid-IME-composition (CJK/etc.).
+  if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
     e.preventDefault();
     textForm.requestSubmit();
   }
