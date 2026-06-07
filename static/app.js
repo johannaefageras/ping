@@ -859,9 +859,19 @@ function renderPing(ping, animate = true) {
 
 textForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-  if (!selectedContact) return;
   const text = textInput.value.trim();
   if (!text) return;
+
+  // Slash commands run locally and never become pings. parseCommand returns
+  // null for plain text and for "/ text" / "/" so literal slashes still send.
+  if (window.PingCommands && PingCommands.parseCommand(text)) {
+    PingCommands.runCommand(text, buildCommandContext());
+    textInput.value = "";
+    hideCommandHints();
+    return;
+  }
+
+  if (!selectedContact) return;
 
   const { data, error } = await sb
     .from("pings")
