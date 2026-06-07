@@ -1379,6 +1379,49 @@ footer {
   50% { opacity: 0.7; }
 }
 
+/* --- Inline video player --- */
+.item.file-item .video-inline {
+  display: block;
+  max-width: 260px;
+  max-height: 200px;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: #000;
+}
+
+.item.file-item .video-inline.loading {
+  width: 260px;
+  height: 146px;
+  animation: thumb-pulse 1.2s ease-in-out infinite;
+}
+
+.item.file-item .video-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 0.85rem;
+}
+
+.item.file-item .video-download-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  color: #888;
+  font-size: 0.72rem;
+  cursor: pointer;
+  text-decoration: none;
+}
+.item.file-item .video-download-link:hover {
+  color: var(--fg);
+}
+.item.file-item .video-download-link .icon {
+  width: 14px;
+  height: 14px;
+}
+
 #lightbox {
   position: fixed;
   inset: 0;
