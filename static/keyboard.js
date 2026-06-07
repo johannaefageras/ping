@@ -123,6 +123,25 @@
     ctx.selectContact(c.contactId, c.recipientId, c.username, c.displayName);
   }
 
+  // Move selection to the prev/next accepted contact and open it. delta is -1
+  // (prev) or +1 (next). Wraps. No-op for 0 contacts. If none selected, picks
+  // the first (next) or last (prev).
+  function cycleContact(delta) {
+    const list = ctx.getContacts();
+    if (list.length === 0) return;
+    const currentId = ctx.getSelectedRecipientId();
+    let idx = list.findIndex((c) => c.recipientId === currentId);
+    let next;
+    if (idx === -1) {
+      next = delta > 0 ? 0 : list.length - 1;
+    } else {
+      const n = list.length;
+      next = (((idx + delta) % n) + n) % n;
+    }
+    const c = list[next];
+    ctx.selectContact(c.contactId, c.recipientId, c.username, c.displayName);
+  }
+
   function onPaletteKeydown(e) {
     if (e.key === "ArrowDown") {
       e.preventDefault();
@@ -203,6 +222,17 @@
     if (e.key === "/") {
       e.preventDefault();
       ctx.focusComposer();
+      return;
+    }
+
+    if (e.altKey && e.key === "ArrowDown") {
+      e.preventDefault();
+      cycleContact(1);
+      return;
+    }
+    if (e.altKey && e.key === "ArrowUp") {
+      e.preventDefault();
+      cycleContact(-1);
       return;
     }
   }
