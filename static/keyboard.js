@@ -185,7 +185,8 @@
     if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key === ",") {
       if (!ctx.isAppActive()) return;
       e.preventDefault();
-      ctx.openSettings();
+      // Don't stack Settings on top of an already-open overlay (mirrors openPalette).
+      if (!overlays.some((o) => o.isOpen())) ctx.openSettings();
       return;
     }
 
