@@ -123,6 +123,7 @@
     ctx.selectContact(c.contactId, c.recipientId, c.username, c.displayName);
   }
 
+  // --- Alt+↑/↓ contact cycling --------------------------------------------
   // Move selection to the prev/next accepted contact and open it. delta is -1
   // (prev) or +1 (next). Wraps. No-op for 0 contacts. If none selected, picks
   // the first (next) or last (prev).
