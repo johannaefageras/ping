@@ -2104,3 +2104,73 @@ footer {
   padding: 0 5px;
   font-family: inherit;
 }
+
+/* --- Keyboard cheatsheet (?) --- */
+#kbd-cheatsheet {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 65;
+}
+#kbd-cheatsheet.hidden { display: none; }
+#kbd-cheatsheet-panel {
+  width: 460px;
+  max-width: 92vw;
+  background: var(--bg, #0a0a0a);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 20%, transparent);
+  overflow: hidden;
+}
+#kbd-cheatsheet-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+}
+#kbd-cheatsheet-title {
+  font-size: 0.85rem;
+  font-weight: normal;
+  margin: 0;
+  opacity: 0.85;
+}
+#kbd-cheatsheet-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.6;
+  display: flex;
+}
+#kbd-cheatsheet-close:hover { opacity: 1; }
+#kbd-cheatsheet-body { padding: 0.6rem 0.4rem 0.9rem; }
+.kbd-cheatsheet-heading {
+  padding: 0.5rem 0.8rem 0.2rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.5;
+  margin: 0;
+  font-weight: normal;
+}
+.kbd-cheatsheet-row {
+  display: flex;
+  align-items: center;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.88rem;
+}
+.kbd-cheatsheet-row > span:first-child { flex: 1; }
+.kbd-keys { display: flex; gap: 4px; align-items: center; }
+.kbd-keys kbd {
+  border: 1px solid color-mix(in srgb, var(--fg) 25%, transparent);
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  background: color-mix(in srgb, var(--fg) 6%, transparent);
+}

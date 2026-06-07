@@ -470,6 +470,40 @@
       </div>
     </div>
 
+    <!-- Keyboard shortcuts cheatsheet (?) -->
+    <div
+      id="kbd-cheatsheet"
+      class="hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Kortkommandon"
+    >
+      <div id="kbd-cheatsheet-panel">
+        <div id="kbd-cheatsheet-titlebar">
+          <span class="tb-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <h2 id="kbd-cheatsheet-title">~/kortkommandon</h2>
+          <button id="kbd-cheatsheet-close" aria-label="St&auml;ng">
+            <svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div id="kbd-cheatsheet-body">
+          <h3 class="kbd-cheatsheet-heading">navigering</h3>
+          <div class="kbd-cheatsheet-row"><span>Hoppa till kontakt</span><span class="kbd-keys"><kbd class="kbd-mod"></kbd><kbd>K</kbd></span></div>
+          <div class="kbd-cheatsheet-row"><span>F&ouml;reg&aring;ende / n&auml;sta kontakt</span><span class="kbd-keys"><kbd class="kbd-alt"></kbd><kbd>&uarr;</kbd> <kbd class="kbd-alt"></kbd><kbd>&darr;</kbd></span></div>
+          <div class="kbd-cheatsheet-row"><span>Fokusera skrivf&auml;ltet</span><span class="kbd-keys"><kbd>/</kbd></span></div>
+
+          <h3 class="kbd-cheatsheet-heading">&aring;tg&auml;rder</h3>
+          <div class="kbd-cheatsheet-row"><span>Inst&auml;llningar</span><span class="kbd-keys"><kbd class="kbd-mod"></kbd><kbd>,</kbd></span></div>
+          <div class="kbd-cheatsheet-row"><span>St&auml;ng ruta / lightbox</span><span class="kbd-keys"><kbd>esc</kbd></span></div>
+          <div class="kbd-cheatsheet-row"><span>Visa kortkommandon</span><span class="kbd-keys"><kbd>?</kbd></span></div>
+
+          <h3 class="kbd-cheatsheet-heading">i skrivf&auml;ltet</h3>
+          <div class="kbd-cheatsheet-row"><span>Slash-kommandon (/help, /theme &hellip;)</span><span class="kbd-keys"><kbd>/</kbd></span></div>
+          <div class="kbd-cheatsheet-row"><span>Skicka</span><span class="kbd-keys"><kbd>&crarr;</kbd></span></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Settings modal -->
     <div
       id="settings-modal"

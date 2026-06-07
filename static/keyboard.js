@@ -143,6 +143,37 @@
     ctx.selectContact(c.contactId, c.recipientId, c.username, c.displayName);
   }
 
+  // --- Cheatsheet (?) -----------------------------------------------------
+  let cheatsheetEl, cheatsheetClose;
+  let cheatsheetLastFocus = null;
+
+  function isCheatsheetOpen() {
+    return cheatsheetEl && !cheatsheetEl.classList.contains("hidden");
+  }
+
+  function openCheatsheet() {
+    if (!ctx.isAppActive()) return;
+    cheatsheetLastFocus = document.activeElement;
+    cheatsheetEl.classList.remove("hidden");
+    cheatsheetClose.focus();
+  }
+
+  function closeCheatsheet() {
+    if (!isCheatsheetOpen()) return;
+    cheatsheetEl.classList.add("hidden");
+    if (cheatsheetLastFocus) cheatsheetLastFocus.focus();
+  }
+
+  // Replace ⌘ / ⌥ vs Ctrl / Alt labels in the cheatsheet at init (display only;
+  // the handlers accept both metaKey and ctrlKey regardless).
+  function applyPlatformLabels() {
+    const isMac = /Mac|iPhone|iPad|iPod/i.test(navigator.platform || navigator.userAgent || "");
+    const mod = isMac ? "⌘" : "Ctrl";
+    const alt = isMac ? "⌥" : "Alt";
+    document.querySelectorAll("#kbd-cheatsheet .kbd-mod").forEach((el) => (el.textContent = mod));
+    document.querySelectorAll("#kbd-cheatsheet .kbd-alt").forEach((el) => (el.textContent = alt));
+  }
+
   function onPaletteKeydown(e) {
     if (e.key === "ArrowDown") {
       e.preventDefault();
@@ -173,8 +204,17 @@
       if (e.target === paletteEl) closePalette(); // backdrop click
     });
 
-    // Register overlays, topmost-first.
-    // Palette sits above the app's own modals; cheatsheet (Task 6) goes in front.
+    // Cheatsheet DOM + events
+    cheatsheetEl = document.getElementById("kbd-cheatsheet");
+    cheatsheetClose = document.getElementById("kbd-cheatsheet-close");
+    cheatsheetClose.addEventListener("click", closeCheatsheet);
+    cheatsheetEl.addEventListener("click", (e) => {
+      if (e.target === cheatsheetEl) closeCheatsheet(); // backdrop click
+    });
+    applyPlatformLabels();
+
+    // Register overlays, topmost-first: cheatsheet, palette, then app modals.
+    registerOverlay({ isOpen: isCheatsheetOpen, close: closeCheatsheet });
     registerOverlay({ isOpen: isPaletteOpen, close: closePalette });
     registerOverlay({ isOpen: ctx.isLightboxOpen, close: ctx.closeLightbox });
     registerOverlay({ isOpen: ctx.isInviteOpen, close: ctx.closeInvite });
@@ -223,6 +263,12 @@
     if (e.key === "/") {
       e.preventDefault();
       ctx.focusComposer();
+      return;
+    }
+
+    if (e.key === "?") {
+      e.preventDefault();
+      openCheatsheet();
       return;
     }
 
