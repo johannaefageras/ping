@@ -867,6 +867,7 @@ textForm.addEventListener("submit", async (e) => {
   if (window.PingCommands && PingCommands.parseCommand(text)) {
     PingCommands.runCommand(text, buildCommandContext());
     textInput.value = "";
+    resetInputHeight();
     hideCommandHints();
     return;
   }
@@ -893,6 +894,7 @@ textForm.addEventListener("submit", async (e) => {
   scrollToBottom();
   lastSentText = text;
   textInput.value = "";
+  resetInputHeight();
 });
 
 async function uploadFiles(files) {
@@ -1684,25 +1686,49 @@ function completeHint(i) {
 
 textInput.addEventListener("input", renderCommandHints);
 
+// Auto-grow the textarea with its content (capped by CSS max-height).
+function autoGrowInput() {
+  textInput.style.height = "auto";
+  textInput.style.height = textInput.scrollHeight + "px";
+}
+
+// Reset the textarea to its single-line height after sending/clearing.
+function resetInputHeight() {
+  textInput.style.height = "auto";
+}
+
+textInput.addEventListener("input", autoGrowInput);
+
 textInput.addEventListener("keydown", (e) => {
-  if (commandHints.classList.contains("hidden") || hintItems.length === 0) return;
-  if (e.key === "ArrowDown") {
+  const menuOpen =
+    !commandHints.classList.contains("hidden") && hintItems.length > 0;
+
+  if (menuOpen) {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      highlightHint(hintIndex + 1);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      highlightHint(hintIndex - 1);
+    } else if (e.key === "Tab") {
+      e.preventDefault();
+      completeHint(hintIndex);
+    } else if (e.key === "Enter") {
+      // Enter with the menu open completes instead of submitting.
+      e.preventDefault();
+      completeHint(hintIndex);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      hideCommandHints();
+    }
+    return;
+  }
+
+  // Menu closed: Enter sends, Shift+Enter inserts a newline.
+  if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
-    highlightHint(hintIndex + 1);
-  } else if (e.key === "ArrowUp") {
-    e.preventDefault();
-    highlightHint(hintIndex - 1);
-  } else if (e.key === "Tab") {
-    e.preventDefault();
-    completeHint(hintIndex);
-  } else if (e.key === "Enter") {
-    // Enter with the menu open completes instead of submitting.
-    e.preventDefault();
-    completeHint(hintIndex);
-  } else if (e.key === "Escape") {
-    e.preventDefault();
-    e.stopPropagation();
-    hideCommandHints();
+    textForm.requestSubmit();
   }
 });
 
