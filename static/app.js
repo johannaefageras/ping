@@ -1446,6 +1446,10 @@ function closeRecordModal() {
 async function startLivePreview() {
   recordError.classList.add("hidden");
   recordRevokeBlob();
+  // Stop any stream still running (e.g. on "Spela in igen") before acquiring a
+  // new one, so the old camera/mic tracks aren't orphaned with the light on.
+  recordStopStream();
+  recordVideo.srcObject = null;
   recordVideo.removeAttribute("src");
   try {
     recordStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -1537,9 +1541,8 @@ recordClose.addEventListener("click", closeRecordModal);
 recordModal.addEventListener("click", (e) => {
   if (e.target === recordModal) closeRecordModal();
 });
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !recordModal.classList.contains("hidden")) closeRecordModal();
-});
+// Escape-to-close and bare-key-shortcut suppression are handled by the keyboard
+// overlay registry (see initKeyboard below), like the other modals.
 
 function showSettingsMsg(el, text, ok) {
   el.textContent = text;
@@ -2062,6 +2065,8 @@ function getAcceptedContactsForKeyboard() {
 // --- Start ---
 window.PingKeyboard.initKeyboard({
   // overlays
+  isRecordOpen: () => !recordModal.classList.contains("hidden"),
+  closeRecord: closeRecordModal,
   isLightboxOpen: () => !lightbox.classList.contains("hidden"),
   closeLightbox,
   isInviteOpen: () => !inviteModal.classList.contains("hidden"),

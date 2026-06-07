@@ -222,6 +222,7 @@
     // Register overlays, topmost-first: cheatsheet, palette, then app modals.
     registerOverlay({ isOpen: isCheatsheetOpen, close: closeCheatsheet });
     registerOverlay({ isOpen: isPaletteOpen, close: closePalette });
+    registerOverlay({ isOpen: ctx.isRecordOpen, close: ctx.closeRecord });
     registerOverlay({ isOpen: ctx.isLightboxOpen, close: ctx.closeLightbox });
     registerOverlay({ isOpen: ctx.isInviteOpen, close: ctx.closeInvite });
     registerOverlay({ isOpen: ctx.isSettingsOpen, close: ctx.closeSettings });
