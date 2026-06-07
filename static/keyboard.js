@@ -7,6 +7,8 @@
 // pattern in commands.js.
 
 (function () {
+  "use strict";
+
   // --- Overlay registry ---------------------------------------------------
   // Ordered topmost-first. Each entry: { isOpen(), close() }. Esc closes the
   // first open overlay and stops. New overlays (palette, cheatsheet) register
@@ -34,7 +36,10 @@
     ctx = context;
 
     // Register the existing overlays the app already manages, topmost-first.
-    // (Palette + cheatsheet are unshifted onto the front in later tasks.)
+    // (Palette + cheatsheet are registered first inside the updated initKeyboard
+    // block in later tasks — caller order determines topmost-first priority.)
+    // Topmost-first: only one of these is open at a time in normal use; order
+    // decides which Esc closes first if several were ever open at once.
     registerOverlay({ isOpen: ctx.isLightboxOpen, close: ctx.closeLightbox });
     registerOverlay({ isOpen: ctx.isInviteOpen, close: ctx.closeInvite });
     registerOverlay({ isOpen: ctx.isSettingsOpen, close: ctx.closeSettings });
