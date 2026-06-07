@@ -2160,6 +2160,13 @@ footer {
   flex: none;
   transition: color 0.15s, background 0.15s;
 }
+/* The button is focused programmatically on open; suppress the default bright
+   ring and use the app's thin theme-aware outline only for keyboard focus. */
+#kbd-cheatsheet-close:focus { outline: none; }
+#kbd-cheatsheet-close:focus-visible {
+  outline: 1px solid var(--fg);
+  outline-offset: 2px;
+}
 #kbd-cheatsheet-close:hover {
   color: var(--fg);
   background: color-mix(in srgb, var(--fg) 10%, transparent);
