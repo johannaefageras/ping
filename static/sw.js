@@ -1,4 +1,4 @@
-const CACHE = "ping-shell-v8";
+const CACHE = "ping-shell-v9";
 
 const SHELL = [
   "/",
@@ -6,6 +6,7 @@ const SHELL = [
   "/style.css",
   "/app.js",
   "/commands.js",
+  "/keyboard.js",
   "/assets/scripts/invite-url.js",
   "/assets/scripts/qrcode.js",
   "/assets/audio/ping.wav",
