@@ -43,7 +43,7 @@ CSP = (
     "style-src 'self' 'unsafe-inline'; "
     "font-src 'self'; "
     "img-src 'self' data: blob:; "
-    "media-src 'self'; "
+    "media-src 'self' blob:; "
     f"connect-src 'self' {SUPABASE_URL} {_supabase_ws}; "
     "object-src 'none'; "
     "base-uri 'self'; "
@@ -56,7 +56,7 @@ SECURITY_HEADERS = {
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "X-Frame-Options": "DENY",
-    "Permissions-Policy": "geolocation=(), microphone=(), camera=(), interest-cohort=()",
+    "Permissions-Policy": "geolocation=(), microphone=(self), camera=(self), interest-cohort=()",
     "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
 }
 
