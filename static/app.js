@@ -785,10 +785,10 @@ function renderPing(ping, animate = true) {
     if (isVideoFile(ping.file_name)) {
       el.innerHTML = `
         <div class="meta">${formatTime(ping.created_at)}</div>
-        <video class="video-inline loading" controls playsinline preload="metadata"></video>
+        <video class="video-inline loading" controls playsinline preload="metadata" aria-label="${escapeHtml(ping.file_name)}"></video>
         <div class="video-meta">
           <span>${escapeHtml(ping.file_name)} <span class="file-size">${formatSize(ping.file_size)}</span></span>
-          <a class="video-download-link" data-path="${escapeHtml(ping.file_path)}" data-name="${escapeHtml(ping.file_name)}" role="button" tabindex="0"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17V3"/><path d="m6 11 6 6 6-6"/><path d="M19 21H5"/></svg> ladda ner</a>
+          <a class="video-download-link" data-path="${escapeHtml(ping.file_path)}" data-name="${escapeHtml(ping.file_name)}" role="button" tabindex="0" aria-label="Ladda ner ${escapeHtml(ping.file_name)}"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17V3"/><path d="m6 11 6 6 6-6"/><path d="M19 21H5"/></svg> ladda ner</a>
         </div>
         <button class="dismiss-btn" aria-label="Avfärda">${dismissSvg}</button>
       `;
@@ -860,7 +860,10 @@ function renderPing(ping, animate = true) {
   const videoEl = el.querySelector(".video-inline");
   if (videoEl) {
     fetchObjectUrl(ping.file_path).then((url) => {
-      if (el._dismissed) {
+      // Bail if the ping was dismissed OR the element was detached (e.g. the
+      // chat was reloaded / contact switched) while the fetch was in flight —
+      // otherwise the blob URL leaks onto an element nothing will revoke.
+      if (el._dismissed || !el.isConnected) {
         if (url) URL.revokeObjectURL(url);
         return;
       }
