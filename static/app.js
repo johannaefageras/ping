@@ -454,6 +454,9 @@ function exitApp() {
   // way out — otherwise it stays open over the auth screen. This also clears the
   // typed-but-unsubmitted password/display-name fields.
   closeSettings();
+  // Same for the invite modal: close it so it doesn't linger over the auth
+  // screen and so its countdown interval is cleared.
+  closeInvite();
 
   showAuthScreen();
 }
@@ -1040,13 +1043,17 @@ function subscribeToRealtime() {
     .on(
       "postgres_changes",
       {
-        event: "UPDATE",
+        // "*" (not just UPDATE) so an invite redemption is seen live: the
+        // redeemer inserts (requester=creator, addressee=redeemer,'accepted'),
+        // and the creator — who is the requester — must catch that INSERT, not
+        // only the accept-an-outgoing-request UPDATE.
+        event: "*",
         schema: "public",
         table: "contacts",
         filter: `requester_id=eq.${currentUser.id}`,
       },
       () => {
-        // Our outgoing request was accepted
+        // Our outgoing request was accepted, or someone redeemed our invite.
         loadContacts();
       }
     )

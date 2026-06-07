@@ -381,10 +381,18 @@ begin
     return query select 'self'::text, null::text; return;
   end if;
 
-  -- Mark used up front so a token can never be redeemed twice, even on retry.
+  -- Atomically claim the token: the `used_at is null` guard makes this the
+  -- single-use gate. The earlier read-based check is just for a friendly early
+  -- return; THIS update is what actually prevents a double-redeem under
+  -- concurrency (two redeemers can both pass the read above, but only one
+  -- update can flip a still-null used_at). If we didn't claim it, someone else
+  -- already did — treat as used.
   update public.invites
     set used_by = v_me, used_at = now()
-    where id = p_token;
+    where id = p_token and used_at is null;
+  if not found then
+    return query select 'used'::text, null::text; return;
+  end if;
 
   select public.profiles.username into v_username
     from public.profiles where public.profiles.id = v_creator;
