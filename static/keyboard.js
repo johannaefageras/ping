@@ -153,6 +153,9 @@
 
   function openCheatsheet() {
     if (!ctx.isAppActive()) return;
+    // Idempotent: a second open while visible would clobber the saved focus
+    // target (with the close button), breaking focus restoration on close.
+    if (isCheatsheetOpen()) return;
     cheatsheetLastFocus = document.activeElement;
     cheatsheetEl.classList.remove("hidden");
     cheatsheetClose.focus();

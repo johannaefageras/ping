@@ -68,7 +68,7 @@ const inviteError = document.getElementById("invite-error");
 // --- App state ---
 let sb = null; // Supabase client
 let currentUser = null; // { id, username }
-let selectedContact = null; // { contactId, recipientId, username }
+let selectedContact = null; // { contactId, recipientId, username, displayName }
 let contacts = [];
 let lastSentText = null; // last text the user sent, for /last recall
 let unreadCounts = {}; // recipientId -> number of pings received while their chat was closed (this session)

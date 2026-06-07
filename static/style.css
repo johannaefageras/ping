@@ -2127,29 +2127,43 @@ footer {
   box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 20%, transparent);
   overflow: hidden;
 }
+/* Titlebar chrome mirrors #settings-titlebar / #settings-close exactly. */
 #kbd-cheatsheet-titlebar {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.55rem 0.8rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--fg) 4%, var(--bg));
 }
 #kbd-cheatsheet-title {
-  font-size: 0.85rem;
-  font-weight: normal;
   margin: 0;
-  opacity: 0.85;
+  flex: 1;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  color: var(--fg-dim);
 }
 #kbd-cheatsheet-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin-left: auto;
   background: none;
   border: none;
-  color: inherit;
+  color: var(--fg-dim);
+  font-size: 1rem;
+  padding: 4px;
   cursor: pointer;
-  opacity: 0.6;
-  display: flex;
+  border-radius: 4px;
+  flex: none;
+  transition: color 0.15s, background 0.15s;
 }
-#kbd-cheatsheet-close:hover { opacity: 1; }
+#kbd-cheatsheet-close:hover {
+  color: var(--fg);
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
+}
 #kbd-cheatsheet-body { padding: 0.6rem 0.4rem 0.9rem; }
 .kbd-cheatsheet-heading {
   padding: 0.5rem 0.8rem 0.2rem;
@@ -2168,6 +2182,8 @@ footer {
 }
 .kbd-cheatsheet-row > span:first-child { flex: 1; }
 .kbd-keys { display: flex; gap: 4px; align-items: center; }
+/* Groups two key caps as one chord (e.g. ⌥↑); chords sit apart via .kbd-keys gap. */
+.kbd-combo { display: inline-flex; gap: 4px; align-items: center; }
 .kbd-keys kbd {
   border: 1px solid color-mix(in srgb, var(--fg) 25%, transparent);
   border-radius: 3px;
