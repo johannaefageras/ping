@@ -1424,6 +1424,34 @@ settingsModal.addEventListener("click", (e) => {
   if (e.target === settingsModal) closeSettings();
 });
 
+// --- Composer popup menus (shared) ---
+// Builds a button-anchored popup menu: click toggles it, outside-click and
+// Escape close it, and aria-expanded stays in sync. Returns { open, close }
+// so menu items can close it before acting.
+function createPopupMenu(button, menu) {
+  function open() {
+    menu.classList.remove("hidden");
+    button.setAttribute("aria-expanded", "true");
+  }
+  function close() {
+    menu.classList.add("hidden");
+    button.setAttribute("aria-expanded", "false");
+  }
+  button.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (menu.classList.contains("hidden")) open();
+    else close();
+  });
+  document.addEventListener("click", (e) => {
+    if (menu.classList.contains("hidden")) return;
+    if (!menu.contains(e.target) && e.target !== button) close();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !menu.classList.contains("hidden")) close();
+  });
+  return { open, close };
+}
+
 // --- Video button popup menu ---
 const canRecordVideo = !!(
   navigator.mediaDevices &&
@@ -1432,35 +1460,10 @@ const canRecordVideo = !!(
 );
 if (!canRecordVideo) videoRecordBtn.classList.add("hidden");
 
-function openVideoMenu() {
-  videoMenu.classList.remove("hidden");
-  videoBtn.setAttribute("aria-expanded", "true");
-}
-
-function closeVideoMenu() {
-  videoMenu.classList.add("hidden");
-  videoBtn.setAttribute("aria-expanded", "false");
-}
-
-videoBtn.addEventListener("click", (e) => {
-  e.stopPropagation();
-  if (videoMenu.classList.contains("hidden")) openVideoMenu();
-  else closeVideoMenu();
-});
-
-// Outside-click closes the menu.
-document.addEventListener("click", (e) => {
-  if (videoMenu.classList.contains("hidden")) return;
-  if (!videoMenu.contains(e.target) && e.target !== videoBtn) closeVideoMenu();
-});
-
-// Escape closes the menu.
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !videoMenu.classList.contains("hidden")) closeVideoMenu();
-});
+const videoMenuCtl = createPopupMenu(videoBtn, videoMenu);
 
 videoPickBtn.addEventListener("click", () => {
-  closeVideoMenu();
+  videoMenuCtl.close();
   videoInput.click();
 });
 
@@ -1607,7 +1610,7 @@ async function sendRecording() {
 
 // Wiring
 videoRecordBtn.addEventListener("click", () => {
-  closeVideoMenu();
+  videoMenuCtl.close();
   openRecordModal();
 });
 recordStart.addEventListener("click", beginRecording);
