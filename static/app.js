@@ -38,6 +38,9 @@ const chatMain = document.getElementById("chat-main");
 const board = document.getElementById("board");
 const dropZone = document.getElementById("drop-zone");
 const fileInput = document.getElementById("file-input");
+const cameraInput = document.getElementById("camera-input");
+const attachBtn = document.getElementById("attach-btn");
+const cameraBtn = document.getElementById("camera-btn");
 const textForm = document.getElementById("text-form");
 const textInput = document.getElementById("text-input");
 const pingSound = document.getElementById("ping-sound");
@@ -975,6 +978,18 @@ fileInput.addEventListener("change", () => {
   if (fileInput.files.length) {
     uploadFiles(fileInput.files);
     fileInput.value = "";
+  }
+});
+
+// Attach (paperclip) reuses the existing multi-file picker.
+attachBtn.addEventListener("click", () => fileInput.click());
+
+// Camera: opens the camera on mobile, an image picker on desktop.
+cameraBtn.addEventListener("click", () => cameraInput.click());
+cameraInput.addEventListener("change", () => {
+  if (cameraInput.files.length) {
+    uploadFiles(cameraInput.files);
+    cameraInput.value = "";
   }
 });
 
