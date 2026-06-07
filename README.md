@@ -15,6 +15,9 @@ want a quick way to swap a URL or a file without going through a chat app.
 - Send text messages, links, and files to accepted contacts
 - Slash commands in the composer: `/help`, `/theme`, `/font`, `/clear`,
   `/who`, `/last`, `/mute`, `/unmute`, `/shrug`, with a `/` hint menu
+- Keyboard shortcuts: `Cmd/Ctrl+K` contact switcher, `Cmd/Ctrl+,` settings,
+  `/` to focus the composer, `Alt+↑/↓` to switch contacts, `Esc` to close the
+  topmost overlay, and `?` for a shortcuts cheatsheet
 - Real-time delivery via Supabase Realtime
 - Per-side dismiss: each user hides their copy independently; the message and
   any attached file are deleted from storage once both sides dismiss it
