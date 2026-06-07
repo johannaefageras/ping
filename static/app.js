@@ -1637,6 +1637,89 @@ function buildCommandContext() {
   };
 }
 
+// --- Command hint menu ---
+const commandHints = document.getElementById("command-hints");
+let hintItems = []; // current list of matched command objects
+let hintIndex = -1; // highlighted row, -1 = none
+
+function hideCommandHints() {
+  hintItems = [];
+  hintIndex = -1;
+  if (commandHints) {
+    commandHints.classList.add("hidden");
+    commandHints.innerHTML = "";
+  }
+}
+
+function renderCommandHints() {
+  if (!commandHints) return;
+  const raw = textInput.value;
+  hintItems = window.PingCommands ? PingCommands.getCommandHints(raw) : [];
+  if (hintItems.length === 0) {
+    hideCommandHints();
+    return;
+  }
+  hintIndex = 0;
+  commandHints.innerHTML = "";
+  hintItems.forEach((c, i) => {
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "hint-row" + (i === 0 ? " active" : "");
+    row.dataset.index = String(i);
+    row.innerHTML =
+      `<span class="hint-name">/${c.name}${c.arg ? " &lt;" + c.arg + "&gt;" : ""}</span>` +
+      `<span class="hint-summary">${c.summary}</span>`;
+    row.addEventListener("mousedown", (e) => {
+      // mousedown (not click) so it fires before the input blurs.
+      e.preventDefault();
+      completeHint(i);
+    });
+    commandHints.appendChild(row);
+  });
+  commandHints.classList.remove("hidden");
+}
+
+function highlightHint(next) {
+  if (hintItems.length === 0) return;
+  hintIndex = (next + hintItems.length) % hintItems.length;
+  commandHints.querySelectorAll(".hint-row").forEach((row, i) => {
+    row.classList.toggle("active", i === hintIndex);
+  });
+}
+
+// Completes the highlighted command into the input. Commands that take an arg
+// get a trailing space (ready for the value); arg-less commands get no space.
+function completeHint(i) {
+  const c = hintItems[i];
+  if (!c) return;
+  textInput.value = "/" + c.name + (c.arg ? " " : "");
+  hideCommandHints();
+  textInput.focus();
+}
+
+textInput.addEventListener("input", renderCommandHints);
+
+textInput.addEventListener("keydown", (e) => {
+  if (commandHints.classList.contains("hidden") || hintItems.length === 0) return;
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    highlightHint(hintIndex + 1);
+  } else if (e.key === "ArrowUp") {
+    e.preventDefault();
+    highlightHint(hintIndex - 1);
+  } else if (e.key === "Tab") {
+    e.preventDefault();
+    completeHint(hintIndex);
+  } else if (e.key === "Enter") {
+    // Enter with the menu open completes instead of submitting.
+    e.preventDefault();
+    completeHint(hintIndex);
+  } else if (e.key === "Escape") {
+    e.preventDefault();
+    hideCommandHints();
+  }
+});
+
 // --- Theme picker ---
 function initThemePicker() {
   const picker = document.getElementById("theme-picker");
