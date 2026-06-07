@@ -2011,7 +2011,8 @@ footer {
   align-items: flex-start;
   justify-content: center;
   padding-top: 12vh;
-  z-index: 60;
+  /* Above the app's own modals (#lightbox/#settings/#invite are z-index 1000). */
+  z-index: 1010;
 }
 #kbd-palette.hidden { display: none; }
 #kbd-palette-panel {
@@ -2113,7 +2114,8 @@ footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 65;
+  /* Above the palette (1010) and the app's modals (1000). */
+  z-index: 1015;
 }
 #kbd-cheatsheet.hidden { display: none; }
 #kbd-cheatsheet-panel {
