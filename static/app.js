@@ -46,6 +46,17 @@ const videoMenu = document.getElementById("video-menu");
 const videoPickBtn = document.getElementById("video-pick-btn");
 const videoRecordBtn = document.getElementById("video-record-btn");
 const videoInput = document.getElementById("video-input");
+const recordModal = document.getElementById("record-modal");
+const recordPanel = document.getElementById("record-panel");
+const recordClose = document.getElementById("record-close");
+const recordVideo = document.getElementById("record-video");
+const recordStatus = document.getElementById("record-status");
+const recordError = document.getElementById("record-error");
+const recordStart = document.getElementById("record-start");
+const recordStop = document.getElementById("record-stop");
+const recordSend = document.getElementById("record-send");
+const recordAgain = document.getElementById("record-again");
+const recordCancel = document.getElementById("record-cancel");
 const textForm = document.getElementById("text-form");
 const textInput = document.getElementById("text-input");
 const pingSound = document.getElementById("ping-sound");
@@ -1370,6 +1381,164 @@ document.addEventListener("keydown", (e) => {
 videoPickBtn.addEventListener("click", () => {
   closeVideoMenu();
   videoInput.click();
+});
+
+// --- Video recording modal ---
+const RECORD_MAX_MS = 60000; // hard 60s auto-stop
+let recordStream = null;      // active MediaStream (camera + mic)
+let recordRecorder = null;    // active MediaRecorder
+let recordChunks = [];        // collected Blob parts
+let recordBlob = null;        // finished recording
+let recordBlobUrl = null;     // object URL for review playback
+let recordTimer = null;       // setInterval handle for the elapsed timer
+let recordStartedAt = 0;
+
+function recordSetButtons({ start, stop, send, again }) {
+  recordStart.classList.toggle("hidden", !start);
+  recordStop.classList.toggle("hidden", !stop);
+  recordSend.classList.toggle("hidden", !send);
+  recordAgain.classList.toggle("hidden", !again);
+}
+
+function recordStopStream() {
+  if (recordStream) {
+    recordStream.getTracks().forEach((t) => t.stop());
+    recordStream = null;
+  }
+}
+
+function recordRevokeBlob() {
+  if (recordBlobUrl) {
+    URL.revokeObjectURL(recordBlobUrl);
+    recordBlobUrl = null;
+  }
+  recordBlob = null;
+  recordChunks = [];
+}
+
+function recordClearTimer() {
+  if (recordTimer) {
+    clearInterval(recordTimer);
+    recordTimer = null;
+  }
+}
+
+// Full teardown used by every exit path.
+function closeRecordModal() {
+  if (recordRecorder && recordRecorder.state !== "inactive") {
+    recordRecorder.onstop = null; // don't trigger review on a forced stop
+    recordRecorder.stop();
+  }
+  recordRecorder = null;
+  recordClearTimer();
+  recordStopStream();
+  recordRevokeBlob();
+  recordVideo.srcObject = null;
+  recordVideo.removeAttribute("src");
+  recordVideo.muted = true;
+  recordError.classList.add("hidden");
+  recordError.textContent = "";
+  recordStatus.textContent = "";
+  recordModal.classList.add("hidden");
+}
+
+// Acquire camera+mic and show the live preview.
+async function startLivePreview() {
+  recordError.classList.add("hidden");
+  recordRevokeBlob();
+  recordVideo.removeAttribute("src");
+  try {
+    recordStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  } catch (err) {
+    console.error("getUserMedia failed:", err);
+    recordError.textContent = "Kunde inte komma åt kamera/mikrofon.";
+    recordError.classList.remove("hidden");
+    recordStatus.textContent = "";
+    recordSetButtons({ start: false, stop: false, send: false, again: false });
+    return;
+  }
+  recordVideo.muted = true; // mute live preview to avoid echo
+  recordVideo.srcObject = recordStream;
+  recordVideo.play().catch(() => {});
+  recordStatus.textContent = "Redo att spela in";
+  recordSetButtons({ start: true, stop: false, send: false, again: false });
+}
+
+async function openRecordModal() {
+  recordModal.classList.remove("hidden");
+  await startLivePreview();
+}
+
+function beginRecording() {
+  if (!recordStream) return;
+  recordChunks = [];
+  recordRecorder = new MediaRecorder(recordStream);
+  recordRecorder.ondataavailable = (e) => {
+    if (e.data && e.data.size > 0) recordChunks.push(e.data);
+  };
+  recordRecorder.onstop = () => {
+    recordClearTimer();
+    recordBlob = new Blob(recordChunks, { type: recordRecorder.mimeType || "video/webm" });
+    recordBlobUrl = URL.createObjectURL(recordBlob);
+    recordVideo.srcObject = null;
+    recordVideo.src = recordBlobUrl;
+    recordVideo.muted = false; // play review with sound
+    recordVideo.play().catch(() => {});
+    recordStatus.textContent = "Förhandsgranskning";
+    recordSetButtons({ start: false, stop: false, send: true, again: true });
+  };
+  recordRecorder.start();
+  recordStartedAt = Date.now();
+  recordStatus.textContent = "Spelar in… 0s";
+  recordSetButtons({ start: false, stop: true, send: false, again: false });
+  recordTimer = setInterval(() => {
+    const elapsed = Date.now() - recordStartedAt;
+    recordStatus.textContent = "Spelar in… " + Math.floor(elapsed / 1000) + "s";
+    if (elapsed >= RECORD_MAX_MS) stopRecording();
+  }, 250);
+}
+
+function stopRecording() {
+  if (recordRecorder && recordRecorder.state !== "inactive") recordRecorder.stop();
+}
+
+function recordTimestampName() {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, "0");
+  return (
+    "video-" + d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) +
+    "-" + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds()) + ".webm"
+  );
+}
+
+async function sendRecording() {
+  if (!recordBlob) return;
+  const file = new File([recordBlob], recordTimestampName(), {
+    type: recordBlob.type || "video/webm",
+  });
+  closeRecordModal();   // tear down camera/mic before the upload round-trip
+  await uploadFiles([file]);
+}
+
+// Wiring
+videoRecordBtn.addEventListener("click", () => {
+  closeVideoMenu();
+  openRecordModal();
+});
+recordStart.addEventListener("click", beginRecording);
+recordStop.addEventListener("click", stopRecording);
+recordSend.addEventListener("click", sendRecording);
+recordAgain.addEventListener("click", () => {
+  recordRevokeBlob();
+  startLivePreview();
+});
+recordCancel.addEventListener("click", closeRecordModal);
+recordClose.addEventListener("click", closeRecordModal);
+recordModal.addEventListener("click", (e) => {
+  if (e.target === recordModal) closeRecordModal();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !recordModal.classList.contains("hidden")) closeRecordModal();
 });
 
 function showSettingsMsg(el, text, ok) {

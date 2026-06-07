@@ -732,6 +732,31 @@
       </div>
     </div>
 
+    <!-- Video recording modal -->
+    <div id="record-modal" class="hidden" role="dialog" aria-modal="true" aria-label="Spela in video">
+      <div id="record-panel">
+        <div id="record-titlebar">
+          <span class="tb-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <h2 id="record-title">~/record</h2>
+          <button id="record-close" aria-label="St&auml;ng">
+            <svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div id="record-body">
+          <video id="record-video" playsinline></video>
+          <p id="record-status" class="record-status"></p>
+          <p id="record-error" class="record-error hidden"></p>
+          <div id="record-controls" class="record-controls">
+            <button type="button" id="record-start">Spela in</button>
+            <button type="button" id="record-stop" class="hidden">Stoppa</button>
+            <button type="button" id="record-send" class="hidden">Skicka</button>
+            <button type="button" id="record-again" class="hidden">Spela in igen</button>
+            <button type="button" id="record-cancel">Avbryt</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Invite modal: QR + link + countdown -->
     <div
       id="invite-modal"
