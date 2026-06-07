@@ -163,22 +163,45 @@
     document.addEventListener("keydown", onGlobalKeydown);
   }
 
+  // True when a bare-key shortcut should be ignored: focus is in an editable
+  // field, or any overlay is open. Modified chords bypass this guard.
+  function isTypingOrOverlayOpen() {
+    const el = document.activeElement;
+    if (el) {
+      const tag = el.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || el.isContentEditable) return true;
+    }
+    return overlays.some((o) => o.isOpen());
+  }
+
   function onGlobalKeydown(e) {
-    // Cmd/Ctrl+K — contact palette. Exempt from the typing guard (it's a chord).
+    // --- Modified chords (exempt from typing guard) ---
     if ((e.metaKey || e.ctrlKey) && !e.altKey && (e.key === "k" || e.key === "K")) {
       e.preventDefault();
-      if (isPaletteOpen()) {
-        closePalette();
-      } else {
-        openPalette();
-      }
+      if (isPaletteOpen()) closePalette();
+      else openPalette();
+      return;
+    }
+    if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key === ",") {
+      if (!ctx.isAppActive()) return;
+      e.preventDefault();
+      ctx.openSettings();
       return;
     }
 
+    // --- Escape (works regardless of typing, but composer hint menu stops it) ---
     if (e.key === "Escape") {
-      if (closeTopmostOverlay()) {
-        e.preventDefault();
-      }
+      if (closeTopmostOverlay()) e.preventDefault();
+      return;
+    }
+
+    // --- Bare-key shortcuts (suppressed while typing / overlay open) ---
+    if (isTypingOrOverlayOpen()) return;
+    if (!ctx.isAppActive()) return;
+
+    if (e.key === "/") {
+      e.preventDefault();
+      ctx.focusComposer();
       return;
     }
   }
