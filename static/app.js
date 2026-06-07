@@ -38,6 +38,9 @@ const chatMain = document.getElementById("chat-main");
 const board = document.getElementById("board");
 const dropZone = document.getElementById("drop-zone");
 const fileInput = document.getElementById("file-input");
+const cameraInput = document.getElementById("camera-input");
+const attachBtn = document.getElementById("attach-btn");
+const cameraBtn = document.getElementById("camera-btn");
 const textForm = document.getElementById("text-form");
 const textInput = document.getElementById("text-input");
 const pingSound = document.getElementById("ping-sound");
@@ -867,6 +870,7 @@ textForm.addEventListener("submit", async (e) => {
   if (window.PingCommands && PingCommands.parseCommand(text)) {
     PingCommands.runCommand(text, buildCommandContext());
     textInput.value = "";
+    resetInputHeight();
     hideCommandHints();
     return;
   }
@@ -893,6 +897,7 @@ textForm.addEventListener("submit", async (e) => {
   scrollToBottom();
   lastSentText = text;
   textInput.value = "";
+  resetInputHeight();
 });
 
 async function uploadFiles(files) {
@@ -973,6 +978,18 @@ fileInput.addEventListener("change", () => {
   if (fileInput.files.length) {
     uploadFiles(fileInput.files);
     fileInput.value = "";
+  }
+});
+
+// Attach (paperclip) reuses the existing multi-file picker.
+attachBtn.addEventListener("click", () => fileInput.click());
+
+// Camera: opens the camera on mobile, an image picker on desktop.
+cameraBtn.addEventListener("click", () => cameraInput.click());
+cameraInput.addEventListener("change", () => {
+  if (cameraInput.files.length) {
+    uploadFiles(cameraInput.files);
+    cameraInput.value = "";
   }
 });
 
@@ -1614,9 +1631,11 @@ function buildCommandContext() {
     setMuted: setMutedFromCommand,
     setInput: (text) => {
       textInput.value = text;
+      autoGrowInput();
     },
     appendInput: (text) => {
       textInput.value = textInput.value ? textInput.value + " " + text : text;
+      autoGrowInput();
     },
     focusInput: () => textInput.focus(),
   };
@@ -1684,25 +1703,51 @@ function completeHint(i) {
 
 textInput.addEventListener("input", renderCommandHints);
 
+// Auto-grow the textarea with its content (capped by CSS max-height).
+function autoGrowInput() {
+  textInput.style.height = "auto";
+  textInput.style.height = textInput.scrollHeight + "px";
+}
+
+// Reset the textarea after sending/clearing. "auto" lets it collapse back to
+// the CSS rows/min-height baseline.
+function resetInputHeight() {
+  textInput.style.height = "auto";
+}
+
+textInput.addEventListener("input", autoGrowInput);
+
 textInput.addEventListener("keydown", (e) => {
-  if (commandHints.classList.contains("hidden") || hintItems.length === 0) return;
-  if (e.key === "ArrowDown") {
+  const menuOpen =
+    !commandHints.classList.contains("hidden") && hintItems.length > 0;
+
+  if (menuOpen) {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      highlightHint(hintIndex + 1);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      highlightHint(hintIndex - 1);
+    } else if (e.key === "Tab") {
+      e.preventDefault();
+      completeHint(hintIndex);
+    } else if (e.key === "Enter") {
+      // Enter with the menu open completes instead of submitting.
+      e.preventDefault();
+      completeHint(hintIndex);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      hideCommandHints();
+    }
+    return;
+  }
+
+  // Menu closed: Enter sends, Shift+Enter inserts a newline.
+  // !e.isComposing prevents sending mid-IME-composition (CJK/etc.).
+  if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
     e.preventDefault();
-    highlightHint(hintIndex + 1);
-  } else if (e.key === "ArrowUp") {
-    e.preventDefault();
-    highlightHint(hintIndex - 1);
-  } else if (e.key === "Tab") {
-    e.preventDefault();
-    completeHint(hintIndex);
-  } else if (e.key === "Enter") {
-    // Enter with the menu open completes instead of submitting.
-    e.preventDefault();
-    completeHint(hintIndex);
-  } else if (e.key === "Escape") {
-    e.preventDefault();
-    e.stopPropagation();
-    hideCommandHints();
+    textForm.requestSubmit();
   }
 });
 

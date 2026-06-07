@@ -1024,11 +1024,13 @@ footer {
 
 #text-form {
   display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
 #text-input {
-  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
   min-width: 0;
   background: #151515;
   border: 2px solid var(--border);
@@ -1036,8 +1038,12 @@ footer {
   padding: 12px 16px;
   font-family: inherit;
   font-size: 0.95rem;
+  line-height: 1.4;
   border-radius: 6px;
   outline: none;
+  resize: none;              /* height is controlled by JS auto-grow */
+  max-height: 9.5em;         /* ~6 lines, then the textarea scrolls */
+  overflow-y: auto;
   transition:
     border-color 0.2s,
     box-shadow 0.2s;
@@ -1052,21 +1058,97 @@ footer {
   color: #383838;
 }
 
-#text-form button {
+/* --- Composer toolbar (row 2) --- */
+
+#composer-toolbar {
+  display: flex;
+  align-items: center;
+}
+
+.composer-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.composer-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: #888;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.composer-icon-btn .icon {
+  width: 20px;
+  height: 20px;
+}
+
+.composer-icon-btn:hover {
+  color: var(--fg);
+  background: #1a1a1a;
+}
+
+.composer-icon-btn.is-placeholder {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.composer-icon-btn.is-placeholder:hover {
+  color: #888;
+  background: none;
+}
+
+.composer-meta {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-left: auto;          /* pushes legend + send button to the right */
+}
+
+.composer-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #6a6a6a;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.composer-hint .kbd-icon {
+  width: 18px;
+  height: 18px;
+  color: #cfcfcf;
+}
+
+.composer-send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  padding: 0;
   background: var(--fg-dim);
   color: var(--bg);
   border: none;
-  padding: 12px 22px;
-  font-family: inherit;
-  font-weight: 550;
-  font-size: 0.85rem;
-  letter-spacing: 1px;
   border-radius: 6px;
   cursor: pointer;
   transition: background 0.15s;
 }
 
-#text-form button:hover {
+.composer-send .icon {
+  width: 22px;
+  height: 22px;
+}
+
+.composer-send:hover {
   background: var(--fg);
 }
 
@@ -1221,12 +1303,12 @@ footer {
   }
 
   #text-input {
-    font-size: 16px;
+    font-size: 16px; /* prevents iOS zoom-on-focus */
     padding: 10px 12px;
   }
 
-  #text-form button {
-    padding: 10px 16px;
+  .composer-hint {
+    display: none; /* legend doesn't fit on narrow screens; icons + send remain */
   }
 
   #auth-box {
