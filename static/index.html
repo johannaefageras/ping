@@ -440,6 +440,36 @@
       <img id="lightbox-img" alt="" />
     </div>
 
+    <!-- Cmd/Ctrl+K contact switcher -->
+    <div
+      id="kbd-palette"
+      class="hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Hoppa till kontakt"
+    >
+      <div id="kbd-palette-panel">
+        <div id="kbd-palette-input-row">
+          <span class="kbd-prompt" aria-hidden="true">&gt;</span>
+          <input
+            id="kbd-palette-input"
+            type="text"
+            placeholder="Hoppa till kontakt&hellip;"
+            autocomplete="off"
+            spellcheck="false"
+            aria-controls="kbd-palette-list"
+          />
+          <span class="kbd-esc-tag" aria-hidden="true">esc</span>
+        </div>
+        <div id="kbd-palette-list" role="listbox" aria-label="Kontakter"></div>
+        <div id="kbd-palette-foot" aria-hidden="true">
+          <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> navigera</span>
+          <span><kbd>&crarr;</kbd> &ouml;ppna</span>
+          <span><kbd>esc</kbd> st&auml;ng</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Settings modal -->
     <div
       id="settings-modal"

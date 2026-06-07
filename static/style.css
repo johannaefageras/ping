@@ -2001,3 +2001,107 @@ footer {
   flex: 1 1 auto;
   opacity: 0.7;
 }
+
+/* --- Cmd/Ctrl+K contact palette --- */
+#kbd-palette {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12vh;
+  z-index: 60;
+}
+#kbd-palette.hidden { display: none; }
+#kbd-palette-panel {
+  width: 440px;
+  max-width: 90vw;
+  background: var(--bg, #0a0a0a);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 20%, transparent);
+  overflow: hidden;
+}
+#kbd-palette-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+}
+.kbd-prompt { opacity: 0.7; }
+#kbd-palette-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+.kbd-esc-tag {
+  font-size: 0.7rem;
+  opacity: 0.5;
+  border: 1px solid color-mix(in srgb, var(--fg) 25%, transparent);
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+#kbd-palette-list {
+  max-height: 40vh;
+  overflow-y: auto;
+}
+.kbd-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.9rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.kbd-row.active,
+.kbd-row:hover {
+  background: var(--accent);
+  color: var(--bg, #0a0a0a);
+}
+.kbd-row .presence-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--fg) 30%, transparent);
+  flex: 0 0 auto;
+}
+.kbd-row .presence-dot.online {
+  background: var(--accent);
+  box-shadow: 0 0 5px var(--accent);
+}
+.kbd-row.active .presence-dot.online { background: var(--bg, #0a0a0a); box-shadow: none; }
+.kbd-row .kbd-name { font-weight: bold; }
+.kbd-row .kbd-handle { opacity: 0.55; font-size: 0.8rem; }
+.kbd-row.active .kbd-handle { opacity: 0.85; }
+.kbd-row .kbd-unread {
+  margin-left: auto;
+  font-size: 0.72rem;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  padding: 0 6px;
+}
+.kbd-empty {
+  padding: 0.7rem 0.9rem;
+  opacity: 0.5;
+  font-size: 0.85rem;
+}
+#kbd-palette-foot {
+  display: flex;
+  gap: 1.2rem;
+  padding: 0.5rem 0.9rem;
+  border-top: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+  font-size: 0.72rem;
+  opacity: 0.55;
+}
+#kbd-palette-foot kbd {
+  border: 1px solid color-mix(in srgb, var(--fg) 25%, transparent);
+  border-radius: 3px;
+  padding: 0 5px;
+  font-family: inherit;
+}
