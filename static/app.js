@@ -1771,14 +1771,44 @@ function initMuteToggle() {
 
 initMuteToggle();
 
+// Normalized accepted contacts for the keyboard palette / shortcuts. Mirrors
+// the derivation in renderContacts() but returns a flat, render-agnostic shape.
+function getAcceptedContactsForKeyboard() {
+  if (!currentUser) return [];
+  return contacts
+    .filter((c) => c.status === "accepted")
+    .map((c) => {
+      const isRequester = c.requester_id === currentUser.id;
+      const recipientId = isRequester ? c.addressee_id : c.requester_id;
+      const other = isRequester ? c.addressee : c.requester;
+      return {
+        contactId: c.id,
+        recipientId,
+        username: other.username,
+        displayName: other.display_name || null,
+        online: onlineUserIds.has(recipientId),
+        unread: unreadCounts[recipientId] || 0,
+      };
+    });
+}
+
 // --- Start ---
 window.PingKeyboard.initKeyboard({
+  // overlays
   isLightboxOpen: () => !lightbox.classList.contains("hidden"),
   closeLightbox,
   isInviteOpen: () => !inviteModal.classList.contains("hidden"),
   closeInvite,
   isSettingsOpen: () => !settingsModal.classList.contains("hidden"),
   closeSettings,
+  // app state / actions
+  isAppActive: () => !appEl.classList.contains("hidden"),
+  getContacts: getAcceptedContactsForKeyboard,
+  getSelectedRecipientId: () => (selectedContact ? selectedContact.recipientId : null),
+  selectContact,
+  openSettings,
+  focusComposer: () => textInput.focus(),
+  escapeHtml,
 });
 
 init();
