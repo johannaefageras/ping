@@ -1275,11 +1275,6 @@ lightbox.addEventListener("click", (e) => {
   // Backdrop click (not the image) closes.
   if (e.target === lightbox) closeLightbox();
 });
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !lightbox.classList.contains("hidden")) {
-    closeLightbox();
-  }
-});
 
 // --- Settings modal ---
 let _settingsLastFocus = null;
@@ -1305,11 +1300,6 @@ settingsBtn.addEventListener("click", openSettings);
 settingsClose.addEventListener("click", closeSettings);
 settingsModal.addEventListener("click", (e) => {
   if (e.target === settingsModal) closeSettings();
-});
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !settingsModal.classList.contains("hidden")) {
-    closeSettings();
-  }
 });
 
 function showSettingsMsg(el, text, ok) {
@@ -1461,11 +1451,6 @@ inviteClose.addEventListener("click", closeInvite);
 inviteRegenBtn.addEventListener("click", generateInvite);
 inviteModal.addEventListener("click", (e) => {
   if (e.target === inviteModal) closeInvite();
-});
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !inviteModal.classList.contains("hidden")) {
-    closeInvite();
-  }
 });
 
 inviteCopyBtn.addEventListener("click", async () => {
@@ -1716,6 +1701,7 @@ textInput.addEventListener("keydown", (e) => {
     completeHint(hintIndex);
   } else if (e.key === "Escape") {
     e.preventDefault();
+    e.stopPropagation();
     hideCommandHints();
   }
 });
@@ -1786,4 +1772,13 @@ function initMuteToggle() {
 initMuteToggle();
 
 // --- Start ---
+window.PingKeyboard.initKeyboard({
+  isLightboxOpen: () => !lightbox.classList.contains("hidden"),
+  closeLightbox,
+  isInviteOpen: () => !inviteModal.classList.contains("hidden"),
+  closeInvite,
+  isSettingsOpen: () => !settingsModal.classList.contains("hidden"),
+  closeSettings,
+});
+
 init();
