@@ -1,10 +1,11 @@
-const CACHE = "ping-shell-v7";
+const CACHE = "ping-shell-v8";
 
 const SHELL = [
   "/",
   "/app",
   "/style.css",
   "/app.js",
+  "/commands.js",
   "/assets/scripts/invite-url.js",
   "/assets/scripts/qrcode.js",
   "/assets/audio/ping.wav",
@@ -65,7 +66,11 @@ self.addEventListener("fetch", (event) => {
   // Network-first for code/styles so edits show on reload (cache-first would
   // serve a stale style.css/app.js until the CACHE version is bumped). Falls
   // back to cache when offline, and refreshes the cache on every hit.
-  if (url.pathname === "/style.css" || url.pathname === "/app.js") {
+  if (
+    url.pathname === "/style.css" ||
+    url.pathname === "/app.js" ||
+    url.pathname === "/commands.js"
+  ) {
     event.respondWith(
       fetch(req)
         .then((res) => {
