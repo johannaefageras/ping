@@ -38,7 +38,10 @@ const chatMain = document.getElementById("chat-main");
 const board = document.getElementById("board");
 const dropZone = document.getElementById("drop-zone");
 const fileInput = document.getElementById("file-input");
-const cameraInput = document.getElementById("camera-input");
+const cameraMenu = document.getElementById("camera-menu");
+const imageUploadBtn = document.getElementById("image-upload-btn");
+const imageCaptureBtn = document.getElementById("image-capture-btn");
+const imageInput = document.getElementById("image-input");
 const attachBtn = document.getElementById("attach-btn");
 const cameraBtn = document.getElementById("camera-btn");
 const videoBtn = document.getElementById("video-btn");
@@ -1074,12 +1077,11 @@ fileInput.addEventListener("change", () => {
 // Attach (paperclip) reuses the existing multi-file picker.
 attachBtn.addEventListener("click", () => fileInput.click());
 
-// Camera: opens the camera on mobile, an image picker on desktop.
-cameraBtn.addEventListener("click", () => cameraInput.click());
-cameraInput.addEventListener("change", () => {
-  if (cameraInput.files.length) {
-    uploadFiles(cameraInput.files);
-    cameraInput.value = "";
+// Image file picker (image-only) reuses the existing upload pipeline.
+imageInput.addEventListener("change", () => {
+  if (imageInput.files.length) {
+    uploadFiles(imageInput.files);
+    imageInput.value = "";
   }
 });
 
@@ -1467,6 +1469,22 @@ videoPickBtn.addEventListener("click", () => {
   videoMenuCtl.close();
   videoInput.click();
 });
+
+// --- Camera button popup menu ---
+const canCaptureImage = !!(
+  navigator.mediaDevices &&
+  typeof navigator.mediaDevices.getUserMedia === "function"
+);
+if (!canCaptureImage) imageCaptureBtn.classList.add("hidden");
+
+const cameraMenuCtl = createPopupMenu(cameraBtn, cameraMenu);
+
+imageUploadBtn.addEventListener("click", () => {
+  cameraMenuCtl.close();
+  imageInput.click();
+});
+
+// imageCaptureBtn opens the capture modal — wired in the capture-modal block (later task).
 
 // --- Video recording modal ---
 const RECORD_MAX_MS = 60000; // hard 60s auto-stop
