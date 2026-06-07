@@ -402,7 +402,7 @@
                   <button type="button" class="composer-icon-btn" id="camera-btn" aria-label="Kamera">
                     <svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"/><circle cx="12" cy="13" r="3"/></svg>
                   </button>
-                  <button type="button" class="composer-icon-btn is-placeholder" id="video-btn" aria-label="Video" disabled>
+                  <button type="button" class="composer-icon-btn" id="video-btn" aria-label="Video" aria-haspopup="true" aria-expanded="false">
                     <svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
                   </button>
                   <button type="button" class="composer-icon-btn" id="attach-btn" aria-label="Bifoga fil">
@@ -411,6 +411,16 @@
                   <button type="button" class="composer-icon-btn is-placeholder" id="emoji-btn" aria-label="Emoji" disabled>
                     <svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M18 13a6 6 0 0 1-6 5 6 6 0 0 1-6-5h12Z"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/></svg>
                   </button>
+                  <div id="video-menu" class="video-menu hidden" role="menu" aria-label="Video">
+                    <button type="button" class="video-menu-item" id="video-pick-btn" role="menuitem">
+                      <svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>
+                      V&auml;lj en videofil
+                    </button>
+                    <button type="button" class="video-menu-item" id="video-record-btn" role="menuitem">
+                      <svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+                      Spela in en klipp
+                    </button>
+                  </div>
                 </div>
 
                 <div class="composer-meta">
@@ -432,6 +442,7 @@
             </form>
 
             <input type="file" id="camera-input" accept="image/*" capture="environment" hidden />
+            <input type="file" id="video-input" accept="video/*" hidden />
           </footer>
         </div>
       </div>
