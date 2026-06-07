@@ -767,6 +767,31 @@
       </div>
     </div>
 
+    <!-- Photo capture modal -->
+    <div id="capture-modal" class="hidden" role="dialog" aria-modal="true" aria-label="Ta en bild">
+      <div id="capture-panel">
+        <div id="capture-titlebar">
+          <span class="tb-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <h2 id="capture-title">~/camera</h2>
+          <button id="capture-close" aria-label="St&auml;ng">
+            <svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div id="capture-body">
+          <video id="capture-video" muted autoplay playsinline></video>
+          <img id="capture-still" class="hidden" alt="Tagen bild" />
+          <p id="capture-status" class="capture-status"></p>
+          <p id="capture-error" class="capture-error hidden"></p>
+          <div id="capture-controls" class="capture-controls">
+            <button type="button" id="capture-snap">Ta bild</button>
+            <button type="button" id="capture-send" class="hidden">Skicka</button>
+            <button type="button" id="capture-retake" class="hidden">Ta om</button>
+            <button type="button" id="capture-cancel">Avbryt</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Invite modal: QR + link + countdown -->
     <div
       id="invite-modal"

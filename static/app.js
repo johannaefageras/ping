@@ -42,6 +42,16 @@ const cameraMenu = document.getElementById("camera-menu");
 const imageUploadBtn = document.getElementById("image-upload-btn");
 const imageCaptureBtn = document.getElementById("image-capture-btn");
 const imageInput = document.getElementById("image-input");
+const captureModal = document.getElementById("capture-modal");
+const captureClose = document.getElementById("capture-close");
+const captureVideo = document.getElementById("capture-video");
+const captureStill = document.getElementById("capture-still");
+const captureStatus = document.getElementById("capture-status");
+const captureError = document.getElementById("capture-error");
+const captureSnap = document.getElementById("capture-snap");
+const captureSend = document.getElementById("capture-send");
+const captureRetake = document.getElementById("capture-retake");
+const captureCancel = document.getElementById("capture-cancel");
 const attachBtn = document.getElementById("attach-btn");
 const cameraBtn = document.getElementById("camera-btn");
 const videoBtn = document.getElementById("video-btn");
@@ -1486,6 +1496,127 @@ imageUploadBtn.addEventListener("click", () => {
 
 // imageCaptureBtn opens the capture modal — wired in the capture-modal block (later task).
 
+// --- Photo capture modal ---
+let captureStream = null;   // active MediaStream (video only)
+let captureCanvas = null;   // offscreen canvas holding the snapped frame
+
+function captureSetButtons({ snap, send, retake }) {
+  captureSnap.classList.toggle("hidden", !snap);
+  captureSend.classList.toggle("hidden", !send);
+  captureRetake.classList.toggle("hidden", !retake);
+}
+
+function captureStopStream() {
+  if (captureStream) {
+    captureStream.getTracks().forEach((t) => t.stop());
+    captureStream = null;
+  }
+}
+
+// Full teardown used by every exit path.
+function closeCaptureModal() {
+  captureStopStream();
+  captureCanvas = null;
+  captureVideo.srcObject = null;
+  captureStill.removeAttribute("src");
+  captureStill.classList.add("hidden");
+  captureSend.disabled = false;
+  captureVideo.classList.remove("hidden");
+  captureError.classList.add("hidden");
+  captureError.textContent = "";
+  captureStatus.textContent = "";
+  captureModal.classList.add("hidden");
+}
+
+// Acquire the camera and show the live preview.
+async function startCapturePreview() {
+  // Stop any stream still running (e.g. on "Ta om") before acquiring a new one,
+  // so the old camera tracks aren't orphaned with the light on.
+  captureStopStream();
+  captureVideo.srcObject = null;
+  captureError.classList.add("hidden");
+  captureStill.classList.add("hidden");
+  captureStill.removeAttribute("src");
+  captureVideo.classList.remove("hidden");
+  try {
+    captureStream = await navigator.mediaDevices.getUserMedia({ video: true });
+  } catch (err) {
+    console.error("getUserMedia failed:", err);
+    captureError.textContent = "Kunde inte komma åt kameran.";
+    captureError.classList.remove("hidden");
+    captureStatus.textContent = "";
+    captureSetButtons({ snap: false, send: false, retake: false });
+    return;
+  }
+  captureVideo.srcObject = captureStream;
+  captureVideo.play().catch(() => {});
+  captureStatus.textContent = "Redo att ta en bild";
+  captureSetButtons({ snap: true, send: false, retake: false });
+}
+
+async function openCaptureModal() {
+  captureModal.classList.remove("hidden");
+  await startCapturePreview();
+}
+
+function snapPhoto() {
+  if (!captureStream) return;
+  const w = captureVideo.videoWidth;
+  const h = captureVideo.videoHeight;
+  if (!w || !h) return; // video not ready yet — keep showing preview
+  captureCanvas = document.createElement("canvas");
+  captureCanvas.width = w;
+  captureCanvas.height = h;
+  captureCanvas.getContext("2d").drawImage(captureVideo, 0, 0, w, h);
+  captureStill.src = captureCanvas.toDataURL("image/png");
+  captureStill.classList.remove("hidden");
+  captureVideo.classList.add("hidden");
+  captureStatus.textContent = "Förhandsgranskning";
+  captureSetButtons({ snap: false, send: true, retake: true });
+}
+
+function captureTimestampName() {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, "0");
+  return (
+    "image-" + d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) +
+    "-" + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds()) + ".png"
+  );
+}
+
+function sendPhoto() {
+  if (!captureCanvas) return;
+  captureSend.disabled = true; // prevent a double-send queuing two toBlob callbacks
+  const name = captureTimestampName();
+  captureCanvas.toBlob(async (blob) => {
+    if (!blob) {
+      captureSend.disabled = false;
+      return;
+    }
+    const file = new File([blob], name, { type: "image/png" });
+    closeCaptureModal(); // tear down camera before the upload round-trip
+    await uploadFiles([file]);
+  }, "image/png");
+}
+
+// Wiring
+imageCaptureBtn.addEventListener("click", () => {
+  cameraMenuCtl.close();
+  openCaptureModal();
+});
+captureSnap.addEventListener("click", snapPhoto);
+captureSend.addEventListener("click", sendPhoto);
+captureRetake.addEventListener("click", () => {
+  captureCanvas = null;
+  startCapturePreview();
+});
+captureCancel.addEventListener("click", closeCaptureModal);
+captureClose.addEventListener("click", closeCaptureModal);
+captureModal.addEventListener("click", (e) => {
+  if (e.target === captureModal) closeCaptureModal();
+});
+// Escape-to-close is handled by the keyboard overlay registry (initKeyboard).
+
 // --- Video recording modal ---
 const RECORD_MAX_MS = 60000; // hard 60s auto-stop
 let recordStream = null;      // active MediaStream (camera + mic)
@@ -2170,6 +2301,8 @@ window.PingKeyboard.initKeyboard({
   // overlays
   isRecordOpen: () => !recordModal.classList.contains("hidden"),
   closeRecord: closeRecordModal,
+  isCaptureOpen: () => !captureModal.classList.contains("hidden"),
+  closeCapture: closeCaptureModal,
   isLightboxOpen: () => !lightbox.classList.contains("hidden"),
   closeLightbox,
   isInviteOpen: () => !inviteModal.classList.contains("hidden"),
