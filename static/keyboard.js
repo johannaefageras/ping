@@ -41,6 +41,9 @@
 
   function openPalette() {
     if (!ctx.isAppActive()) return;
+    // Don't open beneath another overlay (the palette sits at a lower z-index
+    // than the app's modals); that would render it invisibly and confuse Esc.
+    if (overlays.some((o) => o.isOpen())) return;
     paletteLastFocus = document.activeElement;
     paletteEl.classList.remove("hidden");
     paletteInput.value = "";

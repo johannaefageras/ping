@@ -2059,8 +2059,7 @@ footer {
   font-size: 0.9rem;
   cursor: pointer;
 }
-.kbd-row.active,
-.kbd-row:hover {
+.kbd-row.active {
   background: var(--accent);
   color: var(--bg, #0a0a0a);
 }
