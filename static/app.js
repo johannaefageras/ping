@@ -1268,6 +1268,13 @@ function isImageFile(name) {
   return IMAGE_EXTS.has(ext);
 }
 
+const VIDEO_EXTS = new Set(["webm", "mp4", "mov", "m4v", "ogv"]);
+
+function isVideoFile(name) {
+  const ext = (name.split(".").pop() || "").toLowerCase();
+  return VIDEO_EXTS.has(ext);
+}
+
 function formatSize(bytes) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
