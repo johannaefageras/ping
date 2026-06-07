@@ -276,3 +276,146 @@ end;
 $$;
 
 grant execute on function public.dismiss_ping(uuid) to authenticated;
+
+-- ============================================================
+-- 10. INVITES (single-use, expiring contact-invite links)
+-- Idempotent: existing deployments can run just this section.
+-- A random UUID primary key serves as the unguessable token; it rides in the
+-- URL fragment client-side so it never hits server access logs. Redemption
+-- auto-accepts a contact in BOTH directions. All trust logic is in the two
+-- security-definer RPCs below (mirrors the section 9 dismiss_ping pattern).
+-- ============================================================
+
+create table if not exists public.invites (
+  id          uuid primary key default gen_random_uuid(),
+  creator_id  uuid not null references public.profiles(id) on delete cascade,
+  used_by     uuid references public.profiles(id) on delete set null,
+  used_at     timestamptz,
+  expires_at  timestamptz not null,
+  created_at  timestamptz not null default now()
+);
+
+create index if not exists invites_creator_idx on public.invites (creator_id);
+
+alter table public.invites enable row level security;
+
+-- Creators can see and create their own invites. No update/delete policies and
+-- no select for other users: redemption goes through redeem_invite (security
+-- definer), so a redeemer never needs to read the row directly.
+drop policy if exists "Users can view their own invites" on public.invites;
+create policy "Users can view their own invites"
+  on public.invites for select
+  to authenticated
+  using (creator_id = auth.uid());
+
+drop policy if exists "Users can create their own invites" on public.invites;
+create policy "Users can create their own invites"
+  on public.invites for insert
+  to authenticated
+  with check (creator_id = auth.uid());
+
+-- create_invite: invalidate the caller's other open invites (keeps one active
+-- link per user and kills any stale QR still on screen), then mint a fresh
+-- 10-minute single-use invite. Returns the token id + its expiry.
+create or replace function public.create_invite()
+returns table (id uuid, expires_at timestamptz)
+language plpgsql
+security definer set search_path = ''
+as $$
+declare
+  v_id uuid;
+  v_exp timestamptz;
+begin
+  update public.invites
+    set expires_at = now()
+    where public.invites.creator_id = auth.uid()
+      and public.invites.used_at is null
+      and public.invites.expires_at > now();
+
+  v_exp := now() + interval '10 minutes';
+  insert into public.invites (creator_id, expires_at)
+    values (auth.uid(), v_exp)
+    returning invites.id into v_id;
+
+  return query select v_id, v_exp;
+end;
+$$;
+
+grant execute on function public.create_invite() to authenticated;
+
+-- redeem_invite: validate the token and, on success, auto-accept a contact in
+-- both directions. Returns a status the UI maps to a message, plus the
+-- creator's username on success.
+--   status values: 'ok' | 'not_found' | 'expired' | 'used' | 'self'
+-- "already contacts" is treated as success (idempotent): the invite is marked
+-- used and we return ok + username, so re-scanning or scanning a known
+-- contact's link is a friendly no-op rather than an error.
+create or replace function public.redeem_invite(p_token uuid)
+returns table (status text, username text)
+language plpgsql
+security definer set search_path = ''
+as $$
+declare
+  v_creator uuid;
+  v_used_at timestamptz;
+  v_expires timestamptz;
+  v_me uuid := auth.uid();
+  v_existing uuid;
+  v_username text;
+begin
+  select creator_id, used_at, expires_at
+    into v_creator, v_used_at, v_expires
+    from public.invites
+    where id = p_token;
+
+  if not found then
+    return query select 'not_found'::text, null::text; return;
+  end if;
+  if v_used_at is not null then
+    return query select 'used'::text, null::text; return;
+  end if;
+  if v_expires <= now() then
+    return query select 'expired'::text, null::text; return;
+  end if;
+  if v_creator = v_me then
+    return query select 'self'::text, null::text; return;
+  end if;
+
+  -- Atomically claim the token: the `used_at is null` guard makes this the
+  -- single-use gate. The earlier read-based check is just for a friendly early
+  -- return; THIS update is what actually prevents a double-redeem under
+  -- concurrency (two redeemers can both pass the read above, but only one
+  -- update can flip a still-null used_at). If we didn't claim it, someone else
+  -- already did — treat as used.
+  update public.invites
+    set used_by = v_me, used_at = now()
+    where id = p_token and used_at is null;
+  if not found then
+    return query select 'used'::text, null::text; return;
+  end if;
+
+  select public.profiles.username into v_username
+    from public.profiles where public.profiles.id = v_creator;
+
+  -- Look for an existing contact row in either direction.
+  select id into v_existing
+    from public.contacts
+    where (requester_id = v_creator and addressee_id = v_me)
+       or (requester_id = v_me and addressee_id = v_creator)
+    limit 1;
+
+  if v_existing is not null then
+    -- Promote a pending row to accepted; leave an already-accepted row alone.
+    update public.contacts set status = 'accepted'
+      where public.contacts.id = v_existing
+        and public.contacts.status <> 'accepted';
+  else
+    insert into public.contacts (requester_id, addressee_id, status)
+      values (v_creator, v_me, 'accepted');
+  end if;
+
+  return query select 'ok'::text, v_username;
+end;
+$$;
+
+grant execute on function public.redeem_invite(uuid) to authenticated;

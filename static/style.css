@@ -1697,3 +1697,239 @@ footer {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* --- Invite modal --- */
+
+/* Full-screen backdrop: mirrors #settings-modal exactly. */
+#invite-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+#invite-modal.hidden { display: none; }
+
+/* Panel: same construction as #settings-panel, slightly narrower for the
+   invite-specific content (QR + short link row). */
+#invite-panel {
+  background: var(--bg, #0a0a0a);
+  border: 1px solid var(--fg-dim, #1a9956);
+  border-radius: 8px;
+  width: min(92vw, 420px);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: inherit;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--fg) 8%, transparent),
+    0 24px 60px rgba(0, 0, 0, 0.6),
+    0 0 40px color-mix(in srgb, var(--fg) 6%, transparent);
+}
+
+/* Titlebar: identical idiom to #settings-titlebar — dots, centred title,
+   close button. */
+#invite-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--fg) 4%, var(--bg));
+  flex: none;
+}
+
+#invite-title {
+  margin: 0;
+  flex: 1;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  color: var(--fg-dim, #1a9956);
+}
+
+/* Close button: borderless X, mirrors #settings-close. */
+#invite-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--fg-dim, #1a9956);
+  font-size: 1rem;
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  flex: none;
+  transition: color 0.15s, background 0.15s;
+}
+#invite-close:hover {
+  color: var(--fg, #33ff99);
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
+}
+
+/* Body: scrollable column inside the panel. */
+#invite-body {
+  padding: 1rem 1.25rem 1.25rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+/* Intro line: secondary/dim text, small size. */
+.invite-intro {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--fg-dim, #1a9956);
+}
+
+/* QR container: white background so scanners work regardless of the active
+   theme, with padding so the quiet-zone is preserved. */
+#invite-qr {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  padding: 10px;
+  border-radius: 6px;
+  line-height: 0;
+  align-self: center;
+}
+#invite-qr img {
+  display: block;
+  width: 200px;
+  height: 200px;
+  image-rendering: pixelated;
+}
+
+/* Link row: input + copy button side by side. */
+#invite-link-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+/* Link input: matches .settings-section input styling — card-bg fill, dim
+   border, theme-fg text, monospaced and readable. */
+#invite-link-input {
+  flex: 1;
+  min-width: 0;
+  background: var(--card-bg, #111);
+  border: 1px solid var(--border, #222);
+  color: var(--fg, #33ff99);
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+#invite-link-input:focus {
+  border-color: var(--fg-dim, #1a9956);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--fg) 12%, transparent);
+}
+
+/* Primary action buttons: bg=--fg, text=--bg so label is always readable on
+   the bright accent. Mirrors the hover idiom of #display-name-save where hover
+   shifts to the full --fg. Here the default already IS --fg, so hover darkens
+   slightly with a color-mix overlay for feedback. */
+#invite-copy-btn,
+#invite-regen-btn {
+  background: var(--fg, #33ff99);
+  color: var(--bg, #0a0a0a);
+  border: none;
+  padding: 10px 16px;
+  font-family: inherit;
+  font-weight: 550;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+#invite-copy-btn:hover,
+#invite-regen-btn:hover {
+  background: color-mix(in srgb, var(--fg) 80%, var(--bg));
+}
+
+/* "Copied!" muted state: drop back to --fg-dim so there's a clear visual
+   signal the copy already happened (plan called this "--muted"). */
+#invite-copy-btn.copied {
+  background: var(--fg-dim, #1a9956);
+}
+
+/* Regen button: full width so it fills the body column at its own row. */
+#invite-regen-btn {
+  width: 100%;
+}
+
+/* Countdown: small dim centred text; turns danger-red when the link expires. */
+.invite-countdown {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--fg-dim, #1a9956);
+  text-align: center;
+}
+.invite-countdown.expired {
+  color: #ff5555;
+}
+
+/* Error paragraph: danger-red, small, matches #auth-error convention. */
+.invite-error {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #ff5555;
+}
+
+/* --- Invite open button (sidebar) --- */
+
+/* Dashed "ghost" button that lives below the contact-search area. Inherits
+   the sidebar's font/color; only border and layout are set here. */
+.invite-open-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  background: none;
+  border: 1px dashed var(--border, #222);
+  color: inherit;
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  margin-top: 0.5rem;
+}
+.invite-open-btn:hover {
+  border-color: var(--fg, #33ff99);
+  color: var(--fg, #33ff99);
+}
+.invite-open-btn .icon {
+  width: 1em;
+  height: 1em;
+  flex: none;
+}
+
+/* --- Auth-screen invite banner --- */
+
+/* Shown on the login/register screen when the user arrives via an invite
+   link. A --fg-bordered box draws attention without an image or extra colour. */
+.auth-invite-banner {
+  margin-bottom: 1rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--fg, #33ff99);
+  border-radius: 6px;
+  font-size: 0.82rem;
+  color: var(--fg, #33ff99);
+  background: color-mix(in srgb, var(--fg) 6%, var(--bg));
+}
+/* .hidden is defined globally (line 67) — rely on that; no override needed. */

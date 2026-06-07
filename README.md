@@ -10,6 +10,8 @@ want a quick way to swap a URL or a file without going through a chat app.
 
 - Email + password sign-up with username
 - Add contacts by username and accept/reject requests
+- Invite links + QR codes: generate a single-use link (valid 10 min) that
+  instantly connects you with whoever scans or opens it — no username needed
 - Send text messages, links, and files to accepted contacts
 - Real-time delivery via Supabase Realtime
 - Per-side dismiss: each user hides their copy independently; the message and
@@ -42,8 +44,9 @@ supabase/schema.sql     Full Supabase schema: tables, RLS, triggers, RPC
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. In the SQL editor, run [supabase/schema.sql](supabase/schema.sql). This
-   creates the `profiles`, `contacts`, and `pings` tables, RLS policies, the
-   `ping-files` storage bucket, and the `dismiss_ping` RPC.
+   creates the `profiles`, `contacts`, `pings`, and `invites` tables, RLS
+   policies, the `ping-files` storage bucket, and the `dismiss_ping`,
+   `create_invite`, and `redeem_invite` RPCs.
 3. Copy the project URL and the **anon** public key from
    *Project Settings → API*.
 
