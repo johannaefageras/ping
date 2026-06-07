@@ -781,19 +781,31 @@ function renderPing(ping, animate = true) {
     `;
   } else if (ping.type === "file") {
     el.className = `item ${isSelf ? "self" : "other"} file-item${animate && !isSelf ? " ping" : ""}`;
-    const isImage = isImageFile(ping.file_name);
-    const iconOrThumb = isImage
-      ? `<img class="image-thumb loading" alt="${escapeHtml(ping.file_name)}" />`
-      : `<span class="file-icon"><img class="file-type-icon" src="${fileTypeIcon(ping.file_name)}" alt="" width="20" height="20" loading="lazy" /></span>`;
-    el.innerHTML = `
-      <div class="meta">${formatTime(ping.created_at)}</div>
-      <div class="file-info">
-        ${iconOrThumb}
-        <span>${escapeHtml(ping.file_name)} <span class="file-size">${formatSize(ping.file_size)}</span></span>
-        <button class="download-btn" data-path="${escapeHtml(ping.file_path)}" data-name="${escapeHtml(ping.file_name)}"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17V3"/><path d="m6 11 6 6 6-6"/><path d="M19 21H5"/></svg> LADDA NER</button>
-      </div>
-      <button class="dismiss-btn" aria-label="Avfärda"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
-    `;
+    const dismissSvg = `<svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`;
+    if (isVideoFile(ping.file_name)) {
+      el.innerHTML = `
+        <div class="meta">${formatTime(ping.created_at)}</div>
+        <video class="video-inline loading" controls playsinline preload="metadata" aria-label="${escapeHtml(ping.file_name)}"></video>
+        <div class="video-meta">
+          <span>${escapeHtml(ping.file_name)} <span class="file-size">${formatSize(ping.file_size)}</span></span>
+          <a class="video-download-link" data-path="${escapeHtml(ping.file_path)}" data-name="${escapeHtml(ping.file_name)}" role="button" tabindex="0" aria-label="Ladda ner ${escapeHtml(ping.file_name)}"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17V3"/><path d="m6 11 6 6 6-6"/><path d="M19 21H5"/></svg> ladda ner</a>
+        </div>
+        <button class="dismiss-btn" aria-label="Avfärda">${dismissSvg}</button>
+      `;
+    } else {
+      const iconOrThumb = isImageFile(ping.file_name)
+        ? `<img class="image-thumb loading" alt="${escapeHtml(ping.file_name)}" />`
+        : `<span class="file-icon"><img class="file-type-icon" src="${fileTypeIcon(ping.file_name)}" alt="" width="20" height="20" loading="lazy" /></span>`;
+      el.innerHTML = `
+        <div class="meta">${formatTime(ping.created_at)}</div>
+        <div class="file-info">
+          ${iconOrThumb}
+          <span>${escapeHtml(ping.file_name)} <span class="file-size">${formatSize(ping.file_size)}</span></span>
+          <button class="download-btn" data-path="${escapeHtml(ping.file_path)}" data-name="${escapeHtml(ping.file_name)}"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17V3"/><path d="m6 11 6 6 6-6"/><path d="M19 21H5"/></svg> LADDA NER</button>
+        </div>
+        <button class="dismiss-btn" aria-label="Avfärda">${dismissSvg}</button>
+      `;
+    }
   }
 
   board.appendChild(el);
@@ -842,6 +854,53 @@ function renderPing(ping, animate = true) {
     });
   }
 
+  // Video pings: fetch the private file into a blob URL and play it inline.
+  // Mirrors the image-thumb lifecycle (dismiss-mid-fetch guard, _objectUrl
+  // stored for revocation on dismiss). On failure, degrade to a download row.
+  const videoEl = el.querySelector(".video-inline");
+  if (videoEl) {
+    fetchObjectUrl(ping.file_path).then((url) => {
+      // Bail if the ping was dismissed OR the element was detached (e.g. the
+      // chat was reloaded / contact switched) while the fetch was in flight —
+      // otherwise the blob URL leaks onto an element nothing will revoke.
+      if (el._dismissed || !el.isConnected) {
+        if (url) URL.revokeObjectURL(url);
+        return;
+      }
+      if (!url) {
+        // Fetch failed — degrade to the standard download row so the file is
+        // still retrievable.
+        const info = document.createElement("div");
+        info.className = "file-info";
+        info.innerHTML = `
+          <span class="file-icon"><img class="file-type-icon" src="${fileTypeIcon(ping.file_name)}" alt="" width="20" height="20" /></span>
+          <span>${escapeHtml(ping.file_name)} <span class="file-size">${formatSize(ping.file_size)}</span></span>
+          <button class="download-btn" data-path="${escapeHtml(ping.file_path)}" data-name="${escapeHtml(ping.file_name)}"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17V3"/><path d="m6 11 6 6 6-6"/><path d="M19 21H5"/></svg> LADDA NER</button>
+        `;
+        const meta = el.querySelector(".video-meta");
+        if (meta) meta.remove();
+        videoEl.replaceWith(info);
+        const dlFallback = info.querySelector(".download-btn");
+        dlFallback.addEventListener("click", async () => {
+          await downloadFile(dlFallback.dataset.path, dlFallback.dataset.name);
+          if (!isSelf) dismissPing(el, ping);
+        });
+        const fallbackIcon = info.querySelector(".file-type-icon");
+        if (fallbackIcon) {
+          fallbackIcon.addEventListener("error", () => {
+            if (!fallbackIcon.src.endsWith("/file.svg")) {
+              fallbackIcon.src = "/icons/filetypes/file.svg";
+            }
+          }, { once: true });
+        }
+        return;
+      }
+      el._objectUrl = url;
+      videoEl.src = url;
+      videoEl.classList.remove("loading");
+    });
+  }
+
   // Text pings: render a link preview card for the first URL, if any.
   if (ping.type === "text") {
     const url = firstUrl(ping.content);
@@ -859,6 +918,21 @@ function renderPing(ping, animate = true) {
       // Auto-dismiss file pings after download for receiver
       if (!isSelf) {
         dismissPing(el, ping);
+      }
+    });
+  }
+
+  // Inline-video download link: saves the file but does NOT dismiss the ping
+  // (the recipient may keep watching inline; dismissal is manual-X only).
+  const videoDlLink = el.querySelector(".video-download-link");
+  if (videoDlLink) {
+    const triggerVideoDownload = () =>
+      downloadFile(videoDlLink.dataset.path, videoDlLink.dataset.name);
+    videoDlLink.addEventListener("click", triggerVideoDownload);
+    videoDlLink.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        triggerVideoDownload();
       }
     });
   }
@@ -1266,6 +1340,13 @@ const IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"]);
 function isImageFile(name) {
   const ext = (name.split(".").pop() || "").toLowerCase();
   return IMAGE_EXTS.has(ext);
+}
+
+const VIDEO_EXTS = new Set(["webm", "mp4", "mov", "m4v", "ogv"]);
+
+function isVideoFile(name) {
+  const ext = (name.split(".").pop() || "").toLowerCase();
+  return VIDEO_EXTS.has(ext);
 }
 
 function formatSize(bytes) {
