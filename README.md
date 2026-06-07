@@ -13,6 +13,8 @@ want a quick way to swap a URL or a file without going through a chat app.
 - Invite links + QR codes: generate a single-use link (valid 10 min) that
   instantly connects you with whoever scans or opens it — no username needed
 - Send text messages, links, and files to accepted contacts
+- Slash commands in the composer: `/help`, `/theme`, `/font`, `/clear`,
+  `/who`, `/last`, `/mute`, `/unmute`, `/shrug`, with a `/` hint menu
 - Real-time delivery via Supabase Realtime
 - Per-side dismiss: each user hides their copy independently; the message and
   any attached file are deleted from storage once both sides dismiss it
