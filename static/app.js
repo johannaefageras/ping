@@ -998,6 +998,14 @@ cameraInput.addEventListener("change", () => {
   }
 });
 
+// Video file picker reuses the existing upload pipeline.
+videoInput.addEventListener("change", () => {
+  if (videoInput.files.length) {
+    uploadFiles(videoInput.files);
+    videoInput.value = "";
+  }
+});
+
 dropZone.addEventListener("dragover", (e) => {
   e.preventDefault();
   dropZone.classList.add("drag-over");
