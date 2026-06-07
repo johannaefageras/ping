@@ -1525,6 +1525,9 @@ function closeCaptureModal() {
   captureError.classList.add("hidden");
   captureError.textContent = "";
   captureStatus.textContent = "";
+  // Reset to the idle button state so a reopen doesn't briefly show the
+  // post-snap buttons (Skicka/Ta om) before getUserMedia resolves.
+  captureSetButtons({ snap: true, send: false, retake: false });
   captureModal.classList.add("hidden");
 }
 
