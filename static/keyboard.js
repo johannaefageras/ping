@@ -158,7 +158,10 @@
     if (isCheatsheetOpen()) return;
     cheatsheetLastFocus = document.activeElement;
     cheatsheetEl.classList.remove("hidden");
-    cheatsheetClose.focus();
+    // focusVisible:false keeps the close button focused (for Esc/Tab + screen
+    // readers) without drawing the keyboard focus ring — so it looks like the
+    // settings-modal close button, which is mouse-opened and never shows one.
+    cheatsheetClose.focus({ focusVisible: false });
   }
 
   function closeCheatsheet() {

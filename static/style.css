@@ -2160,16 +2160,6 @@ footer {
   flex: none;
   transition: color 0.15s, background 0.15s;
 }
-/* The button is focused programmatically on open; suppress the browser's
-   default (blue) focus ring on both :focus and :focus-visible, and replace it
-   with a soft theme-aware glow (mirrors .settings-toggle input:focus-visible). */
-#kbd-cheatsheet-close:focus,
-#kbd-cheatsheet-close:focus-visible {
-  outline: none;
-}
-#kbd-cheatsheet-close:focus-visible {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--fg) 35%, transparent);
-}
 #kbd-cheatsheet-close:hover {
   color: var(--fg);
   background: color-mix(in srgb, var(--fg) 10%, transparent);
