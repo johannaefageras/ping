@@ -1019,6 +1019,7 @@ footer {
   border-top: 1px solid var(--border);
   padding: 14px 20px;
   background: #0e0e0e;
+  position: relative; /* positioning context for #command-hints */
 }
 
 #text-form {
@@ -1933,3 +1934,70 @@ footer {
   background: color-mix(in srgb, var(--fg) 6%, var(--bg));
 }
 /* .hidden is defined globally (line 67) — rely on that; no override needed. */
+
+/* --- Terminal command layer --- */
+
+/* Local-only system lines: terminal-styled, no bubble, dim, monospace. */
+.item.system {
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 0.15rem 0;
+  background: none;
+  border: none;
+  color: var(--accent);
+  opacity: 0.75;
+  font-family: inherit;
+  font-size: 0.85em;
+  white-space: pre-wrap; /* preserve \n in /help and multi-line lines */
+  word-break: break-word;
+}
+.item.system::before {
+  content: "> ";
+  opacity: 0.6;
+}
+
+/* Hint menu floating above the input. */
+#command-hints {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  margin-bottom: 0.4rem;
+  background: var(--bg, #0a0a0a);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  overflow: hidden;
+  z-index: 20;
+  max-height: 40vh;
+  overflow-y: auto;
+}
+#command-hints.hidden {
+  display: none;
+}
+.hint-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  background: none;
+  border: none;
+  color: inherit;
+  font-family: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+}
+.hint-row.active,
+.hint-row:hover {
+  background: var(--accent);
+  color: var(--bg, #0a0a0a);
+}
+.hint-name {
+  flex: 0 0 auto;
+  font-weight: bold;
+}
+.hint-summary {
+  flex: 1 1 auto;
+  opacity: 0.7;
+}
