@@ -1068,7 +1068,41 @@ footer {
 .composer-actions {
   display: flex;
   gap: 6px;
+  position: relative; /* anchors #video-menu */
 }
+
+.video-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  min-width: 180px;
+  background: var(--bg, #0a0a0a);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 50;
+}
+.video-menu.hidden { display: none; }
+
+.video-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  background: none;
+  border: none;
+  border-radius: 7px;
+  color: var(--fg, #ddd);
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+}
+.video-menu-item:hover { background: #1a1a1a; }
+.video-menu-item.hidden { display: none; }
+.video-menu-item .icon { width: 18px; height: 18px; color: #888; }
 
 .composer-icon-btn {
   display: flex;
@@ -1478,6 +1512,96 @@ footer {
   letter-spacing: 0.5px;
   color: var(--fg-dim);
 }
+
+/* Video recording modal: mirrors #settings-modal / #settings-panel. */
+#record-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+#record-modal.hidden { display: none; }
+
+#record-panel {
+  background: var(--bg, #0a0a0a);
+  border: 1px solid var(--fg-dim, #1a9956);
+  border-radius: 8px;
+  width: min(92vw, 520px);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--fg) 8%, transparent),
+    0 24px 60px rgba(0, 0, 0, 0.6),
+    0 0 40px color-mix(in srgb, var(--fg) 6%, transparent);
+}
+
+#record-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--fg) 4%, var(--bg));
+  flex: none;
+}
+#record-title {
+  margin: 0;
+  flex: 1;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+#record-close {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  display: flex;
+}
+#record-close:hover { color: var(--fg); }
+#record-close .icon { width: 18px; height: 18px; }
+
+#record-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: auto;
+}
+#record-video {
+  width: 100%;
+  max-height: 50vh;
+  background: #000;
+  border-radius: 8px;
+}
+.record-status { margin: 0; color: #888; font-size: 0.85rem; text-align: center; }
+.record-error { margin: 0; color: #e5534b; font-size: 0.85rem; text-align: center; }
+.record-error.hidden { display: none; }
+
+.record-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+.record-controls button {
+  padding: 8px 16px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: #181818;
+  color: var(--fg, #ddd);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.record-controls button:hover { background: #232323; }
+.record-controls button.hidden { display: none; }
+#record-send { border-color: var(--fg-dim); }
 
 /* Icon-only, borderless close button (was an unstyled white default box).
    The X is an inline .icon SVG, so size it in em and let it inherit color. */
