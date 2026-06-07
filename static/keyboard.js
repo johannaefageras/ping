@@ -248,7 +248,9 @@
     if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key === ",") {
       if (!ctx.isAppActive()) return;
       e.preventDefault();
-      // Don't stack Settings on top of an already-open overlay (mirrors openPalette).
+      // Don't stack Settings on top of an already-open overlay (mirrors
+      // openPalette). The plan allowed stacking here ("acceptable"); we
+      // intentionally suppress it instead to avoid layered modals.
       if (!overlays.some((o) => o.isOpen())) ctx.openSettings();
       return;
     }
@@ -263,13 +265,14 @@
     if (isTypingOrOverlayOpen()) return;
     if (!ctx.isAppActive()) return;
 
-    if (e.key === "/") {
+    // Bare `/` and `?` only — don't swallow chords like Cmd//Ctrl/ here.
+    if (e.key === "/" && !e.metaKey && !e.ctrlKey && !e.altKey) {
       e.preventDefault();
       ctx.focusComposer();
       return;
     }
 
-    if (e.key === "?") {
+    if (e.key === "?" && !e.metaKey && !e.ctrlKey && !e.altKey) {
       e.preventDefault();
       openCheatsheet();
       return;
