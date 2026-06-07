@@ -70,6 +70,7 @@ let sb = null; // Supabase client
 let currentUser = null; // { id, username }
 let selectedContact = null; // { contactId, recipientId, username }
 let contacts = [];
+let lastSentText = null; // last text the user sent, for /last recall
 let unreadCounts = {}; // recipientId -> number of pings received while their chat was closed (this session)
 let realtimeChannel = null;
 let presenceChannel = null;
@@ -880,6 +881,7 @@ textForm.addEventListener("submit", async (e) => {
 
   renderPing(data);
   scrollToBottom();
+  lastSentText = text;
   textInput.value = "";
 });
 
@@ -1546,6 +1548,83 @@ function playPing() {
   if (localStorage.getItem("ping-muted") === "1") return;
   pingSound.currentTime = 0;
   pingSound.play().catch(() => {});
+}
+
+// --- Terminal command layer ---
+
+// Renders a local-only, ephemeral "system line" in the chat board. Never stored
+// in the DB, never sent to the contact, not a real ping. Auto-fades. Used by
+// command feedback (/who, /help, /theme, errors, ...). Multi-line text (\n) is
+// preserved. Skipped by loadPings (board.innerHTML reset) and by clearChat.
+function systemLine(text) {
+  if (!board) return;
+  const el = document.createElement("div");
+  el.className = "item system";
+  el.textContent = text; // textContent keeps it XSS-safe and preserves \n via CSS
+  board.appendChild(el);
+  scrollToBottom();
+  el._sysTimer = setTimeout(() => {
+    el.classList.add("fade-out");
+    el.addEventListener("animationend", () => el.remove(), { once: true });
+  }, 8000);
+}
+
+// Dismisses every real ping in the current chat by triggering each rendered
+// dismiss button (reuses dismissPing exactly: RPC, object-URL revocation,
+// fade-out). Skips .system lines. Returns the count dismissed.
+function clearChat() {
+  const items = board.querySelectorAll(".item:not(.system)");
+  let n = 0;
+  items.forEach((el) => {
+    const btn = el.querySelector(".dismiss-btn");
+    if (btn) {
+      btn.click();
+      n++;
+    }
+  });
+  return n;
+}
+
+// Wraps applyTheme + the picker UI so /theme keeps the settings panel in sync.
+function setThemeFromCommand(theme) {
+  const swatches = document.querySelectorAll("#theme-picker .swatch");
+  localStorage.setItem("ping-theme", theme);
+  applyTheme(theme, swatches);
+}
+
+// Wraps applyFont + the picker UI so /font keeps the settings panel in sync.
+function setFontFromCommand(font) {
+  const buttons = document.querySelectorAll("#font-picker .font-btn");
+  localStorage.setItem("ping-font", font);
+  applyFont(font, buttons);
+}
+
+// Wraps the mute toggle so /mute and /unmute keep the settings panel in sync.
+function setMutedFromCommand(muted) {
+  localStorage.setItem("ping-muted", muted ? "1" : "0");
+  if (muteToggle) muteToggle.checked = muted;
+}
+
+// Assembles the capability object handed to commands. Commands call these
+// instead of touching globals/DOM/Supabase directly.
+function buildCommandContext() {
+  return {
+    selectedContact,
+    isOnline: (id) => onlineUserIds.has(id),
+    getLastSent: () => lastSentText,
+    systemLine,
+    clearChat,
+    applyTheme: setThemeFromCommand,
+    applyFont: setFontFromCommand,
+    setMuted: setMutedFromCommand,
+    setInput: (text) => {
+      textInput.value = text;
+    },
+    appendInput: (text) => {
+      textInput.value = textInput.value ? textInput.value + " " + text : text;
+    },
+    focusInput: () => textInput.focus(),
+  };
 }
 
 // --- Theme picker ---
