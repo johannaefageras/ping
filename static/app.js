@@ -1631,9 +1631,11 @@ function buildCommandContext() {
     setMuted: setMutedFromCommand,
     setInput: (text) => {
       textInput.value = text;
+      autoGrowInput();
     },
     appendInput: (text) => {
       textInput.value = textInput.value ? textInput.value + " " + text : text;
+      autoGrowInput();
     },
     focusInput: () => textInput.focus(),
   };
