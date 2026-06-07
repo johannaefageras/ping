@@ -1449,6 +1449,7 @@ function createPopupMenu(button, menu) {
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !menu.classList.contains("hidden")) close();
   });
+  close(); // ensure menu is hidden and aria-expanded initialised, regardless of HTML
   return { open, close };
 }
 
