@@ -781,19 +781,31 @@ function renderPing(ping, animate = true) {
     `;
   } else if (ping.type === "file") {
     el.className = `item ${isSelf ? "self" : "other"} file-item${animate && !isSelf ? " ping" : ""}`;
-    const isImage = isImageFile(ping.file_name);
-    const iconOrThumb = isImage
-      ? `<img class="image-thumb loading" alt="${escapeHtml(ping.file_name)}" />`
-      : `<span class="file-icon"><img class="file-type-icon" src="${fileTypeIcon(ping.file_name)}" alt="" width="20" height="20" loading="lazy" /></span>`;
-    el.innerHTML = `
-      <div class="meta">${formatTime(ping.created_at)}</div>
-      <div class="file-info">
-        ${iconOrThumb}
-        <span>${escapeHtml(ping.file_name)} <span class="file-size">${formatSize(ping.file_size)}</span></span>
-        <button class="download-btn" data-path="${escapeHtml(ping.file_path)}" data-name="${escapeHtml(ping.file_name)}"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17V3"/><path d="m6 11 6 6 6-6"/><path d="M19 21H5"/></svg> LADDA NER</button>
-      </div>
-      <button class="dismiss-btn" aria-label="Avfärda"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
-    `;
+    const dismissSvg = `<svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`;
+    if (isVideoFile(ping.file_name)) {
+      el.innerHTML = `
+        <div class="meta">${formatTime(ping.created_at)}</div>
+        <video class="video-inline loading" controls playsinline preload="metadata"></video>
+        <div class="video-meta">
+          <span>${escapeHtml(ping.file_name)} <span class="file-size">${formatSize(ping.file_size)}</span></span>
+          <a class="video-download-link" data-path="${escapeHtml(ping.file_path)}" data-name="${escapeHtml(ping.file_name)}" role="button" tabindex="0"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17V3"/><path d="m6 11 6 6 6-6"/><path d="M19 21H5"/></svg> ladda ner</a>
+        </div>
+        <button class="dismiss-btn" aria-label="Avfärda">${dismissSvg}</button>
+      `;
+    } else {
+      const iconOrThumb = isImageFile(ping.file_name)
+        ? `<img class="image-thumb loading" alt="${escapeHtml(ping.file_name)}" />`
+        : `<span class="file-icon"><img class="file-type-icon" src="${fileTypeIcon(ping.file_name)}" alt="" width="20" height="20" loading="lazy" /></span>`;
+      el.innerHTML = `
+        <div class="meta">${formatTime(ping.created_at)}</div>
+        <div class="file-info">
+          ${iconOrThumb}
+          <span>${escapeHtml(ping.file_name)} <span class="file-size">${formatSize(ping.file_size)}</span></span>
+          <button class="download-btn" data-path="${escapeHtml(ping.file_path)}" data-name="${escapeHtml(ping.file_name)}"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17V3"/><path d="m6 11 6 6 6-6"/><path d="M19 21H5"/></svg> LADDA NER</button>
+        </div>
+        <button class="dismiss-btn" aria-label="Avfärda">${dismissSvg}</button>
+      `;
+    }
   }
 
   board.appendChild(el);
