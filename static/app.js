@@ -1693,6 +1693,27 @@ function emojiShowCategory(catId) {
   }
 }
 
+// Normalize for diacritic-tolerant, case-insensitive matching: lowercase and
+// strip combining marks so "glad"/"GLÄD" etc. compare on their base letters.
+// (Swedish å ä ö decompose to a/a/o here, which is what we want for search.)
+function emojiNormalize(s) {
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+}
+
+// Filter all emoji across categories whose label or any tag contains the query.
+function emojiSearchItems(query) {
+  const q = emojiNormalize(query.trim());
+  if (!q) return null; // signal: not searching
+  const results = [];
+  for (const cat of emojiData.categories) {
+    for (const item of cat.items) {
+      const hay = [item.label, ...(item.tags || [])].map(emojiNormalize);
+      if (hay.some((h) => h.includes(q))) results.push(item);
+    }
+  }
+  return results;
+}
+
 // Insert text at the textarea caret (replacing any selection), place the caret
 // after it, refocus, and trigger the existing auto-grow / hint listeners via a
 // synthetic input event.
@@ -1753,6 +1774,28 @@ emojiGrid.addEventListener("click", (e) => {
   const cell = e.target.closest(".emoji-grid-cell");
   if (!cell) return;
   insertAtCaret(textInput, `:e:${cell.dataset.token}:`);
+});
+
+// Live search: filter across all categories by label + tags. Empty query
+// returns to the selected category. Clears the category-row highlight while
+// searching (no single category is "selected").
+emojiSearch.addEventListener("input", () => {
+  const results = emojiSearchItems(emojiSearch.value);
+  if (results === null) {
+    emojiShowCategory(emojiSelectedCat || emojiData.categories[0].id);
+    return;
+  }
+  for (const btn of emojiCatRow.querySelectorAll(".emoji-cat-btn")) {
+    btn.classList.remove("sel");
+  }
+  emojiCatLabel.textContent = "Sökresultat";
+  if (results.length === 0) {
+    emojiGrid.innerHTML = "";
+    emojiSetStatus("Inga emojis hittades.");
+  } else {
+    emojiClearStatus();
+    emojiRenderGrid(results);
+  }
 });
 
 // Outside-click closes (mirrors createPopupMenu). The button's own handler
