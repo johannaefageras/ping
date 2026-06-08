@@ -1119,7 +1119,7 @@ footer {
   position: absolute;
   bottom: calc(100% + 8px);
   left: 0;
-  width: 340px;
+  width: min(340px, calc(100vw - 28px));
   background: var(--bg, #0a0a0a);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -1127,7 +1127,6 @@ footer {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   z-index: 50;
 }
-.emoji-picker.hidden { display: none; }
 
 .emoji-search {
   width: 100%;
@@ -1200,7 +1199,6 @@ footer {
   padding: 16px 8px;
   text-align: center;
 }
-.emoji-status.hidden { display: none; }
 
 .composer-icon-btn {
   display: flex;
