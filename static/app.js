@@ -1602,19 +1602,26 @@ async function loadEmojiData() {
   try {
     const res = await fetch("/data/emoji-data.json");
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    emojiData = await res.json();
+    const data = await res.json();
+    if (!data || !Array.isArray(data.categories)) {
+      throw new Error("malformed emoji data: missing categories");
+    }
+    // Build the "folder/id" -> item index into a local, so a malformed payload
+    // can't leave a half-built emojiIndex behind. folder is item.file's first
+    // segment. Assign the module state only once everything succeeds.
+    const idx = new Map();
+    for (const cat of data.categories) {
+      for (const item of cat.items || []) {
+        const folder = item.file.split("/")[0];
+        idx.set(`${folder}/${item.id}`, item);
+      }
+    }
+    emojiData = data;
+    emojiIndex = idx;
   } catch (err) {
     console.error("Failed to load emoji data:", err);
     emojiSetStatus("Kunde inte ladda emojis.");
     return false;
-  }
-  // Build the "folder/id" -> item index. folder is item.file's first segment.
-  emojiIndex = new Map();
-  for (const cat of emojiData.categories) {
-    for (const item of cat.items) {
-      const folder = item.file.split("/")[0];
-      emojiIndex.set(`${folder}/${item.id}`, item);
-    }
   }
   emojiBuildCatRow();
   emojiLoaded = true;
