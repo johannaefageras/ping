@@ -2491,6 +2491,8 @@ window.PingKeyboard.initKeyboard({
   closeInvite,
   isSettingsOpen: () => !settingsModal.classList.contains("hidden"),
   closeSettings,
+  isGalleryOpen,
+  closeFileGallery,
   // app state / actions
   isAppActive: () => !appEl.classList.contains("hidden"),
   getContacts: getAcceptedContactsForKeyboard,
