@@ -924,6 +924,16 @@ body {
   text-decoration: underline;
 }
 
+/* Inline emoji art inside message bubbles. Sized in em so it scales with the
+   surrounding text; vertical-align tuned to sit on the text line. */
+.item .content .emoji-inline {
+  display: inline-block;
+  width: 1.4em;
+  height: 1.4em;
+  vertical-align: -0.32em;
+  margin: 0 1px;
+}
+
 /* File items */
 
 .item.file-item .file-info {

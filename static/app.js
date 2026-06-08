@@ -107,6 +107,7 @@ let unreadCounts = {}; // recipientId -> number of pings received while their ch
 let realtimeChannel = null;
 let presenceChannel = null;
 let onlineUserIds = new Set();
+let emojiIndex = null; // Map<"folder/id", {label,...}> built lazily from emoji-data.json (see emoji picker)
 
 // ============================================================
 // BOOTSTRAP
@@ -789,7 +790,7 @@ function renderPing(ping, animate = true) {
     el.className = `item ${isSelf ? "self" : "other"}${animate && !isSelf ? " ping" : ""}`;
     el.innerHTML = `
       <div class="meta">${formatTime(ping.created_at)}</div>
-      <div class="content">${linkify(ping.content)}</div>
+      <div class="content">${renderContent(ping.content)}</div>
       <button class="dismiss-btn" aria-label="Avfärda"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     `;
   } else if (ping.type === "file") {
@@ -1259,6 +1260,66 @@ function linkify(text) {
   }
   out += escapeHtml(text.slice(last));
   return out;
+}
+
+// Emoji shortcode token: :e:<folder>/<id>: — inserted by the emoji picker and
+// stored verbatim in ping.content. folder is a lowercase english slug; id is a
+// lowercase slug that may contain Swedish å ä ö. Verified against the data: no
+// id contains ':' '/' uppercase or space, so this is unambiguous.
+const EMOJI_TOKEN_RE = /:e:([a-z-]+)\/([a-zåäö-]+):/g;
+const URL_RE = /(https?:\/\/[^\s]+)/g;
+
+// Render raw (unescaped) message content to safe HTML, handling BOTH emoji
+// tokens and URLs in a single left-to-right pass so text is escaped exactly
+// once. Replaces linkify() on the text-ping render path. Anything that isn't a
+// recognized token or URL is escaped as plain text — a malformed token is left
+// as literal text and never injected as HTML. The <img> src is built from the
+// token payload alone, so a ping renders even before the emoji data is loaded;
+// alt/label is taken from the loaded data when available, else the id.
+function renderContent(text) {
+  // Build one combined matcher by scanning for both patterns and taking the
+  // earliest match at each position.
+  let out = "";
+  let pos = 0;
+  while (pos < text.length) {
+    EMOJI_TOKEN_RE.lastIndex = pos;
+    URL_RE.lastIndex = pos;
+    const em = EMOJI_TOKEN_RE.exec(text);
+    const url = URL_RE.exec(text);
+    // Pick whichever matches first (lowest index). null if none from here.
+    let next = null;
+    let kind = null;
+    if (em && (!url || em.index <= url.index)) { next = em; kind = "emoji"; }
+    else if (url) { next = url; kind = "url"; }
+
+    if (!next) {
+      out += escapeHtml(text.slice(pos));
+      break;
+    }
+    out += escapeHtml(text.slice(pos, next.index));
+    if (kind === "emoji") {
+      const folder = next[1];
+      const id = next[2];
+      const label = emojiLabel(folder, id);
+      const src = `/icons/emojis/${folder}/${encodeURI(id)}.svg`;
+      out += `<img class="emoji-inline" src="${escapeHtml(src)}" alt="${escapeHtml(label)}" loading="lazy">`;
+    } else {
+      const url2 = escapeHtml(next[0]);
+      out += `<a href="${url2}" target="_blank" rel="noopener">${url2}</a>`;
+    }
+    pos = next.index + next[0].length;
+  }
+  return out;
+}
+
+// Look up an emoji's Swedish label from the cached picker data; falls back to
+// the id when the data isn't loaded yet or the emoji isn't found.
+function emojiLabel(folder, id) {
+  if (emojiIndex) {
+    const entry = emojiIndex.get(`${folder}/${id}`);
+    if (entry) return entry.label;
+  }
+  return id;
 }
 
 // Extracts the first URL from text using the same pattern linkify uses.
