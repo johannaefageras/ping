@@ -1693,6 +1693,85 @@ function emojiShowCategory(catId) {
   }
 }
 
+// Insert text at the textarea caret (replacing any selection), place the caret
+// after it, refocus, and trigger the existing auto-grow / hint listeners via a
+// synthetic input event.
+function insertAtCaret(textarea, str) {
+  const start = textarea.selectionStart ?? textarea.value.length;
+  const end = textarea.selectionEnd ?? textarea.value.length;
+  const before = textarea.value.slice(0, start);
+  const after = textarea.value.slice(end);
+  textarea.value = before + str + after;
+  const caret = start + str.length;
+  textarea.focus();
+  textarea.setSelectionRange(caret, caret);
+  // Notify existing 'input' listeners (autoGrowInput, renderCommandHints).
+  textarea.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+function emojiOpen() {
+  emojiPicker.classList.remove("hidden");
+  emojiBtn.setAttribute("aria-expanded", "true");
+}
+function emojiClose() {
+  emojiPicker.classList.add("hidden");
+  emojiBtn.setAttribute("aria-expanded", "false");
+}
+function emojiIsOpen() {
+  return !emojiPicker.classList.contains("hidden");
+}
+
+// Toggle on button click. On open, load data if needed, then show the selected
+// (or first) category and focus the search box.
+emojiBtn.addEventListener("click", async (e) => {
+  e.stopPropagation();
+  if (emojiIsOpen()) {
+    emojiClose();
+    return;
+  }
+  emojiOpen();
+  const ok = await loadEmojiData();
+  if (!ok) return; // status line already shows the error; keep panel open
+  emojiSearch.value = "";
+  emojiShowCategory(emojiSelectedCat || emojiData.categories[0].id);
+  emojiSearch.focus();
+});
+
+// Category icon click → show that category (event-delegated).
+emojiCatRow.addEventListener("click", (e) => {
+  const btn = e.target.closest(".emoji-cat-btn");
+  if (!btn) return;
+  emojiSearch.value = "";
+  emojiShowCategory(btn.dataset.catId);
+});
+
+// Emoji click → insert token at the caret; keep the popover open.
+emojiGrid.addEventListener("click", (e) => {
+  const cell = e.target.closest(".emoji-grid-cell");
+  if (!cell) return;
+  insertAtCaret(textInput, `:e:${cell.dataset.token}:`);
+});
+
+// Outside-click closes (mirrors createPopupMenu). The button's own handler
+// manages toggling, so ignore clicks on it here.
+document.addEventListener("click", (e) => {
+  if (!emojiIsOpen()) return;
+  if (!emojiPicker.contains(e.target) && e.target !== emojiBtn && !emojiBtn.contains(e.target)) {
+    emojiClose();
+  }
+});
+
+// Escape closes (matches camera/video). Works whether focus is in the search
+// box or elsewhere in the panel.
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && emojiIsOpen()) {
+    emojiClose();
+    emojiBtn.focus();
+  }
+});
+
+emojiClose(); // ensure hidden + aria initialised regardless of HTML
+
 // --- Photo capture modal ---
 let captureStream = null;   // active MediaStream (video only)
 let captureCanvas = null;   // offscreen canvas holding the snapped frame
