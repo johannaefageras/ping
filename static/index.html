@@ -356,6 +356,28 @@
               </svg>
             </button>
             <h2 id="chat-contact-name"></h2>
+            <button
+              id="gallery-btn"
+              type="button"
+              aria-label="Filer"
+              title="Filer"
+            >
+              <svg
+                class="icon"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5" />
+                <path d="M12 7v5l4 2" />
+              </svg>
+            </button>
           </header>
 
           <main id="chat-main">
@@ -445,7 +467,7 @@
                     f&ouml;r att infoga en ny rad
                   </span>
                   <button type="submit" class="composer-send" aria-label="Skicka">
-                    <svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>
+                    <svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.714 3.048a.498.498 0 0 0-.683.627l2.843 7.627a2 2 0 0 1 0 1.396l-2.842 7.627a.498.498 0 0 0 .682.627l18-8.5a.5.5 0 0 0 0-.904z"/><path d="M6 12h16"/></svg>
                   </button>
                 </div>
               </div>
@@ -540,6 +562,38 @@
           <div class="kbd-cheatsheet-row"><span>Slash-kommandon (/help, /theme &hellip;)</span><span class="kbd-keys"><kbd>/</kbd></span></div>
           <div class="kbd-cheatsheet-row"><span>Skicka</span><span class="kbd-keys"><kbd>&crarr;</kbd></span></div>
         </div>
+      </div>
+    </div>
+
+    <div
+      id="gallery-modal"
+      class="hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Filer"
+    >
+      <div id="gallery-panel">
+        <div id="gallery-titlebar">
+          <span class="tb-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <h2 id="gallery-title">~/filer</h2>
+          <button id="gallery-close" aria-label="St&auml;ng">
+            <svg
+              class="icon"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          </button>
+        </div>
+        <div id="gallery-grid"></div>
       </div>
     </div>
 

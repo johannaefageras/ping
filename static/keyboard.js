@@ -227,6 +227,7 @@
     registerOverlay({ isOpen: ctx.isLightboxOpen, close: ctx.closeLightbox });
     registerOverlay({ isOpen: ctx.isInviteOpen, close: ctx.closeInvite });
     registerOverlay({ isOpen: ctx.isSettingsOpen, close: ctx.closeSettings });
+    registerOverlay({ isOpen: ctx.isGalleryOpen, close: ctx.closeFileGallery });
 
     document.addEventListener("keydown", onGlobalKeydown);
   }
