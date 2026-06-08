@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512.17 512">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: url(#linear-gradient-3);
+      }
+
+      .cls-2 {
+        fill: url(#linear-gradient-2);
+      }
+
+      .cls-3 {
+        fill: url(#linear-gradient);
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="-570.41" y1="1782.37" x2="-467.05" y2="1603.34" gradientTransform="translate(-304.148 -1316.7361) rotate(-30.0007)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#005eff"/>
+      <stop offset=".1" stop-color="#006eff"/>
+      <stop offset=".33" stop-color="#018bff"/>
+      <stop offset=".56" stop-color="#019fff"/>
+      <stop offset=".78" stop-color="#01acff"/>
+      <stop offset="1" stop-color="#01b0ff"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-2" x1="-207.81" y1="1629.99" x2="-118.15" y2="1383.63" gradientTransform="translate(-149.9845 -1229.7431) rotate(-19.9988)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#005eff"/>
+      <stop offset=".1" stop-color="#006eff"/>
+      <stop offset=".33" stop-color="#018bff"/>
+      <stop offset=".56" stop-color="#019fff"/>
+      <stop offset=".78" stop-color="#01acff"/>
+      <stop offset="1" stop-color="#01b0ff"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-3" x1="330.4" y1="1266.03" x2="330.4" y2="1010" gradientTransform="translate(94 -1010)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#005eff"/>
+      <stop offset=".1" stop-color="#006eff"/>
+      <stop offset=".33" stop-color="#018bff"/>
+      <stop offset=".56" stop-color="#019fff"/>
+      <stop offset=".78" stop-color="#01acff"/>
+      <stop offset="1" stop-color="#01b0ff"/>
+    </linearGradient>
+  </defs>
+  <path class="cls-3" d="M163.55,423.98c3.41-1.96,6.49-1.19,8.53,2.3l12.97,22.44c1.96,3.5,1.19,6.57-2.3,8.53l-93.02,53.68c-3.5,1.96-6.57,1.19-8.53-2.3l-10.24-17.75c-1.54-2.56-1.96-4.95-1.96-7.85l5.04-120.59-51.46,29.7c-3.41,1.96-6.57,1.19-8.53-2.3l-12.97-22.53c-1.96-3.5-1.19-6.57,2.3-8.53l90.8-52.4c3.41-2.05,6.49-1.19,8.53,2.3l10.24,17.75c1.54,2.56,1.96,4.86,1.96,7.85l-5.04,120.59,53.68-30.89Z"/>
+  <path class="cls-2" d="M298.82,277.62c4.86-1.79,8.62,0,10.41,4.86l11.52,31.75c1.79,4.86,0,8.62-4.86,10.41l-131.17,47.71c-4.86,1.79-8.62,0-10.41-4.86l-9.13-25.01c-1.28-3.67-1.37-6.74-.68-10.5l33.71-153.27-72.63,26.46c-4.86,1.79-8.62.09-10.41-4.86l-11.52-31.75c-1.79-4.86,0-8.62,4.86-10.41l128.1-46.6c4.86-1.79,8.62,0,10.41,4.86l9.13,25.09c1.37,3.67,1.45,6.74.68,10.5l-33.71,153.19,75.7-27.57Z"/>
+  <path class="cls-1" d="M503.04,199.7c5.8,0,9.13,3.24,9.13,9.13v38.06c0,5.8-3.33,9.13-9.13,9.13h-157.29c-5.89,0-9.13-3.33-9.13-9.13v-29.96c0-4.35,1.11-7.68,3.24-11.35l94.73-149.26h-87.05c-5.8,0-9.13-3.24-9.13-9.13V9.13c0-5.8,3.33-9.13,9.13-9.13h153.62c5.89,0,9.13,3.33,9.13,9.13v29.96c0,4.44-1.11,7.68-3.24,11.35l-94.73,149.26h90.72Z"/>
+</svg>

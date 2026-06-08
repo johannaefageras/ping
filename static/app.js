@@ -80,6 +80,13 @@ const recordAgain = document.getElementById("record-again");
 const recordCancel = document.getElementById("record-cancel");
 const textForm = document.getElementById("text-form");
 const textInput = document.getElementById("text-input");
+const emojiBtn = document.getElementById("emoji-btn");
+const emojiPicker = document.getElementById("emoji-picker");
+const emojiSearch = document.getElementById("emoji-search");
+const emojiCatRow = document.getElementById("emoji-cat-row");
+const emojiCatLabel = document.getElementById("emoji-cat-label");
+const emojiGrid = document.getElementById("emoji-grid");
+const emojiStatus = document.getElementById("emoji-status");
 const pingSound = document.getElementById("ping-sound");
 const lightbox = document.getElementById("lightbox");
 const lightboxImg = document.getElementById("lightbox-img");
@@ -115,6 +122,7 @@ let unreadCounts = {}; // recipientId -> count of unread, non-dismissed pings fr
 let realtimeChannel = null;
 let presenceChannel = null;
 let onlineUserIds = new Set();
+let emojiIndex = null; // Map<"folder/id", {label,...}> built lazily from emoji-data.json (see emoji picker)
 
 const PINGS_PAGE_SIZE = 50;
 // Paging state for the open chat's scrollback. oldestCursor is a compound
@@ -1045,7 +1053,7 @@ function renderPing(ping, animate = true, beforeNode = null) {
     el.className = `item ${isSelf ? "self" : "other"}${animate && !isSelf ? " ping" : ""}`;
     el.innerHTML = `
       <div class="meta">${formatTime(ping.created_at)}<span class="ping-status" aria-hidden="true"></span></div>
-      <div class="content">${linkify(ping.content)}</div>
+      <div class="content">${renderContent(ping.content)}</div>
       <button class="dismiss-btn" aria-label="Ta bort"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     `;
   } else if (ping.type === "file") {
@@ -1731,6 +1739,66 @@ function linkify(text) {
   return out;
 }
 
+// Emoji shortcode token: :e:<folder>/<id>: — inserted by the emoji picker and
+// stored verbatim in ping.content. folder is a lowercase english slug; id is a
+// lowercase slug that may contain Swedish å ä ö. Verified against the data: no
+// id contains ':' '/' uppercase or space, so this is unambiguous.
+const EMOJI_TOKEN_RE = /:e:([a-z-]+)\/([a-zåäö-]+):/g;
+const URL_RE = /(https?:\/\/[^\s]+)/g;
+
+// Render raw (unescaped) message content to safe HTML, handling BOTH emoji
+// tokens and URLs in a single left-to-right pass so text is escaped exactly
+// once. Replaces linkify() on the text-ping render path. Anything that isn't a
+// recognized token or URL is escaped as plain text — a malformed token is left
+// as literal text and never injected as HTML. The <img> src is built from the
+// token payload alone, so a ping renders even before the emoji data is loaded;
+// alt/label is taken from the loaded data when available, else the id.
+function renderContent(text) {
+  // Build one combined matcher by scanning for both patterns and taking the
+  // earliest match at each position.
+  let out = "";
+  let pos = 0;
+  while (pos < text.length) {
+    EMOJI_TOKEN_RE.lastIndex = pos;
+    URL_RE.lastIndex = pos;
+    const em = EMOJI_TOKEN_RE.exec(text);
+    const url = URL_RE.exec(text);
+    // Pick whichever matches first (lowest index). null if none from here.
+    let next = null;
+    let kind = null;
+    if (em && (!url || em.index <= url.index)) { next = em; kind = "emoji"; }
+    else if (url) { next = url; kind = "url"; }
+
+    if (!next) {
+      out += escapeHtml(text.slice(pos));
+      break;
+    }
+    out += escapeHtml(text.slice(pos, next.index));
+    if (kind === "emoji") {
+      const folder = next[1];
+      const id = next[2];
+      const label = emojiLabel(folder, id);
+      const src = `/icons/emojis/${folder}/${encodeURI(id)}.svg`;
+      out += `<img class="emoji-inline" src="${escapeHtml(src)}" alt="${escapeHtml(label)}" loading="lazy">`;
+    } else {
+      const url2 = escapeHtml(next[0]);
+      out += `<a href="${url2}" target="_blank" rel="noopener">${url2}</a>`;
+    }
+    pos = next.index + next[0].length;
+  }
+  return out;
+}
+
+// Look up an emoji's Swedish label from the cached picker data; falls back to
+// the id when the data isn't loaded yet or the emoji isn't found.
+function emojiLabel(folder, id) {
+  if (emojiIndex) {
+    const entry = emojiIndex.get(`${folder}/${id}`);
+    if (entry) return entry.label;
+  }
+  return id;
+}
+
 // Extracts the first URL from text using the same pattern linkify uses.
 function firstUrl(text) {
   const m = text.match(/(https?:\/\/[^\s]+)/);
@@ -2152,6 +2220,240 @@ if (disappearingBtn && disappearingMenu) {
     });
   });
 }
+
+// ============================================================
+// EMOJI PICKER
+// ============================================================
+
+let emojiData = null;        // parsed emoji-data.json { categories: [...] }
+let emojiSelectedCat = null; // currently shown category id (when not searching)
+let emojiLoaded = false;     // data successfully loaded & UI built once
+// emojiIndex (Map "folder/id" -> item) is declared near the top-of-file state.
+
+// Fetch + cache the emoji data on first open. Returns true on success. Builds
+// the folder/id index (used by renderContent's emojiLabel) and the category
+// row. Shows an inline error and returns false on failure.
+async function loadEmojiData() {
+  if (emojiLoaded) return true;
+  emojiSetStatus("Laddar…");
+  try {
+    const res = await fetch("/data/emoji-data.json");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (!data || !Array.isArray(data.categories)) {
+      throw new Error("malformed emoji data: missing categories");
+    }
+    // Build the "folder/id" -> item index into a local, so a malformed payload
+    // can't leave a half-built emojiIndex behind. folder is item.file's first
+    // segment. Assign the module state only once everything succeeds.
+    const idx = new Map();
+    for (const cat of data.categories) {
+      for (const item of cat.items || []) {
+        const folder = item.file.split("/")[0];
+        idx.set(`${folder}/${item.id}`, item);
+      }
+    }
+    emojiData = data;
+    emojiIndex = idx;
+  } catch (err) {
+    console.error("Failed to load emoji data:", err);
+    emojiSetStatus("Kunde inte ladda emojis.");
+    return false;
+  }
+  emojiBuildCatRow();
+  emojiLoaded = true;
+  emojiClearStatus();
+  return true;
+}
+
+// Show / hide the inline status line (loading / error / empty-search).
+function emojiSetStatus(msg) {
+  emojiStatus.textContent = msg;
+  emojiStatus.classList.remove("hidden");
+}
+function emojiClearStatus() {
+  emojiStatus.textContent = "";
+  emojiStatus.classList.add("hidden");
+}
+
+// Build the 7 category icon buttons from the data (order = data order).
+function emojiBuildCatRow() {
+  emojiCatRow.innerHTML = "";
+  emojiData.categories.forEach((cat, i) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "emoji-cat-btn" + (i === 0 ? " sel" : "");
+    btn.title = cat.label;
+    btn.setAttribute("aria-label", cat.label);
+    btn.dataset.catId = cat.id;
+    const img = document.createElement("img");
+    img.src = `/icons/emojis/${encodeURI(cat.icon)}`;
+    img.alt = cat.label;
+    btn.appendChild(img);
+    emojiCatRow.appendChild(btn);
+  });
+}
+
+// Render a list of emoji items into the grid as clickable cells.
+function emojiRenderGrid(items) {
+  emojiGrid.innerHTML = "";
+  const frag = document.createDocumentFragment();
+  for (const item of items) {
+    const cell = document.createElement("button");
+    cell.type = "button";
+    cell.className = "emoji-grid-cell";
+    cell.title = item.label;
+    cell.setAttribute("aria-label", item.label);
+    // folder/id token payload, stored on the element for the click handler.
+    const folder = item.file.split("/")[0];
+    cell.dataset.token = `${folder}/${item.id}`;
+    const img = document.createElement("img");
+    img.src = `/icons/emojis/${encodeURI(item.file)}`;
+    img.alt = item.label;
+    img.loading = "lazy";
+    cell.appendChild(img);
+    frag.appendChild(cell);
+  }
+  emojiGrid.appendChild(frag);
+}
+
+// Show one category's emojis and mark its icon selected.
+function emojiShowCategory(catId) {
+  const cat = emojiData.categories.find((c) => c.id === catId);
+  if (!cat) return;
+  emojiSelectedCat = catId;
+  emojiCatLabel.textContent = cat.label;
+  emojiRenderGrid(cat.items);
+  emojiClearStatus();
+  for (const btn of emojiCatRow.querySelectorAll(".emoji-cat-btn")) {
+    btn.classList.toggle("sel", btn.dataset.catId === catId);
+  }
+}
+
+// Normalize for diacritic-tolerant, case-insensitive matching: lowercase and
+// strip combining marks so "glad"/"GLÄD" etc. compare on their base letters.
+// (Swedish å ä ö decompose to a/a/o here, which is what we want for search.)
+function emojiNormalize(s) {
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+}
+
+// Filter all emoji across categories whose label or any tag contains the query.
+function emojiSearchItems(query) {
+  const q = emojiNormalize(query.trim());
+  if (!q) return null; // signal: not searching
+  const results = [];
+  for (const cat of emojiData.categories) {
+    for (const item of cat.items) {
+      const hay = [item.label, ...(item.tags || [])].map(emojiNormalize);
+      if (hay.some((h) => h.includes(q))) results.push(item);
+    }
+  }
+  return results;
+}
+
+// Insert text at the textarea caret (replacing any selection), place the caret
+// after it, refocus, and trigger the existing auto-grow / hint listeners via a
+// synthetic input event.
+function insertAtCaret(textarea, str) {
+  const start = textarea.selectionStart ?? textarea.value.length;
+  const end = textarea.selectionEnd ?? textarea.value.length;
+  const before = textarea.value.slice(0, start);
+  const after = textarea.value.slice(end);
+  textarea.value = before + str + after;
+  const caret = start + str.length;
+  textarea.focus();
+  textarea.setSelectionRange(caret, caret);
+  // Notify existing 'input' listeners (autoGrowInput, renderCommandHints).
+  textarea.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+function emojiOpen() {
+  emojiPicker.classList.remove("hidden");
+  emojiBtn.setAttribute("aria-expanded", "true");
+}
+function emojiClose() {
+  emojiPicker.classList.add("hidden");
+  emojiBtn.setAttribute("aria-expanded", "false");
+}
+function emojiIsOpen() {
+  return !emojiPicker.classList.contains("hidden");
+}
+
+// Toggle on button click. On open, load data if needed, then show the selected
+// (or first) category and focus the search box.
+emojiBtn.addEventListener("click", async (e) => {
+  e.stopPropagation();
+  if (emojiIsOpen()) {
+    emojiClose();
+    return;
+  }
+  emojiOpen();
+  const ok = await loadEmojiData();
+  if (!ok) return; // status line already shows the error; keep panel open
+  emojiSearch.value = "";
+  emojiShowCategory(emojiSelectedCat || emojiData.categories[0].id);
+  emojiSearch.focus();
+});
+
+// Category icon click → show that category (event-delegated). Refocus the
+// search box so focus stays in the picker (keeps bare-key shortcuts suppressed
+// and lets the user keep typing to search).
+emojiCatRow.addEventListener("click", (e) => {
+  const btn = e.target.closest(".emoji-cat-btn");
+  if (!btn) return;
+  emojiSearch.value = "";
+  emojiShowCategory(btn.dataset.catId);
+  emojiSearch.focus();
+});
+
+// Emoji click → insert token at the caret; keep the popover open.
+emojiGrid.addEventListener("click", (e) => {
+  const cell = e.target.closest(".emoji-grid-cell");
+  if (!cell) return;
+  insertAtCaret(textInput, `:e:${cell.dataset.token}:`);
+});
+
+// Live search: filter across all categories by label + tags. Empty query
+// returns to the selected category. Clears the category-row highlight while
+// searching (no single category is "selected").
+emojiSearch.addEventListener("input", () => {
+  const results = emojiSearchItems(emojiSearch.value);
+  if (results === null) {
+    emojiShowCategory(emojiSelectedCat || emojiData.categories[0].id);
+    return;
+  }
+  for (const btn of emojiCatRow.querySelectorAll(".emoji-cat-btn")) {
+    btn.classList.remove("sel");
+  }
+  emojiCatLabel.textContent = "Sökresultat";
+  if (results.length === 0) {
+    emojiGrid.innerHTML = "";
+    emojiSetStatus("Inga emojis hittades.");
+  } else {
+    emojiClearStatus();
+    emojiRenderGrid(results);
+  }
+});
+
+// Outside-click closes (mirrors createPopupMenu). The button's own handler
+// manages toggling, so ignore clicks on it here.
+document.addEventListener("click", (e) => {
+  if (!emojiIsOpen()) return;
+  if (!emojiPicker.contains(e.target) && e.target !== emojiBtn && !emojiBtn.contains(e.target)) {
+    emojiClose();
+  }
+});
+
+// Escape closes (matches camera/video). Works whether focus is in the search
+// box or elsewhere in the panel.
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && emojiIsOpen()) {
+    emojiClose();
+    emojiBtn.focus();
+  }
+});
+
+emojiClose(); // ensure hidden + aria initialised regardless of HTML
 
 // --- Photo capture modal ---
 let captureStream = null;   // active MediaStream (video only)

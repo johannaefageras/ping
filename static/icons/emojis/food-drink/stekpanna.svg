@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512.03 512">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: url(#radial-gradient-3);
+      }
+
+      .cls-2 {
+        fill: url(#radial-gradient-2);
+      }
+
+      .cls-3 {
+        fill: url(#radial-gradient);
+      }
+
+      .cls-4 {
+        fill: #99a8ae;
+      }
+
+      .cls-5 {
+        fill: #4e5e67;
+      }
+
+      .cls-6 {
+        fill: url(#linear-gradient);
+        isolation: isolate;
+        opacity: .6;
+      }
+
+      .cls-7 {
+        fill: #302c3b;
+      }
+    </style>
+    <radialGradient id="radial-gradient" cx="143.21" cy="337.12" fx="143.21" fy="337.12" r="206.96" gradientTransform="translate(60.57 572.95) scale(1.07 -1.07)" gradientUnits="userSpaceOnUse">
+      <stop offset=".53" stop-color="#4e5e67"/>
+      <stop offset=".6" stop-color="#4b5862"/>
+      <stop offset=".7" stop-color="#414854"/>
+      <stop offset=".81" stop-color="#312e3d"/>
+      <stop offset=".82" stop-color="#302c3b"/>
+    </radialGradient>
+    <radialGradient id="radial-gradient-2" cx="188.34" cy="318.74" fx="188.34" fy="318.74" r="125.04" gradientTransform="translate(20.19 540.22) scale(1.03 -1.03)" gradientUnits="userSpaceOnUse">
+      <stop offset=".68" stop-color="#fff"/>
+      <stop offset=".79" stop-color="#f4f6f6"/>
+      <stop offset=".96" stop-color="#dce1e3"/>
+    </radialGradient>
+    <radialGradient id="radial-gradient-3" cx="109.19" cy="343.35" fx="109.19" fy="343.35" r="67.69" gradientTransform="translate(60.57 572.95) scale(1.07 -1.07)" gradientUnits="userSpaceOnUse">
+      <stop offset=".48" stop-color="#f5c001"/>
+      <stop offset=".7" stop-color="#f4b905"/>
+      <stop offset="1" stop-color="#f0a611"/>
+      <stop offset="1" stop-color="#f0a611"/>
+    </radialGradient>
+    <linearGradient id="linear-gradient" x1="191.31" y1="297.17" x2="191.31" y2="345.65" gradientTransform="translate(0 514) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#fff"/>
+    </linearGradient>
+  </defs>
+  <rect class="cls-4" x="350.08" y="351.73" width="37.16" height="33.78" transform="translate(-152.68 368.5) rotate(-44.98)"/>
+  <path class="cls-7" d="M387.97,356.39l-31.58,31.57c60.59,46.7,89.83,115.13,123.25,123.23,19.46,4.74,36.32-12.11,31.58-31.57-8.12-33.43-76.54-62.69-123.25-123.24ZM497.37,483.58c.09,5.08-8.7,13.85-13.78,13.77-12.34-.2-35.5-32.29-34.97-37.87.33-3.52,7.37-10.55,10.88-10.87,5.57-.53,37.68,22.61,37.87,34.97Z"/>
+  <circle class="cls-5" cx="213.34" cy="213.34" r="213.34"/>
+  <circle class="cls-3" cx="213.34" cy="213.34" r="205.14"/>
+  <path class="cls-2" d="M273.18,106.38c-70.66,4.9-85.05-43.17-146.75-1.9-28.96,19.37-21.16,55.9-36.92,100.31-26.8,75.45,28.78,119.29,94.52,132.55,58.45,11.79,78.61-41.11,134.68-69.51,44.88-22.73,30.48-166.74-45.53-161.45Z"/>
+  <circle class="cls-1" cx="191.3" cy="221.85" r="64.18"/>
+  <path class="cls-6" d="M228.53,183.26c40.14,44.75-114.57,44.77-74.44,0,17.8-19.88,56.62-19.87,74.44,0Z"/>
+</svg>

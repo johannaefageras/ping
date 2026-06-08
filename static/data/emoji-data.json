@@ -1,0 +1,2120 @@
+{
+  "version": 1,
+  "locale": "sv-SE",
+  "categories": [
+    {
+      "id": "människor",
+      "label": "Människor",
+      "icon": "people.svg",
+      "path": "människor",
+      "items": [
+        {
+          "id": "applåd",
+          "file": "people/applåd.svg",
+          "label": "Applåd",
+          "tags": ["klappa", "bravo", "jubel", "beröm", "hyllning", "applådera"]
+        },
+        {
+          "id": "blinkar",
+          "file": "people/blinkar.svg",
+          "label": "Blinkar",
+          "tags": ["blinkning", "skämt", "flirt", "hemlighet", "ironi", "bus"]
+        },
+        {
+          "id": "dreglar",
+          "file": "people/dreglar.svg",
+          "label": "Dreglar",
+          "tags": ["dregel", "sugen", "hungrig", "gott", "begär", "mums"]
+        },
+        {
+          "id": "feber",
+          "file": "people/feber.svg",
+          "label": "Feber",
+          "tags": ["sjuk", "sjukdom", "termometer", "förkyld", "influensa", "mår-dåligt"]
+        },
+        {
+          "id": "fest",
+          "file": "people/fest.svg",
+          "label": "Fest",
+          "tags": ["party", "firande", "kalas", "hurra", "glad", "konfetti"]
+        },
+        {
+          "id": "flinar",
+          "file": "people/flinar.svg",
+          "label": "Flinar",
+          "tags": ["glad", "leende", "skrattar", "nöjd", "stort-leende", "lycklig"]
+        },
+        {
+          "id": "gapar",
+          "file": "people/gapar.svg",
+          "label": "Gapar",
+          "tags": ["förvånad", "chockad", "oj", "häpen", "överraskad", "öppen-mun"]
+        },
+        {
+          "id": "glad",
+          "file": "people/glad.svg",
+          "label": "Glad",
+          "tags": ["leende", "nöjd", "lycklig", "snäll", "vänlig", "mysig"]
+        },
+        {
+          "id": "grimas",
+          "file": "people/grimas.svg",
+          "label": "Grimas",
+          "tags": ["stel", "pinsamt", "nervös", "obekväm", "jobbigt", "tänder"]
+        },
+        {
+          "id": "gråter",
+          "file": "people/gråter.svg",
+          "label": "Gråter",
+          "tags": ["ledsen", "tår", "sorg", "besviken", "deppig", "gråt"]
+        },
+        {
+          "id": "gäspar",
+          "file": "people/gäspar.svg",
+          "label": "Gäspar",
+          "tags": ["trött", "sömnig", "uttråkad", "sova", "gäsp", "seg"]
+        },
+        {
+          "id": "himlar",
+          "file": "people/himlar.svg",
+          "label": "Himlar",
+          "tags": ["ögon", "suck", "irriterad", "dryg", "trött", "men-herregud"]
+        },
+        {
+          "id": "hjärnexplosion",
+          "file": "people/hjärnexplosion.svg",
+          "label": "Hjärnexplosion",
+          "tags": ["mindblown", "chock", "förvånad", "otroligt", "wow", "exploderar"]
+        },
+        {
+          "id": "hjärtögon",
+          "file": "people/hjärtögon.svg",
+          "label": "Hjärtögon",
+          "tags": ["kär", "älskar", "förälskad", "söt", "beundran", "crush"]
+        },
+        {
+          "id": "händer-ihop",
+          "file": "people/händer-ihop.svg",
+          "label": "Händer ihop",
+          "tags": ["tack", "snälla", "be", "bön", "namaste", "tacksam"]
+        },
+        {
+          "id": "händer-upp",
+          "file": "people/händer-upp.svg",
+          "label": "Händer upp",
+          "tags": ["hurra", "jubel", "firar", "yes", "glädje", "upp-med-händerna"]
+        },
+        {
+          "id": "kram",
+          "file": "people/kram.svg",
+          "label": "Kram",
+          "tags": ["krama", "omtanke", "värme", "vänskap", "tröst", "välkommen"]
+        },
+        {
+          "id": "kräks",
+          "file": "people/kräks.svg",
+          "label": "Kräks",
+          "tags": ["spyr", "illamående", "äcklad", "sjuk", "magsjuk", "usch"]
+        },
+        {
+          "id": "kär",
+          "file": "people/kär.svg",
+          "label": "Kär",
+          "tags": ["älskar", "förälskad", "hjärtan", "romantik", "lycklig", "crush"]
+        },
+        {
+          "id": "leende",
+          "file": "people/leende.svg",
+          "label": "Leende",
+          "tags": ["glad", "smil", "nöjd", "skratt", "positiv", "vänlig"]
+        },
+        {
+          "id": "lättad",
+          "file": "people/lättad.svg",
+          "label": "Lättad",
+          "tags": ["skönt", "puh", "lugnad", "tacksam", "avslappnad", "nöjd"]
+        },
+        {
+          "id": "långfinger",
+          "file": "people/långfinger.svg",
+          "label": "Långfinger",
+          "tags": ["fuck-you", "arg", "oförskämd", "förolämpning", "gest", "sur"]
+        },
+        {
+          "id": "missnöjd",
+          "file": "people/missnöjd.svg",
+          "label": "Missnöjd",
+          "tags": ["sur", "uttråkad", "irriterad", "skeptisk", "nej", "besviken"]
+        },
+        {
+          "id": "monokel",
+          "file": "people/monokel.svg",
+          "label": "Monokel",
+          "tags": ["granskar", "undersöker", "funderar", "misstänksam", "fin", "detektiv"]
+        },
+        {
+          "id": "nedstämd",
+          "file": "people/nedstämd.svg",
+          "label": "Nedstämd",
+          "tags": ["ledsen", "sorgsen", "besviken", "deppig", "tänksam", "låg"]
+        },
+        {
+          "id": "nörd",
+          "file": "people/nörd.svg",
+          "label": "Nörd",
+          "tags": ["glasögon", "smart", "plugghäst", "geek", "kunskap", "teknik"]
+        },
+        {
+          "id": "okej",
+          "file": "people/okej.svg",
+          "label": "Okej",
+          "tags": ["ok", "perfekt", "bra", "godkänt", "handtecken", "klart"]
+        },
+        {
+          "id": "pekar-upp",
+          "file": "people/pekar-upp.svg",
+          "label": "Pekar upp",
+          "tags": ["upp", "finger", "här", "notera", "viktigt", "ovan"]
+        },
+        {
+          "id": "rörd",
+          "file": "people/rörd.svg",
+          "label": "Rörd",
+          "tags": ["tårögd", "stolt", "känslosam", "nära-gråt", "berörd", "fin"]
+        },
+        {
+          "id": "segertecken",
+          "file": "people/segertecken.svg",
+          "label": "Segertecken",
+          "tags": ["peace", "fred", "v-tecken", "vinst", "två", "handtecken"]
+        },
+        {
+          "id": "skeptisk",
+          "file": "people/skeptisk.svg",
+          "label": "Skeptisk",
+          "tags": ["misstänksam", "tveksam", "höjt-ögonbryn", "seriöst", "hmm", "osäker"]
+        },
+        {
+          "id": "skrattgråt",
+          "file": "people/skrattgråt.svg",
+          "label": "Skrattgråt",
+          "tags": ["skrattar", "roligt", "haha", "lol", "tårar", "asgarv"]
+        },
+        {
+          "id": "slängkyss",
+          "file": "people/slängkyss.svg",
+          "label": "Slängkyss",
+          "tags": ["puss", "kyss", "kärlek", "flirt", "hjärta", "hej-då"]
+        },
+        {
+          "id": "smil",
+          "file": "people/smil.svg",
+          "label": "Smil",
+          "tags": ["flirtig", "nöjd", "slug", "självsäker", "retsam", "leende"]
+        },
+        {
+          "id": "smälter",
+          "file": "people/smälter.svg",
+          "label": "Smälter",
+          "tags": ["varmt", "pinsamt", "försvinner", "överväldigad", "jobbigt", "smält"]
+        },
+        {
+          "id": "solglasögon",
+          "file": "people/solglasögon.svg",
+          "label": "Solglasögon",
+          "tags": ["cool", "chill", "sommar", "självsäker", "snygg", "glasögon"]
+        },
+        {
+          "id": "sover",
+          "file": "people/sover.svg",
+          "label": "Sover",
+          "tags": ["sova", "trött", "sömn", "natt", "zzz", "vila"]
+        },
+        {
+          "id": "starstruck",
+          "file": "people/starstruck.svg",
+          "label": "Starstruck",
+          "tags": ["imponerad", "wow", "stjärnor", "beundran", "fantastiskt", "idol"]
+        },
+        {
+          "id": "storgråter",
+          "file": "people/storgråter.svg",
+          "label": "Storgråter",
+          "tags": ["gråter", "ledsen", "snyftar", "förtvivlad", "tårar", "sorg"]
+        },
+        {
+          "id": "svordom",
+          "file": "people/svordom.svg",
+          "label": "Svordom",
+          "tags": ["arg", "förbannad", "censur", "ilska", "svär", "rasande"]
+        },
+        {
+          "id": "tokig",
+          "file": "people/tokig.svg",
+          "label": "Tokig",
+          "tags": ["galen", "knäpp", "busig", "crazy", "rolig", "flamsig"]
+        },
+        {
+          "id": "tumme-ner",
+          "file": "people/tumme-ner.svg",
+          "label": "Tumme ner",
+          "tags": ["nej", "dåligt", "ogillar", "underkänt", "missnöjd", "tummen-ner"]
+        },
+        {
+          "id": "tumme-upp",
+          "file": "people/tumme-upp.svg",
+          "label": "Tumme upp",
+          "tags": ["ja", "bra", "godkänt", "gillar", "okej", "tummen-upp"]
+        },
+        {
+          "id": "tänker",
+          "file": "people/tänker.svg",
+          "label": "Tänker",
+          "tags": ["funderar", "hmm", "idé", "undrar", "tvekar", "fråga"]
+        },
+        {
+          "id": "upp-och-ner",
+          "file": "people/upp-och-ner.svg",
+          "label": "Upp och ner",
+          "tags": ["knasigt", "ironi", "sarkasm", "tokigt", "förvirrad", "omvänt"]
+        },
+        {
+          "id": "utslagen",
+          "file": "people/utslagen.svg",
+          "label": "Utslagen",
+          "tags": ["död", "svimmar", "slut", "chockad", "trött", "x-ögon"]
+        },
+        {
+          "id": "vimmelkantig",
+          "file": "people/vimmelkantig.svg",
+          "label": "Vimmelkantig",
+          "tags": ["yr", "snurrig", "berusad", "vinglig", "förvirrad", "groggy"]
+        },
+        {
+          "id": "vinkar",
+          "file": "people/vinkar.svg",
+          "label": "Vinkar",
+          "tags": ["hej", "hejdå", "vinka", "hälsning", "välkommen", "hand"]
+        },
+        {
+          "id": "yr",
+          "file": "people/yr.svg",
+          "label": "Yr",
+          "tags": ["snurrig", "förvirrad", "hypnos", "spiralögon", "chock", "omtöcknad"]
+        }
+      ]
+    },
+    {
+      "id": "djur-natur",
+      "label": "Djur & natur",
+      "icon": "nature.svg",
+      "path": "djur & natur",
+      "items": [
+        {
+          "id": "bi",
+          "file": "nature/bi.svg",
+          "label": "Bi",
+          "tags": ["insekt", "honung", "surr", "blomma", "pollinering", "geting"]
+        },
+        {
+          "id": "blixt",
+          "file": "nature/blixt.svg",
+          "label": "Blixt",
+          "tags": ["el", "ström", "åska", "energi", "snabb", "fara"]
+        },
+        {
+          "id": "bläckfisk",
+          "file": "nature/bläckfisk.svg",
+          "label": "Bläckfisk",
+          "tags": ["hav", "djur", "tentakler", "marin", "sjö", "octopus"]
+        },
+        {
+          "id": "blåsfisk",
+          "file": "nature/blåsfisk.svg",
+          "label": "Blåsfisk",
+          "tags": ["fisk", "hav", "giftig", "uppblåst", "sjö", "marin"]
+        },
+        {
+          "id": "bukett",
+          "file": "nature/bukett.svg",
+          "label": "Bukett",
+          "tags": ["blommor", "present", "romantik", "bröllop", "fira", "vår"]
+        },
+        {
+          "id": "drake",
+          "file": "nature/drake.svg",
+          "label": "Drake",
+          "tags": ["fantasi", "monster", "eld", "saga", "myt", "kinesisk"]
+        },
+        {
+          "id": "eld",
+          "file": "nature/eld.svg",
+          "label": "Eld",
+          "tags": ["brand", "låga", "varmt", "hett", "brinner", "fire"]
+        },
+        {
+          "id": "enhörning",
+          "file": "nature/enhörning.svg",
+          "label": "Enhörning",
+          "tags": ["häst", "horn", "magisk", "fantasi", "saga", "regnbåge"]
+        },
+        {
+          "id": "fjäril",
+          "file": "nature/fjäril.svg",
+          "label": "Fjäril",
+          "tags": ["insekt", "vingar", "sommar", "natur", "larv", "vacker"]
+        },
+        {
+          "id": "gnistor",
+          "file": "nature/gnistor.svg",
+          "label": "Gnistor",
+          "tags": ["glitter", "magi", "stjärnor", "glänser", "fest", "sparkle"]
+        },
+        {
+          "id": "groda",
+          "file": "nature/groda.svg",
+          "label": "Groda",
+          "tags": ["djur", "amfibie", "kvack", "damm", "grön", "padda"]
+        },
+        {
+          "id": "hibiskus",
+          "file": "nature/hibiskus.svg",
+          "label": "Hibiskus",
+          "tags": ["blomma", "tropisk", "sommar", "hawaii", "växt", "röd"]
+        },
+        {
+          "id": "hund",
+          "file": "nature/hund.svg",
+          "label": "Hund",
+          "tags": ["djur", "husdjur", "valp", "vovve", "skälla", "kompis"]
+        },
+        {
+          "id": "häst",
+          "file": "nature/häst.svg",
+          "label": "Häst",
+          "tags": ["djur", "rida", "stall", "ponny", "galopp", "hästansikte"]
+        },
+        {
+          "id": "jordglob",
+          "file": "nature/jordglob.svg",
+          "label": "Jordglob",
+          "tags": ["jorden", "världen", "planet", "amerika", "geografi", "global"]
+        },
+        {
+          "id": "kaktus",
+          "file": "nature/kaktus.svg",
+          "label": "Kaktus",
+          "tags": ["växt", "öken", "taggar", "torrt", "grön", "suckulent"]
+        },
+        {
+          "id": "kanin",
+          "file": "nature/kanin.svg",
+          "label": "Kanin",
+          "tags": ["djur", "hare", "påsk", "söt", "husdjur", "morot"]
+        },
+        {
+          "id": "katt",
+          "file": "nature/katt.svg",
+          "label": "Katt",
+          "tags": ["djur", "husdjur", "kisse", "mjau", "söt", "kattansikte"]
+        },
+        {
+          "id": "krukväxt",
+          "file": "nature/krukväxt.svg",
+          "label": "Krukväxt",
+          "tags": ["växt", "kruka", "hem", "inomhus", "grön", "odla"]
+        },
+        {
+          "id": "kvist",
+          "file": "nature/kvist.svg",
+          "label": "Kvist",
+          "tags": ["ört", "blad", "växt", "grönt", "natur", "krydda"]
+        },
+        {
+          "id": "kyckling",
+          "file": "nature/kyckling.svg",
+          "label": "Kyckling",
+          "tags": ["fågel", "unge", "ägg", "kläcks", "påsk", "gul"]
+        },
+        {
+          "id": "körsbärsblomma",
+          "file": "nature/körsbärsblomma.svg",
+          "label": "Körsbärsblomma",
+          "tags": ["blomma", "vår", "sakura", "rosa", "japan", "träd"]
+        },
+        {
+          "id": "lejon",
+          "file": "nature/lejon.svg",
+          "label": "Lejon",
+          "tags": ["djur", "kattdjur", "savann", "man", "kung", "vild"]
+        },
+        {
+          "id": "lönnlöv",
+          "file": "nature/lönnlöv.svg",
+          "label": "Lönnlöv",
+          "tags": ["löv", "höst", "blad", "kanada", "röd", "natur"]
+        },
+        {
+          "id": "nyckelpiga",
+          "file": "nature/nyckelpiga.svg",
+          "label": "Nyckelpiga",
+          "tags": ["insekt", "prickar", "röd", "sommar", "tur", "skalbagge"]
+        },
+        {
+          "id": "palm",
+          "file": "nature/palm.svg",
+          "label": "Palm",
+          "tags": ["träd", "tropisk", "semester", "strand", "sommar", "kokos"]
+        },
+        {
+          "id": "panda",
+          "file": "nature/panda.svg",
+          "label": "Panda",
+          "tags": ["djur", "björn", "bambu", "söt", "kina", "svartvit"]
+        },
+        {
+          "id": "paraply-regn",
+          "file": "nature/paraply-regn.svg",
+          "label": "Paraply regn",
+          "tags": ["regn", "väder", "blöt", "skydd", "paraply", "droppar"]
+        },
+        {
+          "id": "pingvin",
+          "file": "nature/pingvin.svg",
+          "label": "Pingvin",
+          "tags": ["fågel", "is", "kallt", "antarktis", "djur", "svartvit"]
+        },
+        {
+          "id": "planta",
+          "file": "nature/planta.svg",
+          "label": "Planta",
+          "tags": ["växt", "grodd", "odla", "frö", "ny", "grön"]
+        },
+        {
+          "id": "regnbåge",
+          "file": "nature/regnbåge.svg",
+          "label": "Regnbåge",
+          "tags": ["färger", "väder", "regn", "sol", "pride", "himmel"]
+        },
+        {
+          "id": "regnmoln",
+          "file": "nature/regnmoln.svg",
+          "label": "Regnmoln",
+          "tags": ["regn", "moln", "väder", "blött", "grått", "droppar"]
+        },
+        {
+          "id": "ros",
+          "file": "nature/ros.svg",
+          "label": "Ros",
+          "tags": ["blomma", "kärlek", "romantik", "röd", "present", "taggar"]
+        },
+        {
+          "id": "räv",
+          "file": "nature/räv.svg",
+          "label": "Räv",
+          "tags": ["djur", "skog", "listig", "orange", "vild", "rävansikte"]
+        },
+        {
+          "id": "sköldpadda",
+          "file": "nature/sköldpadda.svg",
+          "label": "Sköldpadda",
+          "tags": ["djur", "långsam", "skal", "hav", "reptil", "turtle"]
+        },
+        {
+          "id": "smäll",
+          "file": "nature/smäll.svg",
+          "label": "Smäll",
+          "tags": ["boom", "krasch", "explosion", "pang", "kollision", "effekt"]
+        },
+        {
+          "id": "snöflinga",
+          "file": "nature/snöflinga.svg",
+          "label": "Snöflinga",
+          "tags": ["snö", "vinter", "kallt", "is", "jul", "väder"]
+        },
+        {
+          "id": "sol",
+          "file": "nature/sol.svg",
+          "label": "Sol",
+          "tags": ["väder", "sommar", "varmt", "ljus", "dag", "soligt"]
+        },
+        {
+          "id": "sol-moln",
+          "file": "nature/sol-moln.svg",
+          "label": "Sol moln",
+          "tags": ["väder", "halvklart", "molnigt", "soligt", "himmel", "dag"]
+        },
+        {
+          "id": "solros",
+          "file": "nature/solros.svg",
+          "label": "Solros",
+          "tags": ["blomma", "gul", "sommar", "växt", "sol", "frön"]
+        },
+        {
+          "id": "stjärna",
+          "file": "nature/stjärna.svg",
+          "label": "Stjärna",
+          "tags": ["natt", "himmel", "glitter", "favorit", "betyg", "rymd"]
+        },
+        {
+          "id": "svamp",
+          "file": "nature/svamp.svg",
+          "label": "Svamp",
+          "tags": ["skog", "natur", "röd", "giftig", "matsvamp", "höst"]
+        },
+        {
+          "id": "tiger",
+          "file": "nature/tiger.svg",
+          "label": "Tiger",
+          "tags": ["djur", "kattdjur", "randig", "vild", "rovdjur", "tigeransikte"]
+        },
+        {
+          "id": "tornado",
+          "file": "nature/tornado.svg",
+          "label": "Tornado",
+          "tags": ["storm", "vind", "virvel", "väder", "fara", "orkan"]
+        },
+        {
+          "id": "träd",
+          "file": "nature/träd.svg",
+          "label": "Träd",
+          "tags": ["skog", "löv", "natur", "grön", "stam", "växt"]
+        },
+        {
+          "id": "tulpan",
+          "file": "nature/tulpan.svg",
+          "label": "Tulpan",
+          "tags": ["blomma", "vår", "växt", "rosa", "bukett", "trädgård"]
+        },
+        {
+          "id": "uggla",
+          "file": "nature/uggla.svg",
+          "label": "Uggla",
+          "tags": ["fågel", "natt", "klok", "skog", "djur", "hoar"]
+        },
+        {
+          "id": "val",
+          "file": "nature/val.svg",
+          "label": "Val",
+          "tags": ["hav", "djur", "vatten", "sprutar", "stor", "marin"]
+        },
+        {
+          "id": "yrsel",
+          "file": "nature/yrsel.svg",
+          "label": "Yrsel",
+          "tags": ["snurr", "stjärnor", "förvirrad", "omtöcknad", "yr", "effekt"]
+        }
+      ]
+    },
+    {
+      "id": "mat-dryck",
+      "label": "Mat & dryck",
+      "icon": "food-drink.svg",
+      "path": "mat & dryck",
+      "items": [
+        {
+          "id": "avokado",
+          "file": "food-drink/avokado.svg",
+          "label": "Avokado",
+          "tags": ["grön", "frukt", "toast", "guacamole", "nyttig", "mat"]
+        },
+        {
+          "id": "banan",
+          "file": "food-drink/banan.svg",
+          "label": "Banan",
+          "tags": ["frukt", "gul", "apa", "mellanmål", "söt", "skal"]
+        },
+        {
+          "id": "blåbär",
+          "file": "food-drink/blåbär.svg",
+          "label": "Blåbär",
+          "tags": ["bär", "frukt", "skog", "blå", "sylt", "smoothie"]
+        },
+        {
+          "id": "broccoli",
+          "file": "food-drink/broccoli.svg",
+          "label": "Broccoli",
+          "tags": ["grönsak", "grönt", "nyttig", "mat", "vegetariskt", "kål"]
+        },
+        {
+          "id": "bröd",
+          "file": "food-drink/bröd.svg",
+          "label": "Bröd",
+          "tags": ["limpa", "macka", "frukost", "bageri", "smörgås", "mat"]
+        },
+        {
+          "id": "chili",
+          "file": "food-drink/chili.svg",
+          "label": "Chili",
+          "tags": ["stark", "het", "peppar", "krydda", "röd", "spicy"]
+        },
+        {
+          "id": "choklad",
+          "file": "food-drink/choklad.svg",
+          "label": "Choklad",
+          "tags": ["godis", "söt", "kakao", "dessert", "mums", "kaka"]
+        },
+        {
+          "id": "citron",
+          "file": "food-drink/citron.svg",
+          "label": "Citron",
+          "tags": ["frukt", "sur", "gul", "citrus", "lemonad", "syrlig"]
+        },
+        {
+          "id": "croissant",
+          "file": "food-drink/croissant.svg",
+          "label": "Croissant",
+          "tags": ["bröd", "bakverk", "frukost", "fransk", "bageri", "smörig"]
+        },
+        {
+          "id": "cupcake",
+          "file": "food-drink/cupcake.svg",
+          "label": "Cupcake",
+          "tags": ["kaka", "bakelse", "fika", "söt", "glasyr", "dessert"]
+        },
+        {
+          "id": "friterad-räka",
+          "file": "food-drink/friterad-räka.svg",
+          "label": "Friterad räka",
+          "tags": ["räka", "tempura", "skaldjur", "friterat", "mat", "asiatiskt"]
+        },
+        {
+          "id": "födelsedagstårta",
+          "file": "food-drink/födelsedagstårta.svg",
+          "label": "Födelsedagstårta",
+          "tags": ["tårta", "födelsedag", "kalas", "ljus", "firande", "grattis"]
+        },
+        {
+          "id": "glass",
+          "file": "food-drink/glass.svg",
+          "label": "Glass",
+          "tags": ["dessert", "kallt", "sött", "strut", "sommar", "glasskula"]
+        },
+        {
+          "id": "godis",
+          "file": "food-drink/godis.svg",
+          "label": "Godis",
+          "tags": ["söt", "karamell", "snask", "lördagsgodis", "godbit", "socker"]
+        },
+        {
+          "id": "hamburgare",
+          "file": "food-drink/hamburgare.svg",
+          "label": "Hamburgare",
+          "tags": ["burgare", "snabbmat", "kött", "bröd", "mat", "restaurang"]
+        },
+        {
+          "id": "isbit",
+          "file": "food-drink/isbit.svg",
+          "label": "Isbit",
+          "tags": ["is", "kallt", "dryck", "frysa", "kyla", "kub"]
+        },
+        {
+          "id": "jordgubbe",
+          "file": "food-drink/jordgubbe.svg",
+          "label": "Jordgubbe",
+          "tags": ["bär", "frukt", "sommar", "röd", "söt", "midsommar"]
+        },
+        {
+          "id": "kaffe",
+          "file": "food-drink/kaffe.svg",
+          "label": "Kaffe",
+          "tags": ["dryck", "varmt", "kopp", "te", "fika", "morgon"]
+        },
+        {
+          "id": "kaka",
+          "file": "food-drink/kaka.svg",
+          "label": "Kaka",
+          "tags": ["cookie", "fika", "söt", "bakverk", "chokladbit", "dessert"]
+        },
+        {
+          "id": "klubba",
+          "file": "food-drink/klubba.svg",
+          "label": "Klubba",
+          "tags": ["godis", "slickepinne", "söt", "karamell", "barn", "socker"]
+        },
+        {
+          "id": "körsbär",
+          "file": "food-drink/körsbär.svg",
+          "label": "Körsbär",
+          "tags": ["bär", "frukt", "röd", "söt", "sommar", "par"]
+        },
+        {
+          "id": "majs",
+          "file": "food-drink/majs.svg",
+          "label": "Majs",
+          "tags": ["grönsak", "gul", "kolv", "grill", "mat", "corn"]
+        },
+        {
+          "id": "mjukglass",
+          "file": "food-drink/mjukglass.svg",
+          "label": "Mjukglass",
+          "tags": ["glass", "dessert", "kallt", "sommar", "strut", "söt"]
+        },
+        {
+          "id": "mjölk",
+          "file": "food-drink/mjölk.svg",
+          "label": "Mjölk",
+          "tags": ["dryck", "glas", "mejeri", "vit", "frukost", "ko"]
+        },
+        {
+          "id": "morot",
+          "file": "food-drink/morot.svg",
+          "label": "Morot",
+          "tags": ["grönsak", "orange", "kanin", "nyttig", "rotfrukt", "mat"]
+        },
+        {
+          "id": "munk",
+          "file": "food-drink/munk.svg",
+          "label": "Munk",
+          "tags": ["donut", "bakverk", "fika", "söt", "glasyr", "dessert"]
+        },
+        {
+          "id": "nappflaska",
+          "file": "food-drink/nappflaska.svg",
+          "label": "Nappflaska",
+          "tags": ["bebis", "barn", "mjölk", "flaska", "mata", "baby"]
+        },
+        {
+          "id": "ost",
+          "file": "food-drink/ost.svg",
+          "label": "Ost",
+          "tags": ["mejeri", "cheese", "macka", "gul", "mat", "bit"]
+        },
+        {
+          "id": "paj",
+          "file": "food-drink/paj.svg",
+          "label": "Paj",
+          "tags": ["bakverk", "dessert", "äppelpaj", "mat", "fika", "söt"]
+        },
+        {
+          "id": "pizza",
+          "file": "food-drink/pizza.svg",
+          "label": "Pizza",
+          "tags": ["mat", "slice", "snabbmat", "ost", "italiensk", "middag"]
+        },
+        {
+          "id": "pommes",
+          "file": "food-drink/pommes.svg",
+          "label": "Pommes",
+          "tags": ["frites", "potatis", "snabbmat", "friterat", "salt", "mat"]
+        },
+        {
+          "id": "popcorn",
+          "file": "food-drink/popcorn.svg",
+          "label": "Popcorn",
+          "tags": ["film", "bio", "snacks", "salt", "majs", "mys"]
+        },
+        {
+          "id": "sallad",
+          "file": "food-drink/sallad.svg",
+          "label": "Sallad",
+          "tags": ["grönt", "blad", "grönsak", "nyttig", "mat", "vegetariskt"]
+        },
+        {
+          "id": "salt",
+          "file": "food-drink/salt.svg",
+          "label": "Salt",
+          "tags": ["krydda", "smak", "salta", "matlagning", "strö", "burk"]
+        },
+        {
+          "id": "skål",
+          "file": "food-drink/skål.svg",
+          "label": "Skål",
+          "tags": ["soppa", "gröt", "mat", "frukost", "middag", "bestick"]
+        },
+        {
+          "id": "spaghetti",
+          "file": "food-drink/spaghetti.svg",
+          "label": "Spaghetti",
+          "tags": ["pasta", "italiensk", "middag", "nudlar", "tomatsås", "mat"]
+        },
+        {
+          "id": "stekpanna",
+          "file": "food-drink/stekpanna.svg",
+          "label": "Stekpanna",
+          "tags": ["laga-mat", "matlagning", "ägg", "frukost", "panna", "stek"]
+        },
+        {
+          "id": "sushi",
+          "file": "food-drink/sushi.svg",
+          "label": "Sushi",
+          "tags": ["japansk", "ris", "fisk", "mat", "lax", "asiatiskt"]
+        },
+        {
+          "id": "taco",
+          "file": "food-drink/taco.svg",
+          "label": "Taco",
+          "tags": ["mexikansk", "fredag", "mat", "skal", "köttfärs", "middag"]
+        },
+        {
+          "id": "tallrik-bestick",
+          "file": "food-drink/tallrik-bestick.svg",
+          "label": "Tallrik bestick",
+          "tags": ["äta", "måltid", "mat", "restaurang", "middag", "bestick"]
+        },
+        {
+          "id": "tekanna",
+          "file": "food-drink/tekanna.svg",
+          "label": "Tekanna",
+          "tags": ["te", "dryck", "varmt", "kanna", "fika", "brygga"]
+        },
+        {
+          "id": "tekopp",
+          "file": "food-drink/tekopp.svg",
+          "label": "Tekopp",
+          "tags": ["te", "dryck", "varmt", "kopp", "fika", "matcha"]
+        },
+        {
+          "id": "tårta",
+          "file": "food-drink/tårta.svg",
+          "label": "Tårta",
+          "tags": ["bakelse", "dessert", "fika", "söt", "jordgubbe", "kalas"]
+        },
+        {
+          "id": "varmkorv",
+          "file": "food-drink/varmkorv.svg",
+          "label": "Varmkorv",
+          "tags": ["korv", "hotdog", "snabbmat", "bröd", "senap", "mat"]
+        },
+        {
+          "id": "vattenmelon",
+          "file": "food-drink/vattenmelon.svg",
+          "label": "Vattenmelon",
+          "tags": ["melon", "frukt", "sommar", "röd", "saftig", "söt"]
+        },
+        {
+          "id": "vindruvor",
+          "file": "food-drink/vindruvor.svg",
+          "label": "Vindruvor",
+          "tags": ["druvor", "frukt", "vin", "lila", "grön", "klase"]
+        },
+        {
+          "id": "vinglas",
+          "file": "food-drink/vinglas.svg",
+          "label": "Vinglas",
+          "tags": ["vin", "dryck", "alkohol", "glas", "middag", "skål"]
+        },
+        {
+          "id": "äpple",
+          "file": "food-drink/äpple.svg",
+          "label": "Äpple",
+          "tags": ["frukt", "röd", "grön", "nyttig", "skola", "äppelpaj"]
+        },
+        {
+          "id": "öl",
+          "file": "food-drink/öl.svg",
+          "label": "Öl",
+          "tags": ["dryck", "alkohol", "bärs", "pub", "skål", "sejdel"]
+        }
+      ]
+    },
+    {
+      "id": "aktiviteter",
+      "label": "Aktiviteter",
+      "icon": "activity.svg",
+      "path": "aktiviteter",
+      "items": [
+        {
+          "id": "bada-badkar",
+          "file": "activity/bada-badkar.svg",
+          "label": "Bada badkar",
+          "tags": ["bad", "badkar", "tvätta", "avkoppling", "spa", "vatten"]
+        },
+        {
+          "id": "balettskor",
+          "file": "activity/balettskor.svg",
+          "label": "Balettskor",
+          "tags": ["balett", "dans", "skor", "dansare", "scen", "klassisk"]
+        },
+        {
+          "id": "ballong",
+          "file": "activity/ballong.svg",
+          "label": "Ballong",
+          "tags": ["kalas", "fest", "födelsedag", "firande", "luft", "party"]
+        },
+        {
+          "id": "basketboll",
+          "file": "activity/basketboll.svg",
+          "label": "Basketboll",
+          "tags": ["basket", "boll", "sport", "match", "korg", "träning"]
+        },
+        {
+          "id": "biljardboll",
+          "file": "activity/biljardboll.svg",
+          "label": "Biljardboll",
+          "tags": ["biljard", "pool", "åtta", "spel", "boll", "bar"]
+        },
+        {
+          "id": "bowling",
+          "file": "activity/bowling.svg",
+          "label": "Bowling",
+          "tags": ["käglor", "klot", "spel", "sport", "strike", "hall"]
+        },
+        {
+          "id": "böcker",
+          "file": "activity/böcker.svg",
+          "label": "Böcker",
+          "tags": ["läsa", "studera", "skola", "bibliotek", "kunskap", "bok"]
+        },
+        {
+          "id": "cirkustält",
+          "file": "activity/cirkustält.svg",
+          "label": "Cirkustält",
+          "tags": ["cirkus", "tält", "show", "föreställning", "akrobat", "nöje"]
+        },
+        {
+          "id": "cykling",
+          "file": "activity/cykling.svg",
+          "label": "Cykling",
+          "tags": ["cykla", "cykel", "sport", "träning", "motion", "transport"]
+        },
+        {
+          "id": "discokula",
+          "file": "activity/discokula.svg",
+          "label": "Discokula",
+          "tags": ["disco", "dans", "fest", "musik", "glitter", "party"]
+        },
+        {
+          "id": "enarmad-bandit",
+          "file": "activity/enarmad-bandit.svg",
+          "label": "Enarmad bandit",
+          "tags": ["spelautomat", "casino", "spel", "jackpot", "tur", "pengar"]
+        },
+        {
+          "id": "fiskespö",
+          "file": "activity/fiskespö.svg",
+          "label": "Fiskespö",
+          "tags": ["fiska", "fiske", "spö", "fisk", "sjö", "hobby"]
+        },
+        {
+          "id": "fotboll",
+          "file": "activity/fotboll.svg",
+          "label": "Fotboll",
+          "tags": ["boll", "sport", "match", "mål", "sparka", "lag"]
+        },
+        {
+          "id": "gitarr",
+          "file": "activity/gitarr.svg",
+          "label": "Gitarr",
+          "tags": ["musik", "instrument", "spela", "rock", "strängar", "konsert"]
+        },
+        {
+          "id": "golfhål",
+          "file": "activity/golfhål.svg",
+          "label": "Golfhål",
+          "tags": ["golf", "sport", "green", "flagga", "hål", "klubba"]
+        },
+        {
+          "id": "guldmedalj",
+          "file": "activity/guldmedalj.svg",
+          "label": "Guldmedalj",
+          "tags": ["medalj", "guld", "vinnare", "första-plats", "pris", "seger"]
+        },
+        {
+          "id": "hjulning",
+          "file": "activity/hjulning.svg",
+          "label": "Hjulning",
+          "tags": ["gymnastik", "akrobatik", "träning", "sport", "volt", "rörelse"]
+        },
+        {
+          "id": "hästkapplöpning",
+          "file": "activity/hästkapplöpning.svg",
+          "label": "Hästkapplöpning",
+          "tags": ["häst", "ridning", "lopp", "sport", "jockey", "galopp"]
+        },
+        {
+          "id": "hörlurar",
+          "file": "activity/hörlurar.svg",
+          "label": "Hörlurar",
+          "tags": ["musik", "lyssna", "ljud", "podcast", "headset", "audio"]
+        },
+        {
+          "id": "jonglering",
+          "file": "activity/jonglering.svg",
+          "label": "Jonglering",
+          "tags": ["jonglera", "cirkus", "show", "bollar", "artist", "uppträda"]
+        },
+        {
+          "id": "joystick",
+          "file": "activity/joystick.svg",
+          "label": "Joystick",
+          "tags": ["spel", "gaming", "tv-spel", "kontroll", "arkad", "game"]
+        },
+        {
+          "id": "kamera",
+          "file": "activity/kamera.svg",
+          "label": "Kamera",
+          "tags": ["foto", "bild", "fotografera", "blixt", "snapshot", "minne"]
+        },
+        {
+          "id": "karusellhäst",
+          "file": "activity/karusellhäst.svg",
+          "label": "Karusellhäst",
+          "tags": ["karusell", "nöjesfält", "häst", "tivoli", "barn", "åkattraktion"]
+        },
+        {
+          "id": "keyboard",
+          "file": "activity/keyboard.svg",
+          "label": "Keyboard",
+          "tags": ["musik", "piano", "instrument", "tangenter", "spela", "synth"]
+        },
+        {
+          "id": "konfetti",
+          "file": "activity/konfetti.svg",
+          "label": "Konfetti",
+          "tags": ["fest", "firande", "party", "kalas", "glädje", "färger"]
+        },
+        {
+          "id": "löpning",
+          "file": "activity/löpning.svg",
+          "label": "Löpning",
+          "tags": ["springa", "träning", "motion", "sport", "jogga", "lopp"]
+        },
+        {
+          "id": "meditation",
+          "file": "activity/meditation.svg",
+          "label": "Meditation",
+          "tags": ["yoga", "lugn", "andas", "mindfulness", "avslappning", "lotus"]
+        },
+        {
+          "id": "mikrofon",
+          "file": "activity/mikrofon.svg",
+          "label": "Mikrofon",
+          "tags": ["sjunga", "röst", "podcast", "karaoke", "musik", "scen"]
+        },
+        {
+          "id": "mål",
+          "file": "activity/mål.svg",
+          "label": "Mål",
+          "tags": ["målnät", "fotboll", "sport", "match", "poäng", "goal"]
+        },
+        {
+          "id": "måltavla",
+          "file": "activity/måltavla.svg",
+          "label": "Måltavla",
+          "tags": ["träff", "mål", "pil", "precision", "target", "mitt-i-prick"]
+        },
+        {
+          "id": "palett",
+          "file": "activity/palett.svg",
+          "label": "Palett",
+          "tags": ["måla", "konst", "färg", "artist", "kreativ", "målning"]
+        },
+        {
+          "id": "partykanon",
+          "file": "activity/partykanon.svg",
+          "label": "Partykanon",
+          "tags": ["fest", "konfetti", "firande", "kalas", "party", "grattis"]
+        },
+        {
+          "id": "penna",
+          "file": "activity/penna.svg",
+          "label": "Penna",
+          "tags": ["skriva", "rita", "skola", "anteckna", "blyerts", "text"]
+        },
+        {
+          "id": "pensel",
+          "file": "activity/pensel.svg",
+          "label": "Pensel",
+          "tags": ["måla", "färg", "konst", "kreativ", "borste", "målning"]
+        },
+        {
+          "id": "pingis",
+          "file": "activity/pingis.svg",
+          "label": "Pingis",
+          "tags": ["bordtennis", "sport", "racket", "boll", "match", "spel"]
+        },
+        {
+          "id": "pokal",
+          "file": "activity/pokal.svg",
+          "label": "Pokal",
+          "tags": ["trofé", "pris", "vinnare", "seger", "mästare", "tävling"]
+        },
+        {
+          "id": "rullskridsko",
+          "file": "activity/rullskridsko.svg",
+          "label": "Rullskridsko",
+          "tags": ["åka", "hjul", "skridsko", "sport", "retro", "rullskor"]
+        },
+        {
+          "id": "rutschkana",
+          "file": "activity/rutschkana.svg",
+          "label": "Rutschkana",
+          "tags": ["lekplats", "barn", "leka", "kana", "park", "lek"]
+        },
+        {
+          "id": "simning",
+          "file": "activity/simning.svg",
+          "label": "Simning",
+          "tags": ["simma", "vatten", "pool", "sport", "träning", "bad"]
+        },
+        {
+          "id": "skateboard",
+          "file": "activity/skateboard.svg",
+          "label": "Skateboard",
+          "tags": ["skate", "bräda", "hjul", "sport", "trick", "åka"]
+        },
+        {
+          "id": "sova",
+          "file": "activity/sova.svg",
+          "label": "Sova",
+          "tags": ["säng", "vila", "sömn", "trött", "natt", "ligga"]
+        },
+        {
+          "id": "studsa-boll",
+          "file": "activity/studsa-boll.svg",
+          "label": "Studsa boll",
+          "tags": ["boll", "basket", "lek", "sport", "studsa", "träning"]
+        },
+        {
+          "id": "styrkelyft",
+          "file": "activity/styrkelyft.svg",
+          "label": "Styrkelyft",
+          "tags": ["träning", "gym", "vikter", "lyfta", "styrka", "skivstång"]
+        },
+        {
+          "id": "surfing",
+          "file": "activity/surfing.svg",
+          "label": "Surfing",
+          "tags": ["surfa", "våg", "hav", "strand", "sport", "bräda"]
+        },
+        {
+          "id": "tagning",
+          "file": "activity/tagning.svg",
+          "label": "Tagning",
+          "tags": ["film", "klappa", "scen", "bio", "inspelning", "kamera"]
+        },
+        {
+          "id": "teatermasker",
+          "file": "activity/teatermasker.svg",
+          "label": "Teatermasker",
+          "tags": ["teater", "drama", "scen", "komedi", "tragedi", "föreställning"]
+        },
+        {
+          "id": "tennis",
+          "file": "activity/tennis.svg",
+          "label": "Tennis",
+          "tags": ["sport", "racket", "boll", "match", "serve", "träning"]
+        },
+        {
+          "id": "tv-spel",
+          "file": "activity/tv-spel.svg",
+          "label": "Tv-spel",
+          "tags": ["spel", "gaming", "kontroll", "console", "game", "nintendo"]
+        },
+        {
+          "id": "tärning",
+          "file": "activity/tärning.svg",
+          "label": "Tärning",
+          "tags": ["spel", "brädspel", "tur", "slump", "kasta", "dice"]
+        }
+      ]
+    },
+    {
+      "id": "platser-resor",
+      "label": "Platser & resor",
+      "icon": "travel-places.svg",
+      "path": "platser & resor",
+      "items": [
+        {
+          "id": "ambulans",
+          "file": "travel-places/ambulans.svg",
+          "label": "Ambulans",
+          "tags": ["sjukvård", "akut", "nödfall", "sjukhus", "sirener", "räddning"]
+        },
+        {
+          "id": "ankare",
+          "file": "travel-places/ankare.svg",
+          "label": "Ankare",
+          "tags": ["båt", "hav", "sjöfart", "hamn", "skepp", "marin"]
+        },
+        {
+          "id": "bank",
+          "file": "travel-places/bank.svg",
+          "label": "Bank",
+          "tags": ["pengar", "byggnad", "ekonomi", "finans", "lån", "kontor"]
+        },
+        {
+          "id": "bensinpump",
+          "file": "travel-places/bensinpump.svg",
+          "label": "Bensinpump",
+          "tags": ["bensin", "mack", "bränsle", "bil", "tanka", "station"]
+        },
+        {
+          "id": "berg",
+          "file": "travel-places/berg.svg",
+          "label": "Berg",
+          "tags": ["fjäll", "natur", "landskap", "vandra", "fuji", "topp"]
+        },
+        {
+          "id": "berg-och-dalbana",
+          "file": "travel-places/berg-och-dalbana.svg",
+          "label": "Berg och dalbana",
+          "tags": ["nöjesfält", "tivoli", "åkattraktion", "fart", "karusell", "kul"]
+        },
+        {
+          "id": "bil",
+          "file": "travel-places/bil.svg",
+          "label": "Bil",
+          "tags": ["auto", "fordon", "köra", "väg", "transport", "resa"]
+        },
+        {
+          "id": "brandbil",
+          "file": "travel-places/brandbil.svg",
+          "label": "Brandbil",
+          "tags": ["brand", "räddning", "brandkår", "sirener", "nödfall", "eld"]
+        },
+        {
+          "id": "bro-natt",
+          "file": "travel-places/bro-natt.svg",
+          "label": "Bro natt",
+          "tags": ["bro", "natt", "stad", "vatten", "resa", "utsikt"]
+        },
+        {
+          "id": "buss",
+          "file": "travel-places/buss.svg",
+          "label": "Buss",
+          "tags": ["transport", "kollektivtrafik", "resa", "hållplats", "fordon", "skola"]
+        },
+        {
+          "id": "butik",
+          "file": "travel-places/butik.svg",
+          "label": "Butik",
+          "tags": ["affär", "handla", "shop", "kiosk", "mataffär", "byggnad"]
+        },
+        {
+          "id": "camping",
+          "file": "travel-places/camping.svg",
+          "label": "Camping",
+          "tags": ["tält", "natur", "resa", "läger", "friluftsliv", "semester"]
+        },
+        {
+          "id": "cykel",
+          "file": "travel-places/cykel.svg",
+          "label": "Cykel",
+          "tags": ["cykla", "transport", "motion", "fordon", "väg", "pendla"]
+        },
+        {
+          "id": "fabrik",
+          "file": "travel-places/fabrik.svg",
+          "label": "Fabrik",
+          "tags": ["industri", "byggnad", "arbete", "produktion", "rök", "verkstad"]
+        },
+        {
+          "id": "fartyg",
+          "file": "travel-places/fartyg.svg",
+          "label": "Fartyg",
+          "tags": ["skepp", "båt", "hav", "resa", "sjöfart", "transport"]
+        },
+        {
+          "id": "flygplan",
+          "file": "travel-places/flygplan.svg",
+          "label": "Flygplan",
+          "tags": ["flyg", "resa", "semester", "airport", "transport", "luft"]
+        },
+        {
+          "id": "frihetsgudinnan",
+          "file": "travel-places/frihetsgudinnan.svg",
+          "label": "Frihetsgudinnan",
+          "tags": ["new-york", "usa", "staty", "amerika", "landmärke", "frihet"]
+        },
+        {
+          "id": "helikopter",
+          "file": "travel-places/helikopter.svg",
+          "label": "Helikopter",
+          "tags": ["flyg", "luft", "transport", "räddning", "rotor", "resa"]
+        },
+        {
+          "id": "hotell",
+          "file": "travel-places/hotell.svg",
+          "label": "Hotell",
+          "tags": ["boende", "resa", "semester", "rum", "sova", "byggnad"]
+        },
+        {
+          "id": "hus-trädgård",
+          "file": "travel-places/hus-trädgård.svg",
+          "label": "Hus trädgård",
+          "tags": ["hus", "hem", "villa", "trädgård", "bostad", "familj"]
+        },
+        {
+          "id": "kartnål",
+          "file": "travel-places/kartnål.svg",
+          "label": "Kartnål",
+          "tags": ["plats", "position", "karta", "pin", "adress", "här"]
+        },
+        {
+          "id": "kompass",
+          "file": "travel-places/kompass.svg",
+          "label": "Kompass",
+          "tags": ["riktning", "navigera", "karta", "resa", "norr", "orientering"]
+        },
+        {
+          "id": "kontor",
+          "file": "travel-places/kontor.svg",
+          "label": "Kontor",
+          "tags": ["byggnad", "arbete", "företag", "stad", "jobb", "skyskrapa"]
+        },
+        {
+          "id": "lok",
+          "file": "travel-places/lok.svg",
+          "label": "Lok",
+          "tags": ["tåg", "järnväg", "transport", "ånglok", "resa", "räls"]
+        },
+        {
+          "id": "motorcykel",
+          "file": "travel-places/motorcykel.svg",
+          "label": "Motorcykel",
+          "tags": ["mc", "fordon", "köra", "väg", "snabb", "transport"]
+        },
+        {
+          "id": "nationalpark",
+          "file": "travel-places/nationalpark.svg",
+          "label": "Nationalpark",
+          "tags": ["natur", "park", "skog", "vandra", "landskap", "friluftsliv"]
+        },
+        {
+          "id": "parasoll",
+          "file": "travel-places/parasoll.svg",
+          "label": "Parasoll",
+          "tags": ["strand", "sol", "skugga", "semester", "sommar", "paraply"]
+        },
+        {
+          "id": "pariserhjul",
+          "file": "travel-places/pariserhjul.svg",
+          "label": "Pariserhjul",
+          "tags": ["nöjesfält", "tivoli", "karusell", "utsikt", "åkattraktion", "semester"]
+        },
+        {
+          "id": "raket",
+          "file": "travel-places/raket.svg",
+          "label": "Raket",
+          "tags": ["rymd", "start", "snabb", "uppskjutning", "måne", "framgång"]
+        },
+        {
+          "id": "satellit",
+          "file": "travel-places/satellit.svg",
+          "label": "Satellit",
+          "tags": ["rymd", "signal", "teknik", "kommunikation", "orbit", "gps"]
+        },
+        {
+          "id": "segelbåt",
+          "file": "travel-places/segelbåt.svg",
+          "label": "Segelbåt",
+          "tags": ["båt", "segla", "hav", "semester", "vind", "sjö"]
+        },
+        {
+          "id": "sjukhus",
+          "file": "travel-places/sjukhus.svg",
+          "label": "Sjukhus",
+          "tags": ["vård", "läkare", "akut", "sjuk", "medicin", "byggnad"]
+        },
+        {
+          "id": "skola",
+          "file": "travel-places/skola.svg",
+          "label": "Skola",
+          "tags": ["utbildning", "klassrum", "lärare", "elev", "studera", "byggnad"]
+        },
+        {
+          "id": "soluppgång",
+          "file": "travel-places/soluppgång.svg",
+          "label": "Soluppgång",
+          "tags": ["morgon", "sol", "gryning", "landskap", "dag", "himmel"]
+        },
+        {
+          "id": "sparkcykel",
+          "file": "travel-places/sparkcykel.svg",
+          "label": "Sparkcykel",
+          "tags": ["scooter", "elspark", "transport", "hjul", "stad", "åka"]
+        },
+        {
+          "id": "spårvagn",
+          "file": "travel-places/spårvagn.svg",
+          "label": "Spårvagn",
+          "tags": ["tram", "kollektivtrafik", "räls", "stad", "transport", "resa"]
+        },
+        {
+          "id": "stadskväll",
+          "file": "travel-places/stadskväll.svg",
+          "label": "Stadskväll",
+          "tags": ["stad", "kväll", "solnedgång", "byggnader", "skyline", "utsikt"]
+        },
+        {
+          "id": "stjärnhimmel",
+          "file": "travel-places/stjärnhimmel.svg",
+          "label": "Stjärnhimmel",
+          "tags": ["natt", "stjärnor", "himmel", "mörker", "utsikt", "kväll"]
+        },
+        {
+          "id": "strand",
+          "file": "travel-places/strand.svg",
+          "label": "Strand",
+          "tags": ["semester", "hav", "sol", "paraply", "sommar", "bad"]
+        },
+        {
+          "id": "taxi",
+          "file": "travel-places/taxi.svg",
+          "label": "Taxi",
+          "tags": ["bil", "transport", "resa", "chaufför", "stad", "gul"]
+        },
+        {
+          "id": "tempel",
+          "file": "travel-places/tempel.svg",
+          "label": "Tempel",
+          "tags": ["byggnad", "klassisk", "museum", "historia", "kolonner", "antik"]
+        },
+        {
+          "id": "tunnelbana",
+          "file": "travel-places/tunnelbana.svg",
+          "label": "Tunnelbana",
+          "tags": ["metro", "kollektivtrafik", "tåg", "station", "stad", "transport"]
+        },
+        {
+          "id": "tåg",
+          "file": "travel-places/tåg.svg",
+          "label": "Tåg",
+          "tags": ["järnväg", "räls", "station", "resa", "transport", "pendla"]
+        },
+        {
+          "id": "ufo",
+          "file": "travel-places/ufo.svg",
+          "label": "Ufo",
+          "tags": ["rymd", "utomjording", "flygande-tefat", "alien", "mystik", "sci-fi"]
+        },
+        {
+          "id": "vulkan",
+          "file": "travel-places/vulkan.svg",
+          "label": "Vulkan",
+          "tags": ["lava", "berg", "utbrott", "eld", "natur", "fara"]
+        },
+        {
+          "id": "vägarbete",
+          "file": "travel-places/vägarbete.svg",
+          "label": "Vägarbete",
+          "tags": ["bygge", "arbete", "trafik", "kon", "väg", "varning"]
+        },
+        {
+          "id": "världskarta",
+          "file": "travel-places/världskarta.svg",
+          "label": "Världskarta",
+          "tags": ["karta", "världen", "resa", "geografi", "plats", "land"]
+        },
+        {
+          "id": "öde-ö",
+          "file": "travel-places/öde-ö.svg",
+          "label": "Öde ö",
+          "tags": ["ö", "strand", "hav", "semester", "ensam", "palm"]
+        },
+        {
+          "id": "öken",
+          "file": "travel-places/öken.svg",
+          "label": "Öken",
+          "tags": ["sand", "torrt", "varmt", "landskap", "kamel", "natur"]
+        }
+      ]
+    },
+    {
+      "id": "prylar",
+      "label": "Prylar",
+      "icon": "objects.svg",
+      "path": "prylar",
+      "items": [
+        {
+          "id": "anteckning",
+          "file": "objects/anteckning.svg",
+          "label": "Anteckning",
+          "tags": ["memo", "skriva", "notis", "papper", "lista", "meddelande"]
+        },
+        {
+          "id": "bok",
+          "file": "objects/bok.svg",
+          "label": "Bok",
+          "tags": ["läsa", "öppen-bok", "studera", "kunskap", "bibliotek", "skola"]
+        },
+        {
+          "id": "bomb",
+          "file": "objects/bomb.svg",
+          "label": "Bomb",
+          "tags": ["explosion", "fara", "spränga", "pang", "hot", "smäll"]
+        },
+        {
+          "id": "brandsläckare",
+          "file": "objects/brandsläckare.svg",
+          "label": "Brandsläckare",
+          "tags": ["brand", "släcka", "eld", "säkerhet", "nödfall", "räddning"]
+        },
+        {
+          "id": "brevlåda",
+          "file": "objects/brevlåda.svg",
+          "label": "Brevlåda",
+          "tags": ["post", "brev", "mail", "skicka", "inkorg", "flagga"]
+        },
+        {
+          "id": "dator",
+          "file": "objects/dator.svg",
+          "label": "Dator",
+          "tags": ["desktop", "skärm", "teknik", "kontor", "arbete", "pc"]
+        },
+        {
+          "id": "diskett",
+          "file": "objects/diskett.svg",
+          "label": "Diskett",
+          "tags": ["spara", "save", "gammal", "data", "lagring", "fil"]
+        },
+        {
+          "id": "förstoringsglas",
+          "file": "objects/förstoringsglas.svg",
+          "label": "Förstoringsglas",
+          "tags": ["sök", "leta", "undersöka", "zoom", "detektiv", "granska"]
+        },
+        {
+          "id": "gem",
+          "file": "objects/gem.svg",
+          "label": "Gem",
+          "tags": ["paperclip", "fästa", "papper", "kontor", "bilaga", "klämma"]
+        },
+        {
+          "id": "glödlampa",
+          "file": "objects/glödlampa.svg",
+          "label": "Glödlampa",
+          "tags": ["idé", "ljus", "smart", "uppfinning", "tanke", "lampa"]
+        },
+        {
+          "id": "gravsten",
+          "file": "objects/gravsten.svg",
+          "label": "Gravsten",
+          "tags": ["grav", "död", "kyrkogård", "minne", "begravning", "rip"]
+        },
+        {
+          "id": "häftstift",
+          "file": "objects/häftstift.svg",
+          "label": "Häftstift",
+          "tags": ["nål", "pin", "anslag", "fästa", "kontor", "tavla"]
+        },
+        {
+          "id": "kalender",
+          "file": "objects/kalender.svg",
+          "label": "Kalender",
+          "tags": ["datum", "tid", "planera", "möte", "schema", "dag"]
+        },
+        {
+          "id": "klocka",
+          "file": "objects/klocka.svg",
+          "label": "Klocka",
+          "tags": ["tid", "armbandsur", "watch", "timer", "sen", "handled"]
+        },
+        {
+          "id": "kontakt",
+          "file": "objects/kontakt.svg",
+          "label": "Kontakt",
+          "tags": ["el", "sladd", "ström", "uttag", "ladda", "plugg"]
+        },
+        {
+          "id": "kreditkort",
+          "file": "objects/kreditkort.svg",
+          "label": "Kreditkort",
+          "tags": ["kort", "betala", "bankkort", "pengar", "köp", "payment"]
+        },
+        {
+          "id": "kugghjul",
+          "file": "objects/kugghjul.svg",
+          "label": "Kugghjul",
+          "tags": ["inställningar", "settings", "verktyg", "maskin", "mekanik", "konfiguration"]
+        },
+        {
+          "id": "kundvagn",
+          "file": "objects/kundvagn.svg",
+          "label": "Kundvagn",
+          "tags": ["handla", "shopping", "butik", "köp", "varukorg", "mataffär"]
+        },
+        {
+          "id": "kuvert",
+          "file": "objects/kuvert.svg",
+          "label": "Kuvert",
+          "tags": ["brev", "mail", "post", "meddelande", "skicka", "epost"]
+        },
+        {
+          "id": "laptop",
+          "file": "objects/laptop.svg",
+          "label": "Laptop",
+          "tags": ["dator", "bärbar", "jobb", "teknik", "arbete", "skärm"]
+        },
+        {
+          "id": "ljus",
+          "file": "objects/ljus.svg",
+          "label": "Ljus",
+          "tags": ["stearinljus", "låga", "mys", "mörker", "tända", "minne"]
+        },
+        {
+          "id": "länk",
+          "file": "objects/länk.svg",
+          "label": "Länk",
+          "tags": ["kedja", "url", "koppling", "hyperlänk", "dela", "webb"]
+        },
+        {
+          "id": "lås",
+          "file": "objects/lås.svg",
+          "label": "Lås",
+          "tags": ["låst", "säkerhet", "skydd", "nyckel", "privat", "stängd"]
+        },
+        {
+          "id": "magnet",
+          "file": "objects/magnet.svg",
+          "label": "Magnet",
+          "tags": ["dra", "metall", "attraktion", "fysik", "kraft", "hästsko"]
+        },
+        {
+          "id": "mobil",
+          "file": "objects/mobil.svg",
+          "label": "Mobil",
+          "tags": ["telefon", "smartphone", "ring", "app", "sms", "skärm"]
+        },
+        {
+          "id": "nallebjörn",
+          "file": "objects/nallebjörn.svg",
+          "label": "Nallebjörn",
+          "tags": ["nalle", "leksak", "barn", "mjukis", "björn", "söt"]
+        },
+        {
+          "id": "nyckel",
+          "file": "objects/nyckel.svg",
+          "label": "Nyckel",
+          "tags": ["lås", "öppna", "säkerhet", "hem", "access", "inloggning"]
+        },
+        {
+          "id": "papperskorg",
+          "file": "objects/papperskorg.svg",
+          "label": "Papperskorg",
+          "tags": ["skräp", "slänga", "radera", "ta-bort", "trash", "avfall"]
+        },
+        {
+          "id": "pengar",
+          "file": "objects/pengar.svg",
+          "label": "Pengar",
+          "tags": ["pengapåse", "rik", "kontanter", "ekonomi", "spara", "betala"]
+        },
+        {
+          "id": "piller",
+          "file": "objects/piller.svg",
+          "label": "Piller",
+          "tags": ["medicin", "läkemedel", "sjuk", "vård", "tablett", "apotek"]
+        },
+        {
+          "id": "present",
+          "file": "objects/present.svg",
+          "label": "Present",
+          "tags": ["gåva", "paket", "födelsedag", "jul", "överraskning", "firande"]
+        },
+        {
+          "id": "radio",
+          "file": "objects/radio.svg",
+          "label": "Radio",
+          "tags": ["musik", "ljud", "sändning", "nyheter", "fm", "apparat"]
+        },
+        {
+          "id": "rosett",
+          "file": "objects/rosett.svg",
+          "label": "Rosett",
+          "tags": ["band", "present", "dekoration", "fint", "rosa", "knut"]
+        },
+        {
+          "id": "sax",
+          "file": "objects/sax.svg",
+          "label": "Sax",
+          "tags": ["klippa", "verktyg", "papper", "hår", "kontor", "cut"]
+        },
+        {
+          "id": "skrivare",
+          "file": "objects/skrivare.svg",
+          "label": "Skrivare",
+          "tags": ["printer", "papper", "printa", "kontor", "dokument", "utskrift"]
+        },
+        {
+          "id": "skrivplatta",
+          "file": "objects/skrivplatta.svg",
+          "label": "Skrivplatta",
+          "tags": ["clipboard", "checklista", "papper", "anteckning", "kontor", "lista"]
+        },
+        {
+          "id": "sköld",
+          "file": "objects/sköld.svg",
+          "label": "Sköld",
+          "tags": ["skydd", "säkerhet", "försvar", "vapen", "trygghet", "guard"]
+        },
+        {
+          "id": "stetoskop",
+          "file": "objects/stetoskop.svg",
+          "label": "Stetoskop",
+          "tags": ["läkare", "sjukvård", "vård", "hjärta", "medicin", "undersökning"]
+        },
+        {
+          "id": "studiomikrofon",
+          "file": "objects/studiomikrofon.svg",
+          "label": "Studiomikrofon",
+          "tags": ["mikrofon", "podcast", "radio", "inspelning", "röst", "studio"]
+        },
+        {
+          "id": "telefon",
+          "file": "objects/telefon.svg",
+          "label": "Telefon",
+          "tags": ["ringa", "samtal", "lur", "kontakt", "kommunikation", "fast-telefon"]
+        },
+        {
+          "id": "termometer",
+          "file": "objects/termometer.svg",
+          "label": "Termometer",
+          "tags": ["temperatur", "feber", "varmt", "kallt", "mäta", "väder"]
+        },
+        {
+          "id": "tidning",
+          "file": "objects/tidning.svg",
+          "label": "Tidning",
+          "tags": ["nyheter", "papper", "artikel", "journalistik", "läsa", "press"]
+        },
+        {
+          "id": "timer",
+          "file": "objects/timer.svg",
+          "label": "Timer",
+          "tags": ["tid", "nedräkning", "klocka", "alarm", "stoppa", "mäta"]
+        },
+        {
+          "id": "timglas",
+          "file": "objects/timglas.svg",
+          "label": "Timglas",
+          "tags": ["tid", "vänta", "sand", "deadline", "nedräkning", "snart"]
+        },
+        {
+          "id": "tv",
+          "file": "objects/tv.svg",
+          "label": "Tv",
+          "tags": ["television", "skärm", "film", "serie", "titta", "underhållning"]
+        },
+        {
+          "id": "verktyg",
+          "file": "objects/verktyg.svg",
+          "label": "Verktyg",
+          "tags": ["hammare", "skiftnyckel", "fixa", "reparera", "bygga", "mekanik"]
+        },
+        {
+          "id": "väckarklocka",
+          "file": "objects/väckarklocka.svg",
+          "label": "Väckarklocka",
+          "tags": ["alarm", "vakna", "tid", "morgon", "ring", "klocka"]
+        },
+        {
+          "id": "våg",
+          "file": "objects/våg.svg",
+          "label": "Våg",
+          "tags": ["balans", "rättvisa", "juridik", "lag", "väga", "domstol"]
+        },
+        {
+          "id": "ädelsten",
+          "file": "objects/ädelsten.svg",
+          "label": "Ädelsten",
+          "tags": ["diamant", "juvel", "rik", "glitter", "smycke", "värdefull"]
+        }
+      ]
+    },
+    {
+      "id": "symboler",
+      "label": "Symboler",
+      "icon": "symbols.svg",
+      "path": "symboler",
+      "items": [
+        {
+          "id": "artonårsgräns",
+          "file": "symbols/artonårsgräns.svg",
+          "label": "Artonårsgräns",
+          "tags": ["18", "åldersgräns", "vuxen", "förbjudet", "barnförbjudet", "myndig"]
+        },
+        {
+          "id": "barnövergång",
+          "file": "symbols/barnövergång.svg",
+          "label": "Barnövergång",
+          "tags": ["barn", "övergång", "skola", "varning", "trafik", "skylt"]
+        },
+        {
+          "id": "bock",
+          "file": "symbols/bock.svg",
+          "label": "Bock",
+          "tags": ["check", "klart", "godkänt", "ja", "rätt", "bekräfta"]
+        },
+        {
+          "id": "brinnande-hjärta",
+          "file": "symbols/brinnande-hjärta.svg",
+          "label": "Brinnande hjärta",
+          "tags": ["hjärta", "kärlek", "passion", "eld", "brinner", "romantik"]
+        },
+        {
+          "id": "brustet-hjärta",
+          "file": "symbols/brustet-hjärta.svg",
+          "label": "Brustet hjärta",
+          "tags": ["hjärta", "ledsen", "sorg", "krossat", "slut", "kärlek"]
+        },
+        {
+          "id": "bultande-hjärta",
+          "file": "symbols/bultande-hjärta.svg",
+          "label": "Bultande hjärta",
+          "tags": ["hjärta", "kärlek", "puls", "slag", "romantik", "känslor"]
+        },
+        {
+          "id": "cool",
+          "file": "symbols/cool.svg",
+          "label": "Cool",
+          "tags": ["knapp", "svalt", "häftig", "bra", "text", "symbol"]
+        },
+        {
+          "id": "fredssymbol",
+          "file": "symbols/fredssymbol.svg",
+          "label": "Fredssymbol",
+          "tags": ["fred", "peace", "symbol", "lugn", "hippie", "antikrig"]
+        },
+        {
+          "id": "frågetecken",
+          "file": "symbols/frågetecken.svg",
+          "label": "Frågetecken",
+          "tags": ["fråga", "undrar", "oklart", "hjälp", "vad", "question"]
+        },
+        {
+          "id": "förbjudet",
+          "file": "symbols/förbjudet.svg",
+          "label": "Förbjudet",
+          "tags": ["stopp", "nej", "inte", "förbud", "no", "blockerad"]
+        },
+        {
+          "id": "glittrigt-hjärta",
+          "file": "symbols/glittrigt-hjärta.svg",
+          "label": "Glittrigt hjärta",
+          "tags": ["hjärta", "kärlek", "glitter", "gnistor", "fint", "romantik"]
+        },
+        {
+          "id": "hashtag",
+          "file": "symbols/hashtag.svg",
+          "label": "Hashtag",
+          "tags": ["fyrkant", "nummer", "tagg", "sociala-medier", "hash", "tecken"]
+        },
+        {
+          "id": "hjärta",
+          "file": "symbols/hjärta.svg",
+          "label": "Hjärta",
+          "tags": ["kärlek", "älskar", "rött", "romantik", "gilla", "love"]
+        },
+        {
+          "id": "hjärta-rosett",
+          "file": "symbols/hjärta-rosett.svg",
+          "label": "Hjärta rosett",
+          "tags": ["hjärta", "present", "gåva", "kärlek", "rosett", "romantik"]
+        },
+        {
+          "id": "hjärter",
+          "file": "symbols/hjärter.svg",
+          "label": "Hjärter",
+          "tags": ["kortlek", "kort", "spel", "hjärta", "suit", "röd"]
+        },
+        {
+          "id": "hundra-poäng",
+          "file": "symbols/hundra-poäng.svg",
+          "label": "Hundra poäng",
+          "tags": ["100", "hundra", "perfekt", "full-pott", "bra", "poäng"]
+        },
+        {
+          "id": "hög-volym",
+          "file": "symbols/hög-volym.svg",
+          "label": "Hög volym",
+          "tags": ["ljud", "högt", "speaker", "volym", "musik", "audio"]
+        },
+        {
+          "id": "högtalare",
+          "file": "symbols/högtalare.svg",
+          "label": "Högtalare",
+          "tags": ["ljud", "megafon", "annonsera", "ropa", "volym", "speaker"]
+        },
+        {
+          "id": "joker",
+          "file": "symbols/joker.svg",
+          "label": "Joker",
+          "tags": ["kort", "kortlek", "spel", "clown", "wildcard", "narr"]
+        },
+        {
+          "id": "klocka",
+          "file": "symbols/klocka.svg",
+          "label": "Klocka",
+          "tags": ["tid", "fyra", "klockan-fyra", "ur", "schema", "time"]
+        },
+        {
+          "id": "klöver",
+          "file": "symbols/klöver.svg",
+          "label": "Klöver",
+          "tags": ["kortlek", "kort", "spel", "club", "suit", "svart"]
+        },
+        {
+          "id": "kryss",
+          "file": "symbols/kryss.svg",
+          "label": "Kryss",
+          "tags": ["x", "fel", "nej", "stäng", "avbryt", "markera"]
+        },
+        {
+          "id": "kvinnotecken",
+          "file": "symbols/kvinnotecken.svg",
+          "label": "Kvinnotecken",
+          "tags": ["kvinna", "female", "venus", "kön", "symbol", "feminint"]
+        },
+        {
+          "id": "lilja",
+          "file": "symbols/lilja.svg",
+          "label": "Lilja",
+          "tags": ["fleur-de-lis", "symbol", "fransk", "heraldik", "scout", "blomma"]
+        },
+        {
+          "id": "ljusknapp",
+          "file": "symbols/ljusknapp.svg",
+          "label": "Ljusknapp",
+          "tags": ["ljus", "bright", "knapp", "skärm", "styrka", "symbol"]
+        },
+        {
+          "id": "läkande-hjärta",
+          "file": "symbols/läkande-hjärta.svg",
+          "label": "Läkande hjärta",
+          "tags": ["hjärta", "läker", "plåster", "tröst", "kärlek", "reparera"]
+        },
+        {
+          "id": "manstecken",
+          "file": "symbols/manstecken.svg",
+          "label": "Manstecken",
+          "tags": ["man", "male", "mars", "kön", "symbol", "maskulint"]
+        },
+        {
+          "id": "moturs-pilar",
+          "file": "symbols/moturs-pilar.svg",
+          "label": "Moturs pilar",
+          "tags": ["uppdatera", "refresh", "rotera", "reload", "pilar", "tillbaka"]
+        },
+        {
+          "id": "ok",
+          "file": "symbols/ok.svg",
+          "label": "Ok",
+          "tags": ["okej", "knapp", "godkänt", "ja", "klart", "bekräfta"]
+        },
+        {
+          "id": "oändlighet",
+          "file": "symbols/oändlighet.svg",
+          "label": "Oändlighet",
+          "tags": ["infinity", "evigt", "alltid", "loop", "gränslös", "symbol"]
+        },
+        {
+          "id": "pilhjärta",
+          "file": "symbols/pilhjärta.svg",
+          "label": "Pilhjärta",
+          "tags": ["hjärta", "kärlek", "cupid", "pil", "romantik", "förälskad"]
+        },
+        {
+          "id": "pratbubbla",
+          "file": "symbols/pratbubbla.svg",
+          "label": "Pratbubbla",
+          "tags": ["tal", "chat", "meddelande", "kommentar", "dialog", "säg"]
+        },
+        {
+          "id": "ringklocka",
+          "file": "symbols/ringklocka.svg",
+          "label": "Ringklocka",
+          "tags": ["klocka", "notis", "alarm", "ring", "ljud", "avisering"]
+        },
+        {
+          "id": "ruter",
+          "file": "symbols/ruter.svg",
+          "label": "Ruter",
+          "tags": ["kortlek", "kort", "spel", "diamant", "suit", "röd"]
+        },
+        {
+          "id": "röd-ring",
+          "file": "symbols/röd-ring.svg",
+          "label": "Röd ring",
+          "tags": ["cirkel", "ring", "röd", "markering", "symbol", "tom"]
+        },
+        {
+          "id": "rökförbud",
+          "file": "symbols/rökförbud.svg",
+          "label": "Rökförbud",
+          "tags": ["röka", "cigarett", "förbud", "nej", "skylt", "rökning"]
+        },
+        {
+          "id": "sos",
+          "file": "symbols/sos.svg",
+          "label": "Sos",
+          "tags": ["nödsignal", "hjälp", "akut", "larm", "räddning", "knapp"]
+        },
+        {
+          "id": "spader",
+          "file": "symbols/spader.svg",
+          "label": "Spader",
+          "tags": ["kortlek", "kort", "spel", "suit", "svart", "spade"]
+        },
+        {
+          "id": "tankebubbla",
+          "file": "symbols/tankebubbla.svg",
+          "label": "Tankebubbla",
+          "tags": ["tanke", "fundera", "dröm", "idé", "bubbla", "think"]
+        },
+        {
+          "id": "toalett",
+          "file": "symbols/toalett.svg",
+          "label": "Toalett",
+          "tags": ["wc", "restroom", "badrum", "herr", "dam", "skylt"]
+        },
+        {
+          "id": "transtecken",
+          "file": "symbols/transtecken.svg",
+          "label": "Transtecken",
+          "tags": ["trans", "transgender", "kön", "symbol", "identitet", "pride"]
+        },
+        {
+          "id": "tyst-klocka",
+          "file": "symbols/tyst-klocka.svg",
+          "label": "Tyst klocka",
+          "tags": ["notis-av", "ljud-av", "tyst", "alarm", "klocka", "mute"]
+        },
+        {
+          "id": "utrop-fråga",
+          "file": "symbols/utrop-fråga.svg",
+          "label": "Utrop fråga",
+          "tags": ["interrobang", "förvånad", "fråga", "utrop", "vad", "oj"]
+        },
+        {
+          "id": "utropstecken",
+          "file": "symbols/utropstecken.svg",
+          "label": "Utropstecken",
+          "tags": ["utrop", "viktigt", "varning", "obs", "exclamation", "rött"]
+        },
+        {
+          "id": "varning",
+          "file": "symbols/varning.svg",
+          "label": "Varning",
+          "tags": ["fara", "obs", "triangel", "risk", "alert", "försiktigt"]
+        },
+        {
+          "id": "virvel",
+          "file": "symbols/virvel.svg",
+          "label": "Virvel",
+          "tags": ["cyklon", "snurr", "spiral", "storm", "väder", "yr"]
+        },
+        {
+          "id": "vårdsymbol",
+          "file": "symbols/vårdsymbol.svg",
+          "label": "Vårdsymbol",
+          "tags": ["medicin", "sjukvård", "läkare", "orm", "symbol", "hälsa"]
+        },
+        {
+          "id": "zzz",
+          "file": "symbols/zzz.svg",
+          "label": "Zzz",
+          "tags": ["sova", "sömn", "trött", "snarkar", "natt", "vila"]
+        },
+        {
+          "id": "återvinning",
+          "file": "symbols/återvinning.svg",
+          "label": "Återvinning",
+          "tags": ["recycling", "miljö", "återbruka", "sortera", "grönt", "kretslopp"]
+        }
+      ]
+    }
+  ]
+}

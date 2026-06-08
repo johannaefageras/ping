@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 320 512">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: url(#radial-gradient);
+      }
+
+      .cls-2 {
+        fill: url(#linear-gradient);
+      }
+    </style>
+    <radialGradient id="radial-gradient" cx="160" cy="258" fx="160" fy="258" r="267.3" gradientTransform="translate(0 514) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffdf40"/>
+      <stop offset=".18" stop-color="#ffd83a"/>
+      <stop offset=".46" stop-color="#ffc32b"/>
+      <stop offset=".79" stop-color="#ffa113"/>
+      <stop offset="1" stop-color="#f80"/>
+    </radialGradient>
+    <linearGradient id="linear-gradient" x1="156.4" y1="95.68" x2="156.4" y2="498" gradientTransform="translate(0 514) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffd947"/>
+      <stop offset="1" stop-color="#fff5bf"/>
+    </linearGradient>
+  </defs>
+  <polygon class="cls-1" points="83.12 0 0 302.48 187.36 260.88 148.4 512 320 170.96 122.08 214.72 176.88 0 83.12 0"/>
+  <polygon class="cls-2" points="290.16 194 100.4 235.84 156.4 16 95.28 16 22.64 281.04 206.64 240.24 178.64 418.32 290.16 194"/>
+</svg>
