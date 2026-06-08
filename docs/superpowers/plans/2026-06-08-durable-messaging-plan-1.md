@@ -48,10 +48,12 @@ Several tasks need a runnable app and a Supabase project with two distinct users
 
 ---
 
-### Task 1: Schema — `delivered_at` / `read_at` columns + `mark_read` RPC
+### Task 1: Schema — `delivered_at` / `read_at` columns + `mark_read` / `mark_delivered` RPCs
 
 **Files:**
 - Modify: `supabase/schema.sql` (append new section 11 after section 10, which currently ends at `supabase/schema.sql:421`)
+
+> **Why two RPCs:** `pings` has RLS enabled with only SELECT and INSERT policies — there is **no UPDATE policy** — so a client `update` on `pings` is denied (affects 0 rows). Both `read_at` and `delivered_at` must therefore be written through security-definer RPCs, exactly like `dismiss_ping`. `mark_delivered(p_id)` is what Task 8 calls when the receiver's client gets a realtime INSERT.
 
 - [ ] **Step 1: Append section 11 to the schema**
 
@@ -59,17 +61,22 @@ Add to the end of `supabase/schema.sql`:
 
 ```sql
 -- ============================================================
--- 11. DURABLE MESSAGING — read/delivery state + mark_read RPC
+-- 11. DURABLE MESSAGING — read/delivery state + mark_read/mark_delivered RPCs
 -- Idempotent: existing deployments can run just this section.
 -- Pings now persist as a durable conversation log. Two timestamps track
 -- delivery and read state per message:
---   delivered_at: stamped by the receiver's client when it receives the
---                 realtime INSERT (or on next load if it was offline at send).
+--   delivered_at: stamped when the receiver's client receives the realtime
+--                 INSERT (or on next load if it was offline at send), via the
+--                 mark_delivered RPC below.
 --   read_at:      stamped when the receiver opens that chat with the tab
 --                 focused, via the mark_read RPC below.
 -- The per-side dismiss flags (section 9) still govern row visibility; these
 -- columns are orthogonal to dismissal. Unread count = pings where
 -- receiver_id = me, read_at is null, and not dismissed_by_receiver.
+-- NOTE: pings has no UPDATE RLS policy (RLS is enabled with only SELECT/INSERT
+-- policies), so clients CANNOT update delivered_at/read_at directly — these
+-- stamps are written exclusively through the two security-definer RPCs below,
+-- matching the dismiss_ping (section 9) mutation pattern.
 -- ============================================================
 
 alter table public.pings add column if not exists delivered_at timestamptz;
@@ -103,6 +110,29 @@ end;
 $$;
 
 grant execute on function public.mark_read(uuid) to authenticated;
+
+-- mark_delivered: stamp delivered_at = now() on a single ping the caller has
+-- received, if not already stamped. p_id is the ping's id. The caller may only
+-- mark a message delivered when they are its receiver (receiver_id =
+-- auth.uid()); the `delivered_at is null` guard makes repeat calls a no-op.
+-- This exists because pings has no UPDATE RLS policy — the receiver's client
+-- cannot write delivered_at directly, so it goes through this RPC. Mirrors the
+-- mark_read / dismiss_ping pattern.
+create or replace function public.mark_delivered(p_id uuid)
+returns void
+language plpgsql
+security definer set search_path = ''
+as $$
+begin
+  update public.pings
+    set delivered_at = now()
+    where id = p_id
+      and receiver_id = auth.uid()
+      and delivered_at is null;
+end;
+$$;
+
+grant execute on function public.mark_delivered(uuid) to authenticated;
 ```
 
 - [ ] **Step 2: Apply section 11 to the scratch Supabase project**
@@ -136,11 +166,17 @@ where (sender_id = '<A>' and receiver_id = '<B>')
 ```
 Expected: the **B→A** row has a non-null `read_at`; the **A→B** row's `read_at` is still null (the caller cannot mark messages they sent as read). Calling `mark_read('<B>')` again leaves `read_at` unchanged (only `read_at is null` rows are touched).
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 6: Verify `mark_delivered` authorization (only the receiver can stamp; idempotent)**
+
+As user A, take the id of a B→A message with `delivered_at` null. Authenticated as **A** (the receiver), run `await sb.rpc('mark_delivered', { p_id: '<that_id>' })` from the app console; then re-query that row.
+Expected: its `delivered_at` is now non-null. Call it again → unchanged (the `delivered_at is null` guard). Now authenticated as **B** (the sender, not the receiver), call `mark_delivered` on an A→B message id whose `delivered_at` is null — i.e. a message B sent, so B is not the receiver.
+Expected: `delivered_at` stays null (the `receiver_id = auth.uid()` guard blocks a non-receiver from stamping).
+
+- [ ] **Step 7: Commit**
 
 ```bash
 git add -f supabase/schema.sql
-git commit -m "feat(schema): add delivered_at/read_at to pings + mark_read RPC"
+git commit -m "feat(schema): add delivered_at/read_at + mark_read/mark_delivered RPCs"
 ```
 
 > Note: `supabase/` is tracked normally (only `docs/` needs `-f`). Use `git add supabase/schema.sql` if `-f` is rejected as unnecessary; the `-f` is harmless and matches the repo convention of force-adding tracked-but-ignored paths.
@@ -843,15 +879,15 @@ Replace with:
       async (payload) => {
         const ping = payload.new;
 
-        // Record delivery regardless of which chat is open: a single targeted
-        // update, guarded so it only fires once. delivered_at is never blocked
-        // on the chat being open (read_at is the open-and-focused signal).
+        // Record delivery regardless of which chat is open. pings has no UPDATE
+        // RLS policy, so we cannot write delivered_at with a direct client
+        // update — it goes through the mark_delivered security-definer RPC
+        // (Task 1), which stamps now() only when the caller is the receiver and
+        // delivered_at is still null. delivered_at is never blocked on the chat
+        // being open (read_at is the open-and-focused signal).
         if (ping.delivered_at == null) {
-          await sb
-            .from("pings")
-            .update({ delivered_at: new Date().toISOString() })
-            .eq("id", ping.id)
-            .is("delivered_at", null);
+          const { error } = await sb.rpc("mark_delivered", { p_id: ping.id });
+          if (error) console.error("mark_delivered failed:", error);
         }
 
         const chatOpen = selectedContact && ping.sender_id === selectedContact.recipientId;
@@ -1121,14 +1157,14 @@ git commit -m "docs: reframe Ping as durable-by-default messaging (keep lightwei
 
 ---
 
-### Task 11: Update README schema/setup references for the new RPC
+### Task 11: Update README schema/setup references for the new RPCs
 
-The README's setup section enumerates the RPCs created by `schema.sql`. Add `mark_read`.
+The README's setup section enumerates the RPCs created by `schema.sql`. Add `mark_read` and `mark_delivered`.
 
 **Files:**
 - Modify: `README.md` — the schema bullet in the Supabase setup section (around `README.md:54-57`)
 
-- [ ] **Step 1: Add `mark_read` to the RPC list**
+- [ ] **Step 1: Add `mark_read` and `mark_delivered` to the RPC list**
 
 Find (around `README.md:55-56`):
 
@@ -1141,14 +1177,14 @@ Replace with:
 
 ```markdown
    policies, the `ping-files` storage bucket, and the `dismiss_ping`,
-   `mark_read`, `create_invite`, and `redeem_invite` RPCs.
+   `mark_read`, `mark_delivered`, `create_invite`, and `redeem_invite` RPCs.
 ```
 
 - [ ] **Step 2: Commit**
 
 ```bash
 git add README.md
-git commit -m "docs: mention mark_read RPC in setup instructions"
+git commit -m "docs: mention mark_read/mark_delivered RPCs in setup instructions"
 ```
 
 ---
