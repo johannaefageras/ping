@@ -105,7 +105,7 @@ const inviteError = document.getElementById("invite-error");
 // --- App state ---
 let sb = null; // Supabase client
 let currentUser = null; // { id, username }
-let selectedContact = null; // { contactId, recipientId, username, displayName }
+let selectedContact = null; // { contactId, recipientId, username, displayName, disappearingTtl }
 let contacts = [];
 let lastSentText = null; // last text the user sent, for /last recall
 let unreadCounts = {}; // recipientId -> count of unread, non-dismissed pings from that contact; loaded from the DB on entry (durable across reload) and kept live by realtime
@@ -546,7 +546,7 @@ async function loadContacts() {
   const { data, error } = await sb
     .from("contacts")
     .select(
-      `id, status, requester_id, addressee_id, created_at,
+      `id, status, requester_id, addressee_id, created_at, disappearing_ttl,
        requester:profiles!contacts_requester_id_fkey(username, display_name),
        addressee:profiles!contacts_addressee_id_fkey(username, display_name)`
     )
@@ -772,7 +772,14 @@ async function rejectContact(contactId) {
 
 async function selectContact(contactId, recipientId, username, displayName) {
   closeFileGallery();
-  selectedContact = { contactId, recipientId, username, displayName: displayName || null };
+  const contactRow = contacts.find((c) => c.id === contactId);
+  selectedContact = {
+    contactId,
+    recipientId,
+    username,
+    displayName: displayName || null,
+    disappearingTtl: contactRow ? contactRow.disappearing_ttl || null : null,
+  };
 
   document.querySelectorAll(".contact-item").forEach((el) => {
     el.classList.toggle("active", el.dataset.recipientId === recipientId);
