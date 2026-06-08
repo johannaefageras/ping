@@ -1737,12 +1737,15 @@ emojiBtn.addEventListener("click", async (e) => {
   emojiSearch.focus();
 });
 
-// Category icon click → show that category (event-delegated).
+// Category icon click → show that category (event-delegated). Refocus the
+// search box so focus stays in the picker (keeps bare-key shortcuts suppressed
+// and lets the user keep typing to search).
 emojiCatRow.addEventListener("click", (e) => {
   const btn = e.target.closest(".emoji-cat-btn");
   if (!btn) return;
   emojiSearch.value = "";
   emojiShowCategory(btn.dataset.catId);
+  emojiSearch.focus();
 });
 
 // Emoji click → insert token at the caret; keep the popover open.
