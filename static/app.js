@@ -1080,6 +1080,148 @@ async function downloadFile(path, filename) {
   URL.revokeObjectURL(url);
 }
 
+// ============================================================
+// FILE GALLERY — per-contact overlay of all exchanged files
+// ============================================================
+// Browse-and-download view. Unlike the chat stream, downloading here does NOT
+// auto-dismiss the file. Blob URLs created for image thumbs are tracked on
+// _galleryObjectUrls and revoked on close so none leak.
+
+let _galleryLastFocus = null;
+let _galleryObjectUrls = [];
+
+// Loads this contact's file pings, newest-first. Mirrors loadPings' .or()
+// filter plus an .eq("type","file"). RLS already restricts rows to pings the
+// user is a party to and hasn't dismissed, so no extra guard is needed.
+async function loadGalleryFiles() {
+  const { recipientId } = selectedContact;
+  const { data, error } = await sb
+    .from("pings")
+    .select("*")
+    .eq("type", "file")
+    .or(
+      `and(sender_id.eq.${currentUser.id},receiver_id.eq.${recipientId}),` +
+        `and(sender_id.eq.${recipientId},receiver_id.eq.${currentUser.id})`
+    )
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Failed to load gallery files:", error);
+    return [];
+  }
+  return data || [];
+}
+
+// Builds one grid cell. Image files get a lazily-fetched thumbnail (degrading
+// to the file-type icon on failure); everything else gets the file-type icon.
+// Clicking (or Enter/Space) downloads via downloadFile — no dismissal.
+function renderGalleryItem(ping) {
+  const cell = document.createElement("div");
+  cell.className = "gallery-item";
+  cell.setAttribute("role", "button");
+  cell.setAttribute("tabindex", "0");
+  cell.setAttribute("aria-label", "Ladda ner " + ping.file_name);
+
+  const iconHtml = `<span class="gallery-icon"><img class="file-type-icon" src="${fileTypeIcon(ping.file_name)}" alt="" /></span>`;
+  const thumbHtml = isImageFile(ping.file_name)
+    ? `<img class="gallery-thumb loading" alt="${escapeHtml(ping.file_name)}" />`
+    : iconHtml;
+
+  cell.innerHTML = `
+    ${thumbHtml}
+    <span class="gallery-name">${escapeHtml(ping.file_name)}</span>
+    <span class="gallery-meta">${formatSize(ping.file_size)} &middot; ${formatDate(ping.created_at)}</span>
+  `;
+
+  // Missing file-type icon degrades to file.svg (CSP forbids inline onerror).
+  const typeIcon = cell.querySelector(".file-type-icon");
+  if (typeIcon) {
+    typeIcon.addEventListener("error", () => {
+      if (!typeIcon.src.endsWith("/file.svg")) {
+        typeIcon.src = "/icons/filetypes/file.svg";
+      }
+    }, { once: true });
+  }
+
+  // Image thumbnail: fetch the private object and fill the <img>. Track the
+  // blob URL for revocation on close; degrade to the icon on failure.
+  const thumb = cell.querySelector(".gallery-thumb");
+  if (thumb) {
+    fetchObjectUrl(ping.file_path).then((url) => {
+      // Gallery was closed mid-fetch — revoke and bail.
+      if (!galleryModal || galleryModal.classList.contains("hidden")) {
+        if (url) URL.revokeObjectURL(url);
+        return;
+      }
+      if (!url) {
+        thumb.outerHTML = `<span class="gallery-icon"><img class="file-type-icon" src="${fileTypeIcon(ping.file_name)}" alt="" /></span>`;
+        const fallbackIcon = cell.querySelector(".file-type-icon");
+        if (fallbackIcon) {
+          fallbackIcon.addEventListener("error", () => {
+            if (!fallbackIcon.src.endsWith("/file.svg")) {
+              fallbackIcon.src = "/icons/filetypes/file.svg";
+            }
+          }, { once: true });
+        }
+        return;
+      }
+      _galleryObjectUrls.push(url);
+      thumb.src = url;
+      thumb.classList.remove("loading");
+    });
+  }
+
+  function activate() {
+    downloadFile(ping.file_path, ping.file_name);
+  }
+  cell.addEventListener("click", activate);
+  cell.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      activate();
+    }
+  });
+
+  return cell;
+}
+
+async function openFileGallery() {
+  if (!selectedContact) return;
+  _galleryLastFocus = document.activeElement;
+  galleryTitle.textContent = "~/filer med @" + selectedContact.username;
+  galleryGrid.innerHTML = "";
+  galleryModal.classList.remove("hidden");
+  galleryClose.focus();
+
+  const files = await loadGalleryFiles();
+  // Guard against a close (or contact switch) during the await.
+  if (galleryModal.classList.contains("hidden")) return;
+
+  if (files.length === 0) {
+    galleryGrid.innerHTML = `<div class="gallery-empty">Inga filer &auml;n</div>`;
+    return;
+  }
+  files.forEach((ping) => galleryGrid.appendChild(renderGalleryItem(ping)));
+}
+
+function closeFileGallery() {
+  galleryModal.classList.add("hidden");
+  _galleryObjectUrls.forEach((url) => URL.revokeObjectURL(url));
+  _galleryObjectUrls = [];
+  galleryGrid.innerHTML = "";
+  if (_galleryLastFocus) _galleryLastFocus.focus();
+}
+
+function isGalleryOpen() {
+  return !galleryModal.classList.contains("hidden");
+}
+
+galleryBtn.addEventListener("click", openFileGallery);
+galleryClose.addEventListener("click", closeFileGallery);
+galleryModal.addEventListener("click", (e) => {
+  if (e.target === galleryModal) closeFileGallery();
+});
+
 // --- File input & drag-and-drop ---
 
 // Attach (paperclip) is for non-media files: images and videos have their
