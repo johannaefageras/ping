@@ -1088,11 +1088,17 @@ fileInput.addEventListener("change", () => {
 attachBtn.addEventListener("click", () => fileInput.click());
 
 // Image file picker (image-only) reuses the existing upload pipeline.
+// accept="image/*" is only a picker hint, so enforce image-only here by
+// MIME type: non-image selections (e.g. via "All files") are rejected.
 imageInput.addEventListener("change", () => {
-  if (imageInput.files.length) {
-    uploadFiles(imageInput.files);
-    imageInput.value = "";
+  const images = Array.from(imageInput.files).filter((f) =>
+    f.type.startsWith("image/")
+  );
+  if (images.length < imageInput.files.length) {
+    alert("Bara bildfiler kan laddas upp här.");
   }
+  if (images.length) uploadFiles(images);
+  imageInput.value = "";
 });
 
 // Video file picker reuses the existing upload pipeline.
