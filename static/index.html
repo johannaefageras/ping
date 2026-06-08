@@ -356,6 +356,37 @@
               </svg>
             </button>
             <h2 id="chat-contact-name"></h2>
+            <div class="disappearing-wrap">
+              <button
+                id="disappearing-btn"
+                type="button"
+                aria-haspopup="true"
+                aria-expanded="false"
+                aria-label="Försvinnande meddelanden"
+                title="Försvinnande meddelanden"
+              >
+                <svg
+                  class="icon"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 7v5l3 2" />
+                </svg>
+                <span id="disappearing-label" class="disappearing-label">av</span>
+              </button>
+              <div id="disappearing-menu" class="hidden" role="menu">
+                <button type="button" role="menuitem" data-ttl="">Av</button>
+                <button type="button" role="menuitem" data-ttl="24 hours">24h</button>
+                <button type="button" role="menuitem" data-ttl="7 days">7d</button>
+              </div>
+            </div>
             <button
               id="gallery-btn"
               type="button"

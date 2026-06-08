@@ -2725,3 +2725,71 @@ footer {
   color: var(--accent, #4f9eed);
   opacity: 1;
 }
+
+.disappearing-wrap {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+}
+
+#disappearing-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--fg-dim);
+  padding: 4px 6px;
+  cursor: pointer;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.8rem;
+  transition: color 0.15s, background 0.15s;
+}
+#disappearing-btn:hover {
+  color: var(--fg);
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
+}
+#disappearing-btn .icon {
+  width: 18px;
+  height: 18px;
+}
+.disappearing-label {
+  letter-spacing: 0.5px;
+}
+/* Active (timer on) — tint the control so it's visibly engaged. */
+#disappearing-btn.active {
+  color: var(--accent);
+}
+
+#disappearing-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 96px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+#disappearing-menu.hidden {
+  display: none;
+}
+#disappearing-menu button {
+  background: none;
+  border: none;
+  color: var(--fg);
+  text-align: left;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+}
+#disappearing-menu button:hover {
+  background: color-mix(in srgb, var(--fg) 12%, transparent);
+}
