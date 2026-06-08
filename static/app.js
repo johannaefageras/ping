@@ -34,6 +34,11 @@ const chatPlaceholder = document.getElementById("chat-placeholder");
 const chatView = document.getElementById("chat-view");
 const mobileContactsToggle = document.getElementById("mobile-contacts-toggle");
 const chatContactName = document.getElementById("chat-contact-name");
+const galleryBtn = document.getElementById("gallery-btn");
+const galleryModal = document.getElementById("gallery-modal");
+const galleryClose = document.getElementById("gallery-close");
+const galleryTitle = document.getElementById("gallery-title");
+const galleryGrid = document.getElementById("gallery-grid");
 const chatMain = document.getElementById("chat-main");
 const board = document.getElementById("board");
 const dropZone = document.getElementById("drop-zone");
@@ -1390,6 +1395,11 @@ function formatSize(bytes) {
 function formatTime(ts) {
   const d = new Date(ts);
   return d.toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" });
+}
+
+function formatDate(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString("sv-SE", { day: "2-digit", month: "2-digit" });
 }
 
 // Escapes for both text and attribute contexts. Quotes are included because
