@@ -23,12 +23,12 @@ want a quick way to swap a URL or a file without going through a chat app.
   separators and paged scrollback (latest 50, "ladda äldre" for older)
 - Read/unread + delivery receipts: per-message sent/delivered/read status, and
   a sidebar unread badge that survives reload
-- Delete a message: ✕ removes your copy; the message and any attached file are
-  deleted from storage once both sides delete it
+- Delete a message: ✕ removes your copy; exchanged files stay available in the
+  per-contact file archive for both participants
 - Disappearing messages: per-conversation opt-in timer (av / 24h / 7d, either
   side can set it); expired messages are hidden on load and swept daily
 - Files stored in a private Supabase Storage bucket — only sender and
-  receiver can download them
+  receiver can download them, including from the per-contact file archive
 - Retro terminal aesthetic, Swedish UI
 
 ## Stack
@@ -55,8 +55,8 @@ supabase/schema.sql     Full Supabase schema: tables, RLS, triggers, RPC
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. In the SQL editor, run [supabase/schema.sql](supabase/schema.sql). This
-   creates the `profiles`, `contacts`, `pings`, and `invites` tables, RLS
-   policies, the `ping-files` storage bucket, and the `dismiss_ping`,
+   creates the `profiles`, `contacts`, `pings`, `file_archive`, and `invites`
+   tables, RLS policies, the `ping-files` storage bucket, and the `dismiss_ping`,
    `mark_read`, `mark_delivered`, `set_disappearing`, `create_invite`, and
    `redeem_invite` RPCs. It also defines `purge_expired_pings()` and a daily
    `pg_cron` sweep for disappearing messages — enable the **pg_cron** extension
@@ -118,12 +118,14 @@ state on the backend, so a single small instance is enough.
   - Contacts are visible only to the two users involved.
   - Pings are visible only to sender and receiver, and only if that side
     hasn't dismissed them.
+  - Archived file entries are visible only to the sender and receiver, and do
+    not disappear when either side dismisses the chat message.
   - Sending a ping requires an `accepted` contact link between sender and
     receiver.
   - Files in the `ping-files` storage bucket are readable only if the caller
-    is the sender or receiver of a ping that references the object.
-- Hard deletion of a ping fires a trigger that also removes the underlying
-  storage object, so dismissed files don't leak.
+    is the sender or receiver of a ping or archive row that references the object.
+- Hard deletion of a ping keeps archived files intact; storage cleanup runs only
+  when no ping or archive row still references the object.
 
 ## License
 

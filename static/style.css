@@ -811,6 +811,8 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -827,11 +829,14 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 
 #chat-header {
   display: flex;
   align-items: center;
+  flex: none;
   padding: 0 20px;
   height: 60px;
   box-sizing: border-box;
@@ -857,11 +862,11 @@ body {
 }
 
 #chat-main {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   padding: 16px 20px;
-  display: flex;
-  flex-direction: column;
+  position: relative;
 }
 
 /* --- Board (messages) --- */
@@ -870,22 +875,29 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-height: 0;
 }
 
 .item {
+  flex: 0 0 auto;
+  max-width: min(680px, 88%);
   padding: 10px 14px;
+  padding-right: 36px;
   border: 1px solid var(--border);
   border-radius: 4px;
   animation: slideIn 0.25s ease-out;
   position: relative;
+  overflow-wrap: anywhere;
 }
 
 .item.self {
+  align-self: flex-end;
   background: var(--self-bg);
   border-left: 3px solid var(--fg);
 }
 
 .item.other {
+  align-self: flex-start;
   background: var(--other-bg);
   border-left: 3px solid var(--accent);
 }
@@ -981,9 +993,15 @@ body {
 /* --- Drop Zone (compact) --- */
 
 #drop-zone {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
   border: 2px dashed var(--border);
-  padding: 80px 20px;
-  margin: auto 64px;
+  min-height: 190px;
+  padding: 0 20px;
+  margin: clamp(24px, 12vh, 96px) 64px 0;
   text-align: center;
   font-size: 0.8rem;
   color: #444;
@@ -992,6 +1010,10 @@ body {
     color 0.2s,
     background 0.2s;
   cursor: pointer;
+}
+
+#board:not(:empty) + #drop-zone {
+  display: none;
 }
 
 #drop-zone-inner {
@@ -1013,6 +1035,18 @@ body {
   background: rgba(51, 255, 153, 0.03);
 }
 
+#chat-view.drag-over #drop-zone {
+  position: absolute;
+  inset: 16px 20px;
+  z-index: 10;
+  display: flex;
+  min-height: 0;
+  margin: 0;
+  padding: 0 20px;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--fg) 5%, rgba(0, 0, 0, 0.86));
+}
+
 #drop-zone.drag-over .drop-icon {
   color: var(--fg);
 }
@@ -1026,6 +1060,7 @@ body {
 /* --- Footer / Input Bar --- */
 
 footer {
+  flex: none;
   border-top: 1px solid var(--border);
   padding: 14px 20px;
   background: #0e0e0e;
@@ -1412,7 +1447,13 @@ footer {
   }
 
   #drop-zone {
-    padding: 10px 14px;
+    min-height: 120px;
+    margin: 18px 0 0;
+    padding: 0 14px;
+  }
+
+  #chat-view.drag-over #drop-zone {
+    inset: 12px 14px;
   }
 
   .item {
@@ -2787,6 +2828,7 @@ footer {
 }
 
 .day-separator {
+  flex: 0 0 auto;
   text-align: center;
   margin: 0.75rem auto 0.25rem;
   font-size: 0.75em;
@@ -2798,6 +2840,7 @@ footer {
 }
 
 .load-older {
+  flex: 0 0 auto;
   display: block;
   margin: 0.5rem auto;
   padding: 0.25rem 0.75rem;

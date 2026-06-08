@@ -123,6 +123,8 @@ let realtimeChannel = null;
 let presenceChannel = null;
 let onlineUserIds = new Set();
 let emojiIndex = null; // Map<"folder/id", {label,...}> built lazily from emoji-data.json (see emoji picker)
+let sendingText = false;
+const activeUploadKeys = new Set();
 
 const PINGS_PAGE_SIZE = 50;
 // Paging state for the open chat's scrollback. oldestCursor is a compound
@@ -919,6 +921,19 @@ function renderLoadOlderControl() {
   return ctl;
 }
 
+function isPingRendered(pingId) {
+  return !!board.querySelector(`[data-ping-id="${pingId}"]`);
+}
+
+function appendPingToBoard(ping, animate = true) {
+  if (isPingRendered(ping.id)) return false;
+  renderDaySeparatorIfNeeded(ping, lastRenderedPing);
+  renderPing(ping, animate);
+  lastRenderedPing = ping;
+  scrollToBottom();
+  return true;
+}
+
 // Fetches the page of messages older than the oldestCursor keyset and prepends
 // them, preserving the user's scroll position (so the viewport doesn't jump).
 async function loadOlderPings() {
@@ -1045,6 +1060,7 @@ function dismissPing(el, ping) {
 }
 
 function renderPing(ping, animate = true, beforeNode = null) {
+  if (isPingRendered(ping.id)) return null;
   const isSelf = ping.sender_id === currentUser.id;
   const el = document.createElement("div");
   el.dataset.pingId = ping.id;
@@ -1267,75 +1283,94 @@ textForm.addEventListener("submit", async (e) => {
   }
 
   if (!selectedContact) return;
+  if (sendingText) return;
+  sendingText = true;
 
-  const { data, error } = await sb
-    .from("pings")
-    .insert({
-      sender_id: currentUser.id,
-      receiver_id: selectedContact.recipientId,
-      type: "text",
-      content: text,
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error("Failed to send ping:", error);
-    return;
-  }
-
-  renderDaySeparatorIfNeeded(data, lastRenderedPing);
-  renderPing(data);
-  lastRenderedPing = data;
-  scrollToBottom();
-  lastSentText = text;
-  textInput.value = "";
-  resetInputHeight();
-});
-
-async function uploadFiles(files) {
-  if (!selectedContact) return;
-
-  for (const file of files) {
-    if (file.size > 50 * 1024 * 1024) {
-      alert("Filen är för stor (max 50 MB)");
-      continue;
-    }
-
-    const safeName = file.name.normalize("NFC").replace(/[^a-zA-Z0-9._-]/g, "_");
-    const filePath = `${currentUser.id}/${crypto.randomUUID()}_${safeName}`;
-    const { error: uploadError } = await sb.storage
-      .from("ping-files")
-      .upload(filePath, file);
-
-    if (uploadError) {
-      console.error("Upload failed:", uploadError);
-      alert("Uppladdning misslyckades: " + file.name);
-      continue;
-    }
-
+  try {
+    const target = selectedContact;
     const { data, error } = await sb
       .from("pings")
       .insert({
         sender_id: currentUser.id,
-        receiver_id: selectedContact.recipientId,
-        type: "file",
-        file_path: filePath,
-        file_name: file.name,
-        file_size: file.size,
+        receiver_id: target.recipientId,
+        type: "text",
+        content: text,
       })
       .select()
       .single();
 
     if (error) {
-      console.error("Failed to create file ping:", error);
+      console.error("Failed to send ping:", error);
+      return;
+    }
+
+    if (selectedContact && selectedContact.recipientId === target.recipientId) {
+      appendPingToBoard(data);
+    }
+    lastSentText = text;
+    textInput.value = "";
+    resetInputHeight();
+  } finally {
+    sendingText = false;
+  }
+});
+
+function fileUploadKey(file) {
+  return [file.name, file.size, file.lastModified, file.type].join("|");
+}
+
+async function uploadFiles(files) {
+  if (!selectedContact) return;
+  const target = selectedContact;
+
+  for (const file of Array.from(files)) {
+    const uploadKey = fileUploadKey(file);
+    if (activeUploadKeys.has(uploadKey)) continue;
+    activeUploadKeys.add(uploadKey);
+
+    if (file.size > 50 * 1024 * 1024) {
+      alert("Filen är för stor (max 50 MB)");
+      activeUploadKeys.delete(uploadKey);
       continue;
     }
 
-    renderDaySeparatorIfNeeded(data, lastRenderedPing);
-    renderPing(data);
-    lastRenderedPing = data;
-    scrollToBottom();
+    try {
+      const safeName = file.name.normalize("NFC").replace(/[^a-zA-Z0-9._-]/g, "_");
+      const filePath = `${currentUser.id}/${crypto.randomUUID()}_${safeName}`;
+      const { error: uploadError } = await sb.storage
+        .from("ping-files")
+        .upload(filePath, file);
+
+      if (uploadError) {
+        console.error("Upload failed:", uploadError);
+        alert("Uppladdning misslyckades: " + file.name);
+        continue;
+      }
+
+      const { data, error } = await sb
+        .from("pings")
+        .insert({
+          sender_id: currentUser.id,
+          receiver_id: target.recipientId,
+          type: "file",
+          file_path: filePath,
+          file_name: file.name,
+          file_size: file.size,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Failed to create file ping:", error);
+        continue;
+      }
+
+      if (selectedContact && selectedContact.recipientId === target.recipientId) {
+        appendPingToBoard(data);
+      }
+    } finally {
+      activeUploadKeys.delete(uploadKey);
+    }
   }
 }
 
@@ -1377,10 +1412,28 @@ async function downloadFile(path, filename) {
 let _galleryLastFocus = null;
 let _galleryObjectUrls = [];
 
-// Loads this contact's file pings, newest-first. Mirrors loadPings' .or()
-// filter plus an .eq("type","file"). RLS already restricts rows to pings the
-// user is a party to and hasn't dismissed, so no extra guard is needed.
+// Loads this contact's archived files, newest-first. The archive is independent
+// from per-side message dismissal, so files stay listed for both participants
+// even after the chat bubble has been removed.
 async function loadGalleryFiles() {
+  const { recipientId } = selectedContact;
+  const { data, error } = await sb
+    .from("file_archive")
+    .select("id, sender_id, receiver_id, file_path, file_name, file_size, created_at")
+    .or(
+      `and(sender_id.eq.${currentUser.id},receiver_id.eq.${recipientId}),` +
+        `and(sender_id.eq.${recipientId},receiver_id.eq.${currentUser.id})`
+    )
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Failed to load archived files:", error);
+    return loadGalleryFilesFromPings();
+  }
+  return data || [];
+}
+
+async function loadGalleryFilesFromPings() {
   const { recipientId } = selectedContact;
   const { data, error } = await sb
     .from("pings")
@@ -1393,7 +1446,7 @@ async function loadGalleryFiles() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Failed to load gallery files:", error);
+    console.error("Failed to load gallery files from pings:", error);
     return [];
   }
   return data || [];
@@ -1514,6 +1567,11 @@ galleryModal.addEventListener("click", (e) => {
 
 // --- File input & drag-and-drop ---
 
+function setChatDragActive(active) {
+  chatView.classList.toggle("drag-over", active);
+  dropZone.classList.toggle("drag-over", active);
+}
+
 // Attach (paperclip) is for non-media files: images and videos have their
 // own composer buttons, so reject those here by MIME type and allow
 // everything else (files with no detectable type count as "other").
@@ -1562,25 +1620,31 @@ videoInput.addEventListener("change", () => {
 
 dropZone.addEventListener("dragover", (e) => {
   e.preventDefault();
-  dropZone.classList.add("drag-over");
+  e.stopPropagation();
+  setChatDragActive(true);
 });
-dropZone.addEventListener("dragleave", () => {
-  dropZone.classList.remove("drag-over");
+dropZone.addEventListener("dragleave", (e) => {
+  e.stopPropagation();
+  if (!chatView.contains(e.relatedTarget)) setChatDragActive(false);
 });
 dropZone.addEventListener("drop", (e) => {
   e.preventDefault();
-  dropZone.classList.remove("drag-over");
+  e.stopPropagation();
+  setChatDragActive(false);
   if (e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files);
 });
 
 // Allow dropping anywhere in the chat view
 chatView.addEventListener("dragover", (e) => {
   e.preventDefault();
-  dropZone.classList.add("drag-over");
+  setChatDragActive(true);
+});
+chatView.addEventListener("dragleave", (e) => {
+  if (!chatView.contains(e.relatedTarget)) setChatDragActive(false);
 });
 chatView.addEventListener("drop", (e) => {
   e.preventDefault();
-  dropZone.classList.remove("drag-over");
+  setChatDragActive(false);
   if (e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files);
 });
 
@@ -1624,12 +1688,7 @@ function subscribeToRealtime() {
           // around loadPings' SELECT can be both in the page AND delivered here.
           // Without auto-dismiss to mask it, that duplicate would persist until
           // reload — skip if this id is already on the board.
-          if (!board.querySelector(`[data-ping-id="${ping.id}"]`)) {
-            renderDaySeparatorIfNeeded(ping, lastRenderedPing);
-            renderPing(ping);
-            lastRenderedPing = ping;
-            scrollToBottom();
-          }
+          appendPingToBoard(ping);
           // Chat is open; if the tab is focused, mark it read immediately.
           markChatRead();
         } else {
@@ -2547,7 +2606,7 @@ function captureTimestampName() {
 }
 
 function sendPhoto() {
-  if (!captureCanvas) return;
+  if (!captureCanvas || captureSend.disabled) return;
   captureSend.disabled = true; // prevent a double-send queuing two toBlob callbacks
   const name = captureTimestampName();
   captureCanvas.toBlob(async (blob) => {
@@ -2635,6 +2694,7 @@ function closeRecordModal() {
   recordError.classList.add("hidden");
   recordError.textContent = "";
   recordStatus.textContent = "";
+  recordSend.disabled = false;
   recordModal.classList.add("hidden");
 }
 
@@ -2712,7 +2772,8 @@ function recordTimestampName() {
 }
 
 async function sendRecording() {
-  if (!recordBlob) return;
+  if (!recordBlob || recordSend.disabled) return;
+  recordSend.disabled = true;
   const file = new File([recordBlob], recordTimestampName(), {
     type: recordBlob.type || "video/webm",
   });

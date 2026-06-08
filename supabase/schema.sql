@@ -638,3 +638,189 @@ begin
   end if;
 end;
 $$;
+
+-- ============================================================
+-- 13. FILE ARCHIVE — durable per-pair file history
+-- Idempotent: existing deployments can run just this section.
+-- File pings still appear in the chat stream and can be dismissed per side, but
+-- the underlying file metadata is copied into file_archive on insert. The gallery
+-- reads from this archive so both participants can find exchanged files no
+-- matter which side sent the file or whether either side hid the chat message.
+-- ============================================================
+
+create table if not exists public.file_archive (
+  id uuid primary key default gen_random_uuid(),
+  ping_id uuid unique references public.pings(id) on delete set null,
+  sender_id uuid not null references public.profiles(id) on delete cascade,
+  receiver_id uuid not null references public.profiles(id) on delete cascade,
+  file_path text not null unique,
+  file_name text not null,
+  file_size bigint,
+  created_at timestamptz default now() not null
+);
+
+create index if not exists file_archive_pair_idx on public.file_archive (
+  least(sender_id, receiver_id),
+  greatest(sender_id, receiver_id),
+  created_at
+);
+
+alter table public.file_archive enable row level security;
+
+drop policy if exists "Users can view archived files they sent or received"
+  on public.file_archive;
+create policy "Users can view archived files they sent or received"
+  on public.file_archive for select
+  to authenticated
+  using (sender_id = auth.uid() or receiver_id = auth.uid());
+
+create or replace function public.archive_file_ping()
+returns trigger
+language plpgsql
+security definer set search_path = ''
+as $$
+begin
+  if new.type = 'file' and new.file_path is not null then
+    insert into public.file_archive (
+      ping_id,
+      sender_id,
+      receiver_id,
+      file_path,
+      file_name,
+      file_size,
+      created_at
+    )
+    values (
+      new.id,
+      new.sender_id,
+      new.receiver_id,
+      new.file_path,
+      coalesce(new.file_name, 'fil'),
+      new.file_size,
+      new.created_at
+    )
+    on conflict (file_path) do update
+      set ping_id = coalesce(public.file_archive.ping_id, excluded.ping_id),
+          sender_id = excluded.sender_id,
+          receiver_id = excluded.receiver_id,
+          file_name = excluded.file_name,
+          file_size = excluded.file_size,
+          created_at = excluded.created_at;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_file_ping_archived on public.pings;
+create trigger on_file_ping_archived
+  after insert on public.pings
+  for each row execute function public.archive_file_ping();
+
+-- Backfill archive rows for file pings that already exist at migration time.
+insert into public.file_archive (
+  ping_id,
+  sender_id,
+  receiver_id,
+  file_path,
+  file_name,
+  file_size,
+  created_at
+)
+select
+  id,
+  sender_id,
+  receiver_id,
+  file_path,
+  coalesce(file_name, 'fil'),
+  file_size,
+  created_at
+from public.pings
+where type = 'file'
+  and file_path is not null
+on conflict (file_path) do update
+  set ping_id = coalesce(public.file_archive.ping_id, excluded.ping_id),
+      sender_id = excluded.sender_id,
+      receiver_id = excluded.receiver_id,
+      file_name = excluded.file_name,
+      file_size = excluded.file_size,
+      created_at = excluded.created_at;
+
+-- Storage downloads are authorized by either the visible ping row OR the durable
+-- file archive row. The archive clause keeps downloads working after both users
+-- have dismissed the chat message and the ping row has been removed.
+drop policy if exists "Users can download files from their pings" on storage.objects;
+drop policy if exists "Users can download files from their pings or archive" on storage.objects;
+create policy "Users can download files from their pings or archive"
+  on storage.objects for select
+  to authenticated
+  using (
+    bucket_id = 'ping-files'
+    and (
+      exists (
+        select 1 from public.file_archive
+        where (sender_id = auth.uid() or receiver_id = auth.uid())
+          and file_path = name
+      )
+      or exists (
+        select 1 from public.pings
+        where (sender_id = auth.uid() or receiver_id = auth.uid())
+          and file_path = name
+      )
+    )
+  );
+
+-- Replaces section 8's cleanup function. File pings that made it into the
+-- archive must not delete their storage object when the chat row disappears.
+-- If a legacy/non-archived file ping is deleted, keep the old cleanup behavior.
+create or replace function public.handle_ping_delete()
+returns trigger
+language plpgsql
+security definer set search_path = ''
+as $$
+begin
+  if old.type = 'file'
+     and old.file_path is not null
+     and not exists (
+       select 1 from public.file_archive
+       where file_path = old.file_path
+     )
+  then
+    delete from storage.objects
+    where bucket_id = 'ping-files'
+      and name = old.file_path;
+  end if;
+  return old;
+end;
+$$;
+
+-- If an archive row is later removed by account/contact cleanup, delete the
+-- object only when neither another archive row nor a ping still references it.
+create or replace function public.handle_file_archive_delete()
+returns trigger
+language plpgsql
+security definer set search_path = ''
+as $$
+begin
+  if old.file_path is not null
+     and not exists (
+       select 1 from public.file_archive
+       where file_path = old.file_path
+         and id <> old.id
+     )
+     and not exists (
+       select 1 from public.pings
+       where file_path = old.file_path
+     )
+  then
+    delete from storage.objects
+    where bucket_id = 'ping-files'
+      and name = old.file_path;
+  end if;
+  return old;
+end;
+$$;
+
+drop trigger if exists on_file_archive_deleted on public.file_archive;
+create trigger on_file_archive_deleted
+  before delete on public.file_archive
+  for each row execute function public.handle_file_archive_delete();
