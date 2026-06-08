@@ -774,7 +774,6 @@ async function loadPings() {
 function dismissPing(el, ping) {
   if (el._dismissed) return;
   el._dismissed = true;
-  clearTimeout(el._dismissTimer);
   el.classList.add("fade-out");
   el.addEventListener(
     "animationend",
@@ -903,9 +902,8 @@ function renderPing(ping, animate = true) {
         if (meta) meta.remove();
         videoEl.replaceWith(info);
         const dlFallback = info.querySelector(".download-btn");
-        dlFallback.addEventListener("click", async () => {
-          await downloadFile(dlFallback.dataset.path, dlFallback.dataset.name);
-          if (!isSelf) dismissPing(el, ping);
+        dlFallback.addEventListener("click", () => {
+          downloadFile(dlFallback.dataset.path, dlFallback.dataset.name);
         });
         const fallbackIcon = info.querySelector(".file-type-icon");
         if (fallbackIcon) {
@@ -935,12 +933,8 @@ function renderPing(ping, animate = true) {
   // Download button (files)
   const dlBtn = el.querySelector(".download-btn");
   if (dlBtn) {
-    dlBtn.addEventListener("click", async () => {
-      await downloadFile(dlBtn.dataset.path, dlBtn.dataset.name);
-      // Auto-dismiss file pings after download for receiver
-      if (!isSelf) {
-        dismissPing(el, ping);
-      }
+    dlBtn.addEventListener("click", () => {
+      downloadFile(dlBtn.dataset.path, dlBtn.dataset.name);
     });
   }
 
@@ -959,13 +953,6 @@ function renderPing(ping, animate = true) {
     });
   }
 
-  // Auto-remove on timer for freshly-arrived pings only — historical pings
-  // loaded on chat open keep until the user dismisses them. Received files
-  // also wait for download instead of timing out.
-  const isReceivedFile = ping.type === "file" && !isSelf;
-  if (animate && !isReceivedFile) {
-    el._dismissTimer = setTimeout(() => dismissPing(el, ping), 20000);
-  }
 }
 
 // ============================================================
