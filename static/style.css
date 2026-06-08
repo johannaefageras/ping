@@ -1556,6 +1556,130 @@ footer {
   color: var(--fg-dim);
 }
 
+/* File gallery modal: mirrors #settings-modal / #settings-panel. */
+#gallery-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+#gallery-modal.hidden { display: none; }
+
+#gallery-panel {
+  background: var(--bg, #0a0a0a);
+  border: 1px solid var(--fg-dim, #1a9956);
+  border-radius: 8px;
+  width: min(92vw, 640px);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--fg) 8%, transparent),
+    0 24px 60px rgba(0, 0, 0, 0.6),
+    0 0 40px color-mix(in srgb, var(--fg) 6%, transparent);
+}
+
+#gallery-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--fg) 4%, var(--bg));
+  flex: none;
+}
+
+#gallery-title {
+  margin: 0;
+  flex: 1;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  color: var(--fg-dim);
+}
+
+#gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+/* Empty state spans the whole grid. */
+#gallery-grid .gallery-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--fg-dim);
+  padding: 32px 0;
+  font-size: 0.85rem;
+}
+
+.gallery-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--fg) 3%, var(--bg));
+  cursor: pointer;
+  text-align: center;
+  color: inherit;
+}
+
+.gallery-item:hover,
+.gallery-item:focus-visible {
+  border-color: var(--fg-dim);
+  outline: none;
+}
+
+.gallery-thumb {
+  width: 100%;
+  height: 84px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--fg) 6%, var(--bg));
+}
+
+.gallery-thumb.loading {
+  opacity: 0.4;
+}
+
+.gallery-icon {
+  width: 100%;
+  height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--fg) 6%, var(--bg));
+  border-radius: 4px;
+}
+
+.gallery-icon img {
+  width: 36px;
+  height: 36px;
+}
+
+.gallery-name {
+  font-size: 0.72rem;
+  line-height: 1.2;
+  word-break: break-word;
+  max-height: 2.4em;
+  overflow: hidden;
+}
+
+.gallery-meta {
+  font-size: 0.65rem;
+  color: var(--fg-dim);
+}
+
 /* Video recording modal: mirrors #settings-modal / #settings-panel. */
 #record-modal {
   position: fixed;
