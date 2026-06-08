@@ -523,6 +523,15 @@ grant execute on function public.mark_delivered(uuid) to authenticated;
 alter table public.contacts
   add column if not exists disappearing_ttl interval;  -- null = off
 
+-- A disappearing_ttl change must propagate live to the OTHER side's open chat
+-- (the client's contacts realtime subscriptions, filtered on requester_id /
+-- addressee_id, call loadContacts → refreshDisappearingControl on a contacts
+-- UPDATE). REPLICA IDENTITY FULL makes Postgres emit the full row on UPDATE so
+-- the realtime payload + server-side row filter see every column — the same
+-- reason pings carries it (section 11). This is the first live contacts UPDATE
+-- path the client relies on. Idempotent.
+alter table public.contacts replica identity full;
+
 -- set_disappearing: set (or clear) the pair's disappearing-messages timer.
 -- p_contact_id is the contacts row id; p_ttl is the new interval (null = off,
 -- e.g. '24 hours', '7 days'). Authorized to EITHER side of the pair: the caller

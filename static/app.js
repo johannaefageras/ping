@@ -562,11 +562,13 @@ async function loadContacts() {
   }
 
   contacts = data || [];
-  // A contact may have changed their display name since we opened their chat;
-  // re-sync the selected contact and its header from the fresh data.
+  // A contact may have changed their display name OR the pair's disappearing
+  // timer since we opened the chat; re-sync both from the fresh data.
   syncSelectedContactDisplayName();
+  syncSelectedContactDisappearingTtl();
   renderContacts();
   refreshChatHeader();
+  refreshDisappearingControl();
 }
 
 // Re-reads the currently selected contact's display_name from the freshly
@@ -584,6 +586,21 @@ function syncSelectedContactDisplayName() {
   const other =
     match.requester_id === currentUser.id ? match.addressee : match.requester;
   selectedContact.displayName = other.display_name || null;
+}
+
+// Re-reads the open pair's disappearing_ttl from the freshly loaded `contacts`
+// array (matched by the other party's user id), so a remote timer change shows
+// live. No-op when no contact is selected or the contact is no longer listed.
+function syncSelectedContactDisappearingTtl() {
+  if (!selectedContact) return;
+  const match = contacts.find(
+    (c) =>
+      c.status === "accepted" &&
+      (c.requester_id === selectedContact.recipientId ||
+        c.addressee_id === selectedContact.recipientId)
+  );
+  if (!match) return;
+  selectedContact.disappearingTtl = match.disappearing_ttl || null;
 }
 
 // Re-renders the open chat header from the selected contact's current name.
