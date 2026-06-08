@@ -108,7 +108,7 @@ let currentUser = null; // { id, username }
 let selectedContact = null; // { contactId, recipientId, username, displayName }
 let contacts = [];
 let lastSentText = null; // last text the user sent, for /last recall
-let unreadCounts = {}; // recipientId -> number of pings received while their chat was closed (this session)
+let unreadCounts = {}; // recipientId -> count of unread, non-dismissed pings from that contact; loaded from the DB on entry (durable across reload) and kept live by realtime
 let realtimeChannel = null;
 let presenceChannel = null;
 let onlineUserIds = new Set();
@@ -467,6 +467,7 @@ async function enterApp(user) {
   currentUsernameEl.textContent = "@" + currentUser.username;
   displayNameInput.value = currentUser.display_name || "";
 
+  await loadUnreadCounts();
   await loadContacts();
   subscribeToRealtime();
   subscribePresence();
@@ -590,6 +591,30 @@ function refreshChatHeader() {
     selectedContact.username,
     selectedContact.displayName
   );
+}
+
+// Source of truth for the sidebar unread badges on load: how many messages
+// each contact has sent me that I haven't read yet (and haven't deleted).
+// Populates the in-memory unreadCounts map keyed by the sender's id (which is
+// the contact's recipientId in sidebar terms). Realtime keeps it live after.
+async function loadUnreadCounts() {
+  const { data, error } = await sb
+    .from("pings")
+    .select("sender_id")
+    .eq("receiver_id", currentUser.id)
+    .is("read_at", null)
+    .eq("dismissed_by_receiver", false);
+
+  if (error) {
+    console.error("Failed to load unread counts:", error);
+    return;
+  }
+
+  const counts = {};
+  (data || []).forEach((row) => {
+    counts[row.sender_id] = (counts[row.sender_id] || 0) + 1;
+  });
+  unreadCounts = counts;
 }
 
 // Renders a contact label: display name as primary line (when set) with
@@ -749,11 +774,6 @@ async function selectContact(contactId, recipientId, username, displayName) {
   closeFileGallery();
   selectedContact = { contactId, recipientId, username, displayName: displayName || null };
 
-  if (unreadCounts[recipientId]) {
-    unreadCounts[recipientId] = 0;
-    renderContacts();
-  }
-
   document.querySelectorAll(".contact-item").forEach((el) => {
     el.classList.toggle("active", el.dataset.recipientId === recipientId);
   });
@@ -766,6 +786,24 @@ async function selectContact(contactId, recipientId, username, displayName) {
 
   await loadPings();
   textInput.focus();
+  await markChatRead();
+}
+
+// Marks the open chat's incoming messages read in the DB (only when the tab is
+// focused — an open-but-backgrounded chat shouldn't count as read), then clears
+// the local badge for that contact and re-renders the sidebar.
+async function markChatRead() {
+  if (!selectedContact || !document.hasFocus()) return;
+  const { recipientId } = selectedContact;
+  const { error } = await sb.rpc("mark_read", { p_other: recipientId });
+  if (error) {
+    console.error("mark_read failed:", error);
+    return;
+  }
+  if (unreadCounts[recipientId]) {
+    unreadCounts[recipientId] = 0;
+    renderContacts();
+  }
 }
 
 async function loadPings() {
@@ -2387,6 +2425,13 @@ window.addEventListener("hashchange", async () => {
     sessionStorage.setItem(INVITE_STASH_KEY, token);
     showAuthInviteBanner();
   }
+});
+
+// A received message counts as read when its chat is open AND the tab is
+// focused. Selecting a contact handles the open case; this handles the
+// "chat already open, user tabs back in" case.
+window.addEventListener("focus", () => {
+  markChatRead();
 });
 
 function playPing() {
