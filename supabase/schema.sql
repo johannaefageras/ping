@@ -419,3 +419,77 @@ end;
 $$;
 
 grant execute on function public.redeem_invite(uuid) to authenticated;
+
+-- ============================================================
+-- 11. DURABLE MESSAGING — read/delivery state + mark_read/mark_delivered RPCs
+-- Idempotent: existing deployments can run just this section.
+-- Pings now persist as a durable conversation log. Two timestamps track
+-- delivery and read state per message:
+--   delivered_at: stamped when the receiver's client receives the realtime
+--                 INSERT (or on next load if it was offline at send), via the
+--                 mark_delivered RPC below.
+--   read_at:      stamped when the receiver opens that chat with the tab
+--                 focused, via the mark_read RPC below.
+-- The per-side dismiss flags (section 9) still govern row visibility; these
+-- columns are orthogonal to dismissal. Unread count = pings where
+-- receiver_id = me, read_at is null, and not dismissed_by_receiver.
+-- NOTE: pings has no UPDATE RLS policy (RLS is enabled with only SELECT/INSERT
+-- policies), so clients CANNOT update delivered_at/read_at directly — these
+-- stamps are written exclusively through the two security-definer RPCs below,
+-- matching the dismiss_ping (section 9) mutation pattern.
+-- ============================================================
+
+alter table public.pings add column if not exists delivered_at timestamptz;
+alter table public.pings add column if not exists read_at      timestamptz;
+
+-- Partial index: the durable unread-count query filters on
+-- (receiver_id, read_at is null) and the receiver's own non-dismissed rows.
+create index if not exists pings_unread_idx
+  on public.pings (receiver_id)
+  where read_at is null;
+
+-- mark_read: stamp read_at = now() on every ping the caller has received from
+-- a given counterparty that is still unread. p_other is the counterparty's
+-- user id (the "recipientId" the client already tracks per chat). Security
+-- definer with an explicit auth check: the caller may only mark their OWN
+-- received messages read, so no pair-membership lookup is needed beyond
+-- receiver_id = auth.uid(). Mirrors the dismiss_ping (section 9) pattern.
+create or replace function public.mark_read(p_other uuid)
+returns void
+language plpgsql
+security definer set search_path = ''
+as $$
+begin
+  update public.pings
+    set read_at = now()
+    where receiver_id = auth.uid()
+      and sender_id = p_other
+      and read_at is null
+      and not dismissed_by_receiver;
+end;
+$$;
+
+grant execute on function public.mark_read(uuid) to authenticated;
+
+-- mark_delivered: stamp delivered_at = now() on a single ping the caller has
+-- received, if not already stamped. p_id is the ping's id. The caller may only
+-- mark a message delivered when they are its receiver (receiver_id =
+-- auth.uid()); the `delivered_at is null` guard makes repeat calls a no-op.
+-- This exists because pings has no UPDATE RLS policy — the receiver's client
+-- cannot write delivered_at directly, so it goes through this RPC. Mirrors the
+-- mark_read / dismiss_ping pattern.
+create or replace function public.mark_delivered(p_id uuid)
+returns void
+language plpgsql
+security definer set search_path = ''
+as $$
+begin
+  update public.pings
+    set delivered_at = now()
+    where id = p_id
+      and receiver_id = auth.uid()
+      and delivered_at is null;
+end;
+$$;
+
+grant execute on function public.mark_delivered(uuid) to authenticated;
