@@ -835,10 +835,23 @@ async function loadPings() {
     return;
   }
 
-  const page = (pings || []).slice().reverse(); // oldest → newest
+  const ttlSeconds = parseTtlSeconds(selectedContact.disappearingTtl);
+  // hasMoreOlder reflects the raw page size (whether the DB had a full page),
+  // independent of how many survive the expiry filter — otherwise filtering the
+  // whole page to empty would wrongly stop paging.
   hasMoreOlder = (pings || []).length === PINGS_PAGE_SIZE;
-  oldestCursor = page.length
-    ? { ts: page[0].created_at, id: page[0].id }
+  const page = (pings || [])
+    .slice()
+    .reverse() // oldest → newest
+    .filter((ping) => !isExpired(ping, ttlSeconds));
+  // Cursor anchors on the oldest RAW row (not the oldest surviving one) so the
+  // next page continues from the true page boundary even if the top rows were
+  // filtered out as expired.
+  const rawOldest = (pings || []).length
+    ? (pings || [])[(pings || []).length - 1]
+    : null;
+  oldestCursor = rawOldest
+    ? { ts: rawOldest.created_at, id: rawOldest.id }
     : null;
 
   board.innerHTML = "";
@@ -910,10 +923,22 @@ async function loadOlderPings() {
       return;
     }
 
-    const older = (pings || []).slice().reverse(); // oldest → newest
+    const ttlSeconds = parseTtlSeconds(selectedContact.disappearingTtl);
     hasMoreOlder = (pings || []).length === PINGS_PAGE_SIZE;
+    // Advance the cursor to the raw oldest row of THIS fetch before filtering, so
+    // paging continues from the true boundary even if every fetched row expired.
+    const rawOldest = (pings || []).length
+      ? (pings || [])[(pings || []).length - 1]
+      : null;
+    const older = (pings || [])
+      .slice()
+      .reverse() // oldest → newest
+      .filter((ping) => !isExpired(ping, ttlSeconds));
+    if (rawOldest) {
+      oldestCursor = { ts: rawOldest.created_at, id: rawOldest.id };
+    }
     if (!older.length) {
-      renderLoadOlderControl(); // removes the button if history is now exhausted
+      renderLoadOlderControl(); // refresh/remove the button per hasMoreOlder
       return;
     }
 
@@ -943,7 +968,6 @@ async function loadOlderPings() {
       prev = ping;
     });
 
-    oldestCursor = { ts: older[0].created_at, id: older[0].id };
     // `prev` is now the last (newest) inserted message. If the pre-existing
     // leading separator is for the same day, it's a duplicate — remove it.
     if (
@@ -1867,6 +1891,36 @@ function renderDaySeparatorIfNeeded(ping, prev, beforeNode = null) {
   } else {
     board.appendChild(sep);
   }
+}
+
+// Parses a Postgres interval string (as PostgREST serializes it) into seconds.
+// Handles "HH:MM:SS", "N days", "N day", and "N day(s) HH:MM:SS" combos — which
+// covers the only values set_disappearing can write (24h → "24:00:00", 7d →
+// "7 days"). It deliberately does NOT handle month/year units, a verbatim
+// "N hours" string, or fractional seconds; those can't occur via the RPC, and
+// an unparseable value falls through to null (treated as timer-off) rather than
+// erroring. Returns null for null/empty (disappearing timer off → never expires).
+function parseTtlSeconds(ttl) {
+  if (!ttl) return null;
+  let seconds = 0;
+  const dayMatch = /(\d+)\s+days?/.exec(ttl);
+  if (dayMatch) seconds += parseInt(dayMatch[1], 10) * 86400;
+  const timeMatch = /(\d{1,2}):(\d{2}):(\d{2})/.exec(ttl);
+  if (timeMatch) {
+    seconds +=
+      parseInt(timeMatch[1], 10) * 3600 +
+      parseInt(timeMatch[2], 10) * 60 +
+      parseInt(timeMatch[3], 10);
+  }
+  return seconds > 0 ? seconds : null;
+}
+
+// True if a ping is older than the pair's disappearing TTL (in seconds). A null
+// ttlSeconds (timer off) means nothing expires. Compares against created_at.
+function isExpired(ping, ttlSeconds) {
+  if (!ttlSeconds) return false;
+  const ageSeconds = (Date.now() - new Date(ping.created_at).getTime()) / 1000;
+  return ageSeconds > ttlSeconds;
 }
 
 // Escapes for both text and attribute contexts. Quotes are included because
