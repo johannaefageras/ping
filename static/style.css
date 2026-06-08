@@ -1114,6 +1114,94 @@ footer {
 .composer-menu-item.hidden { display: none; }
 .composer-menu-item .icon { width: 18px; height: 18px; color: #888; }
 
+/* --- Emoji picker popover --- */
+.emoji-picker {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  width: 340px;
+  background: var(--bg, #0a0a0a);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 50;
+}
+.emoji-picker.hidden { display: none; }
+
+.emoji-search {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: #141414;
+  color: var(--fg, #ddd);
+  font: inherit;
+  font-size: 0.85rem;
+  outline: none;
+}
+.emoji-search::placeholder { color: #777; }
+
+.emoji-cat-row {
+  display: flex;
+  gap: 2px;
+  margin: 8px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.emoji-cat-btn {
+  flex: 1;
+  height: 38px;
+  padding: 4px;
+  border: none;
+  border-radius: 7px;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.emoji-cat-btn img { width: 24px; height: 24px; display: block; }
+.emoji-cat-btn:hover { background: #161616; }
+.emoji-cat-btn.sel { background: #1a1a1a; }
+
+.emoji-cat-label {
+  font-size: 0.7rem;
+  color: #aaa;
+  margin: 0 2px 6px;
+  min-height: 14px;
+}
+
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  max-height: 252px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+.emoji-grid-cell {
+  aspect-ratio: 1;
+  padding: 5px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.emoji-grid-cell img { width: 100%; height: 100%; display: block; }
+.emoji-grid-cell:hover { background: #1a1a1a; }
+
+.emoji-status {
+  font-size: 0.78rem;
+  color: #888;
+  padding: 16px 8px;
+  text-align: center;
+}
+.emoji-status.hidden { display: none; }
+
 .composer-icon-btn {
   display: flex;
   align-items: center;
