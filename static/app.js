@@ -108,10 +108,26 @@ let currentUser = null; // { id, username }
 let selectedContact = null; // { contactId, recipientId, username, displayName }
 let contacts = [];
 let lastSentText = null; // last text the user sent, for /last recall
-let unreadCounts = {}; // recipientId -> number of pings received while their chat was closed (this session)
+let unreadCounts = {}; // recipientId -> count of unread, non-dismissed pings from that contact; loaded from the DB on entry (durable across reload) and kept live by realtime
 let realtimeChannel = null;
 let presenceChannel = null;
 let onlineUserIds = new Set();
+
+const PINGS_PAGE_SIZE = 50;
+// Paging state for the open chat's scrollback. oldestCursor is a compound
+// keyset cursor { ts, id } for the topmost rendered message — created_at alone
+// isn't a stable key (two messages can share a microsecond, e.g. a multi-file
+// upload loop), so the next older page is fetched with a (created_at, id)
+// keyset to avoid skipping or duplicating co-timestamped rows. hasMoreOlder is
+// false once a page returns fewer than PINGS_PAGE_SIZE rows (we've reached the
+// start of history). loadingOlder guards against overlapping "ladda äldre"
+// fetches. lastRenderedPing tracks the newest message appended to the open
+// board so realtime/send paths can decide whether a fresh day separator is
+// needed.
+let oldestCursor = null;
+let hasMoreOlder = false;
+let loadingOlder = false;
+let lastRenderedPing = null;
 
 // ============================================================
 // BOOTSTRAP
@@ -451,6 +467,7 @@ async function enterApp(user) {
   currentUsernameEl.textContent = "@" + currentUser.username;
   displayNameInput.value = currentUser.display_name || "";
 
+  await loadUnreadCounts();
   await loadContacts();
   subscribeToRealtime();
   subscribePresence();
@@ -461,6 +478,10 @@ function exitApp() {
   selectedContact = null;
   contacts = [];
   unreadCounts = {};
+  oldestCursor = null;
+  hasMoreOlder = false;
+  loadingOlder = false;
+  lastRenderedPing = null;
 
   if (realtimeChannel) sb.removeChannel(realtimeChannel);
   realtimeChannel = null;
@@ -570,6 +591,30 @@ function refreshChatHeader() {
     selectedContact.username,
     selectedContact.displayName
   );
+}
+
+// Source of truth for the sidebar unread badges on load: how many messages
+// each contact has sent me that I haven't read yet (and haven't deleted).
+// Populates the in-memory unreadCounts map keyed by the sender's id (which is
+// the contact's recipientId in sidebar terms). Realtime keeps it live after.
+async function loadUnreadCounts() {
+  const { data, error } = await sb
+    .from("pings")
+    .select("sender_id")
+    .eq("receiver_id", currentUser.id)
+    .is("read_at", null)
+    .eq("dismissed_by_receiver", false);
+
+  if (error) {
+    console.error("Failed to load unread counts:", error);
+    return;
+  }
+
+  const counts = {};
+  (data || []).forEach((row) => {
+    counts[row.sender_id] = (counts[row.sender_id] || 0) + 1;
+  });
+  unreadCounts = counts;
 }
 
 // Renders a contact label: display name as primary line (when set) with
@@ -729,11 +774,6 @@ async function selectContact(contactId, recipientId, username, displayName) {
   closeFileGallery();
   selectedContact = { contactId, recipientId, username, displayName: displayName || null };
 
-  if (unreadCounts[recipientId]) {
-    unreadCounts[recipientId] = 0;
-    renderContacts();
-  }
-
   document.querySelectorAll(".contact-item").forEach((el) => {
     el.classList.toggle("active", el.dataset.recipientId === recipientId);
   });
@@ -746,12 +786,32 @@ async function selectContact(contactId, recipientId, username, displayName) {
 
   await loadPings();
   textInput.focus();
+  await markChatRead();
+}
+
+// Marks the open chat's incoming messages read in the DB (only when the tab is
+// focused — an open-but-backgrounded chat shouldn't count as read), then clears
+// the local badge for that contact and re-renders the sidebar.
+async function markChatRead() {
+  if (!selectedContact || !document.hasFocus()) return;
+  const { recipientId } = selectedContact;
+  const { error } = await sb.rpc("mark_read", { p_other: recipientId });
+  if (error) {
+    console.error("mark_read failed:", error);
+    return;
+  }
+  if (unreadCounts[recipientId]) {
+    unreadCounts[recipientId] = 0;
+    renderContacts();
+  }
 }
 
 async function loadPings() {
   if (!selectedContact) return;
 
   const { recipientId } = selectedContact;
+  // Fetch the most recent PINGS_PAGE_SIZE rows: order DESC + limit, then
+  // reverse so we render oldest→newest into the board.
   const { data: pings, error } = await sb
     .from("pings")
     .select("*")
@@ -759,22 +819,146 @@ async function loadPings() {
       `and(sender_id.eq.${currentUser.id},receiver_id.eq.${recipientId}),` +
         `and(sender_id.eq.${recipientId},receiver_id.eq.${currentUser.id})`
     )
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(PINGS_PAGE_SIZE);
 
   if (error) {
     console.error("Failed to load pings:", error);
     return;
   }
 
+  const page = (pings || []).slice().reverse(); // oldest → newest
+  hasMoreOlder = (pings || []).length === PINGS_PAGE_SIZE;
+  oldestCursor = page.length
+    ? { ts: page[0].created_at, id: page[0].id }
+    : null;
+
   board.innerHTML = "";
-  (pings || []).forEach((ping) => renderPing(ping, false));
+  lastRenderedPing = null;
+  renderLoadOlderControl();
+  let prev = null;
+  page.forEach((ping) => {
+    renderDaySeparatorIfNeeded(ping, prev);
+    renderPing(ping, false);
+    prev = ping;
+  });
+  lastRenderedPing = page.length ? page[page.length - 1] : null;
   scrollToBottom();
+}
+
+// Inserts (or refreshes) the "ladda äldre" button as the first child of #board.
+// Removed when there is no older history left. Returns the button element (or
+// null when there's no more history) so callers can anchor a prepend to it.
+function renderLoadOlderControl() {
+  let ctl = document.getElementById("load-older");
+  if (!hasMoreOlder) {
+    if (ctl) ctl.remove();
+    return null;
+  }
+  if (!ctl) {
+    ctl = document.createElement("button");
+    ctl.id = "load-older";
+    ctl.className = "load-older";
+    ctl.type = "button";
+    ctl.textContent = "ladda äldre";
+    ctl.addEventListener("click", loadOlderPings);
+  }
+  // Always keep it as the first child so it stays at the very top.
+  if (board.firstChild !== ctl) board.insertBefore(ctl, board.firstChild);
+  return ctl;
+}
+
+// Fetches the page of messages older than the oldestCursor keyset and prepends
+// them, preserving the user's scroll position (so the viewport doesn't jump).
+async function loadOlderPings() {
+  if (!selectedContact || loadingOlder || !hasMoreOlder || !oldestCursor) return;
+  loadingOlder = true;
+  try {
+    const { recipientId } = selectedContact;
+
+    // Compound keyset: rows strictly older than the cursor in (created_at, id)
+    // descending order — created_at < ts, OR same created_at with a smaller id.
+    // This won't skip or duplicate messages that share a created_at at the page
+    // boundary (a plain `.lt("created_at", ts)` would drop a co-timestamped
+    // sibling). The pair filter is applied with .or(); the keyset is a second
+    // .or() (PostgREST ANDs successive .or() groups together).
+    const { data: pings, error } = await sb
+      .from("pings")
+      .select("*")
+      .or(
+        `and(sender_id.eq.${currentUser.id},receiver_id.eq.${recipientId}),` +
+          `and(sender_id.eq.${recipientId},receiver_id.eq.${currentUser.id})`
+      )
+      .or(
+        `created_at.lt.${oldestCursor.ts},` +
+          `and(created_at.eq.${oldestCursor.ts},id.lt.${oldestCursor.id})`
+      )
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .limit(PINGS_PAGE_SIZE);
+
+    if (error) {
+      console.error("Failed to load older pings:", error);
+      return;
+    }
+
+    const older = (pings || []).slice().reverse(); // oldest → newest
+    hasMoreOlder = (pings || []).length === PINGS_PAGE_SIZE;
+    if (!older.length) {
+      renderLoadOlderControl(); // removes the button if history is now exhausted
+      return;
+    }
+
+    // Scroll anchoring: capture height/top before prepending, restore after, so
+    // the messages the user was looking at stay put instead of jumping.
+    const prevHeight = chatMain.scrollHeight;
+    const prevTop = chatMain.scrollTop;
+
+    // The button (if present) is board.firstChild; the anchor is the node right
+    // after it — i.e. the current top-of-history element the older page slots in
+    // front of. If the button isn't present, fall back to board.firstChild.
+    const btn = document.getElementById("load-older");
+    const anchor = btn ? btn.nextSibling : board.firstChild;
+
+    // `anchor` is the first pre-existing chat node. It is a `.day-separator` iff
+    // the existing top message began a day. Remember it so we can dedupe the
+    // boundary after inserting (the inserted page may end on that same day).
+    const preExistingLeadingSep =
+      anchor && anchor.classList && anchor.classList.contains("day-separator")
+        ? anchor
+        : null;
+
+    let prev = null;
+    older.forEach((ping) => {
+      renderDaySeparatorIfNeeded(ping, prev, anchor);
+      renderPingBefore(ping, anchor);
+      prev = ping;
+    });
+
+    oldestCursor = { ts: older[0].created_at, id: older[0].id };
+    // `prev` is now the last (newest) inserted message. If the pre-existing
+    // leading separator is for the same day, it's a duplicate — remove it.
+    if (
+      preExistingLeadingSep &&
+      prev &&
+      preExistingLeadingSep.dataset.dayKey === dayKey(prev.created_at)
+    ) {
+      preExistingLeadingSep.remove();
+    }
+
+    renderLoadOlderControl(); // refresh/remove the button per hasMoreOlder
+    chatMain.scrollTop = prevTop + (chatMain.scrollHeight - prevHeight);
+  } finally {
+    // Clear the guard only after all rendering completes, so the whole critical
+    // section is covered even if an await is later added to the render tail.
+    loadingOlder = false;
+  }
 }
 
 function dismissPing(el, ping) {
   if (el._dismissed) return;
   el._dismissed = true;
-  clearTimeout(el._dismissTimer);
   el.classList.add("fade-out");
   el.addEventListener(
     "animationend",
@@ -783,54 +967,70 @@ function dismissPing(el, ping) {
         URL.revokeObjectURL(el._objectUrl);
         el._objectUrl = null;
       }
+      // Remember the preceding node so we can clean up a day separator that this
+      // delete leaves orphaned (a separator whose only message was this one).
+      const prev = el.previousElementSibling;
       el.remove();
+      // A leading separator is now orphaned if nothing follows it, or the next
+      // sibling is another separator (its day's last message just went away).
+      if (prev && prev.classList.contains("day-separator")) {
+        const next = prev.nextElementSibling;
+        if (!next || next.classList.contains("day-separator")) prev.remove();
+      }
       await sb.rpc("dismiss_ping", { p_id: ping.id });
     },
     { once: true }
   );
 }
 
-function renderPing(ping, animate = true) {
+function renderPing(ping, animate = true, beforeNode = null) {
   const isSelf = ping.sender_id === currentUser.id;
   const el = document.createElement("div");
+  el.dataset.pingId = ping.id;
 
   if (ping.type === "text") {
     el.className = `item ${isSelf ? "self" : "other"}${animate && !isSelf ? " ping" : ""}`;
     el.innerHTML = `
-      <div class="meta">${formatTime(ping.created_at)}</div>
+      <div class="meta">${formatTime(ping.created_at)}<span class="ping-status" aria-hidden="true"></span></div>
       <div class="content">${linkify(ping.content)}</div>
-      <button class="dismiss-btn" aria-label="Avfärda"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      <button class="dismiss-btn" aria-label="Ta bort"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     `;
   } else if (ping.type === "file") {
     el.className = `item ${isSelf ? "self" : "other"} file-item${animate && !isSelf ? " ping" : ""}`;
     const dismissSvg = `<svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`;
     if (isVideoFile(ping.file_name)) {
       el.innerHTML = `
-        <div class="meta">${formatTime(ping.created_at)}</div>
+        <div class="meta">${formatTime(ping.created_at)}<span class="ping-status" aria-hidden="true"></span></div>
         <video class="video-inline loading" controls playsinline preload="metadata" aria-label="${escapeHtml(ping.file_name)}"></video>
         <div class="video-meta">
           <span>${escapeHtml(ping.file_name)} <span class="file-size">${formatSize(ping.file_size)}</span></span>
           <a class="video-download-link" data-path="${escapeHtml(ping.file_path)}" data-name="${escapeHtml(ping.file_name)}" role="button" tabindex="0" aria-label="Ladda ner ${escapeHtml(ping.file_name)}"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17V3"/><path d="m6 11 6 6 6-6"/><path d="M19 21H5"/></svg> ladda ner</a>
         </div>
-        <button class="dismiss-btn" aria-label="Avfärda">${dismissSvg}</button>
+        <button class="dismiss-btn" aria-label="Ta bort">${dismissSvg}</button>
       `;
     } else {
       const iconOrThumb = isImageFile(ping.file_name)
         ? `<img class="image-thumb loading" alt="${escapeHtml(ping.file_name)}" />`
         : `<span class="file-icon"><img class="file-type-icon" src="${fileTypeIcon(ping.file_name)}" alt="" width="20" height="20" loading="lazy" /></span>`;
       el.innerHTML = `
-        <div class="meta">${formatTime(ping.created_at)}</div>
+        <div class="meta">${formatTime(ping.created_at)}<span class="ping-status" aria-hidden="true"></span></div>
         <div class="file-info">
           ${iconOrThumb}
           <span>${escapeHtml(ping.file_name)} <span class="file-size">${formatSize(ping.file_size)}</span></span>
           <button class="download-btn" data-path="${escapeHtml(ping.file_path)}" data-name="${escapeHtml(ping.file_name)}"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17V3"/><path d="m6 11 6 6 6-6"/><path d="M19 21H5"/></svg> LADDA NER</button>
         </div>
-        <button class="dismiss-btn" aria-label="Avfärda">${dismissSvg}</button>
+        <button class="dismiss-btn" aria-label="Ta bort">${dismissSvg}</button>
       `;
     }
   }
 
-  board.appendChild(el);
+  if (beforeNode) {
+    board.insertBefore(el, beforeNode);
+  } else {
+    board.appendChild(el);
+  }
+
+  if (isSelf) renderPingStatus(el, ping);
 
   // CSP forbids inline onerror; attach the fallback in JS so a missing icon
   // degrades to file.svg instead of a broken-image glyph.
@@ -903,9 +1103,8 @@ function renderPing(ping, animate = true) {
         if (meta) meta.remove();
         videoEl.replaceWith(info);
         const dlFallback = info.querySelector(".download-btn");
-        dlFallback.addEventListener("click", async () => {
-          await downloadFile(dlFallback.dataset.path, dlFallback.dataset.name);
-          if (!isSelf) dismissPing(el, ping);
+        dlFallback.addEventListener("click", () => {
+          downloadFile(dlFallback.dataset.path, dlFallback.dataset.name);
         });
         const fallbackIcon = info.querySelector(".file-type-icon");
         if (fallbackIcon) {
@@ -935,12 +1134,8 @@ function renderPing(ping, animate = true) {
   // Download button (files)
   const dlBtn = el.querySelector(".download-btn");
   if (dlBtn) {
-    dlBtn.addEventListener("click", async () => {
-      await downloadFile(dlBtn.dataset.path, dlBtn.dataset.name);
-      // Auto-dismiss file pings after download for receiver
-      if (!isSelf) {
-        dismissPing(el, ping);
-      }
+    dlBtn.addEventListener("click", () => {
+      downloadFile(dlBtn.dataset.path, dlBtn.dataset.name);
     });
   }
 
@@ -959,12 +1154,35 @@ function renderPing(ping, animate = true) {
     });
   }
 
-  // Auto-remove on timer for freshly-arrived pings only — historical pings
-  // loaded on chat open keep until the user dismisses them. Received files
-  // also wait for download instead of timing out.
-  const isReceivedFile = ping.type === "file" && !isSelf;
-  if (animate && !isReceivedFile) {
-    el._dismissTimer = setTimeout(() => dismissPing(el, ping), 20000);
+}
+
+// Convenience: render a ping inserted before an existing node (used when
+// prepending an older page). Never animates historical messages.
+function renderPingBefore(ping, beforeNode) {
+  renderPing(ping, false, beforeNode);
+}
+
+// Renders the sender-side status indicator on one of MY messages:
+//   sent (no delivered_at)      → ✓
+//   delivered (delivered_at)    → ✓✓
+//   read (read_at)              → ✓✓ with a read style
+// No-op for messages I received (only the sender sees receipts).
+function renderPingStatus(el, ping) {
+  if (ping.sender_id !== currentUser.id) return;
+  const slot = el.querySelector(".ping-status");
+  if (!slot) return;
+  if (ping.read_at) {
+    slot.textContent = "✓✓";
+    slot.classList.add("read");
+    slot.title = "Läst";
+  } else if (ping.delivered_at) {
+    slot.textContent = "✓✓";
+    slot.classList.remove("read");
+    slot.title = "Levererad";
+  } else {
+    slot.textContent = "✓";
+    slot.classList.remove("read");
+    slot.title = "Skickad";
   }
 }
 
@@ -1005,7 +1223,9 @@ textForm.addEventListener("submit", async (e) => {
     return;
   }
 
+  renderDaySeparatorIfNeeded(data, lastRenderedPing);
   renderPing(data);
+  lastRenderedPing = data;
   scrollToBottom();
   lastSentText = text;
   textInput.value = "";
@@ -1051,7 +1271,9 @@ async function uploadFiles(files) {
       continue;
     }
 
+    renderDaySeparatorIfNeeded(data, lastRenderedPing);
     renderPing(data);
+    lastRenderedPing = data;
     scrollToBottom();
   }
 }
@@ -1318,26 +1540,67 @@ function subscribeToRealtime() {
       },
       (payload) => {
         const ping = payload.new;
+
+        // Record delivery regardless of which chat is open. pings has no UPDATE
+        // RLS policy, so we cannot write delivered_at with a direct client
+        // update — it goes through the mark_delivered security-definer RPC,
+        // which stamps now() only when the caller is the receiver and
+        // delivered_at is still null. Fire-and-forget: nothing here consumes the
+        // result, so we must NOT block rendering the arriving message on the RPC
+        // round-trip. delivered_at is never blocked on the chat being open
+        // (read_at is the open-and-focused signal).
+        if (ping.delivered_at == null) {
+          sb.rpc("mark_delivered", { p_id: ping.id }).then(({ error }) => {
+            if (error) console.error("mark_delivered failed:", error);
+          });
+        }
+
         const chatOpen = selectedContact && ping.sender_id === selectedContact.recipientId;
 
         if (chatOpen) {
-          renderPing(ping);
-          scrollToBottom();
+          // Dedup guard: the realtime channel lives for the whole session while
+          // loadPings runs per chat-open, so a row committing in the window
+          // around loadPings' SELECT can be both in the page AND delivered here.
+          // Without auto-dismiss to mask it, that duplicate would persist until
+          // reload — skip if this id is already on the board.
+          if (!board.querySelector(`[data-ping-id="${ping.id}"]`)) {
+            renderDaySeparatorIfNeeded(ping, lastRenderedPing);
+            renderPing(ping);
+            lastRenderedPing = ping;
+            scrollToBottom();
+          }
+          // Chat is open; if the tab is focused, mark it read immediately.
+          markChatRead();
         } else {
-          // Chat not open: count it as unread and schedule a decrement when the
-          // ping would have auto-expired (keeps the badge consistent with the
-          // 20s ephemeral lifetime).
+          // Chat not open: it's a durable unread. No timed decrement — the
+          // badge persists until the chat is opened (mark_read) or the message
+          // is deleted.
           unreadCounts[ping.sender_id] = (unreadCounts[ping.sender_id] || 0) + 1;
           renderContacts();
-          setTimeout(() => {
-            if (unreadCounts[ping.sender_id] > 0) {
-              unreadCounts[ping.sender_id] -= 1;
-              renderContacts();
-            }
-          }, 20000);
         }
 
         playPing();
+      }
+    )
+    .on(
+      "postgres_changes",
+      {
+        // Sender-side read/delivery receipts: when a message WE sent gets its
+        // delivered_at / read_at stamped by the receiver, reflect it live. We
+        // filter on sender_id = me so we only react to our own outgoing rows.
+        event: "UPDATE",
+        schema: "public",
+        table: "pings",
+        filter: `sender_id=eq.${currentUser.id}`,
+      },
+      (payload) => {
+        const ping = payload.new;
+        // Only relevant if this message is in the currently open chat.
+        const inOpenChat =
+          selectedContact && ping.receiver_id === selectedContact.recipientId;
+        if (!inOpenChat) return;
+        const el = board.querySelector(`[data-ping-id="${ping.id}"]`);
+        if (el) renderPingStatus(el, ping);
       }
     )
     .on(
@@ -1549,6 +1812,54 @@ function formatTime(ts) {
 function formatDate(ts) {
   const d = new Date(ts);
   return d.toLocaleDateString("sv-SE", { day: "2-digit", month: "2-digit" });
+}
+
+// Day-separator label for the conversation log: "Idag" / "Igår" / otherwise a
+// localized day. Reuses the sv-SE locale conventions of formatDate/formatTime.
+function formatDaySeparator(ts) {
+  const d = new Date(ts);
+  const today = new Date();
+  const startOf = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate());
+  const dayMs = 86400000;
+  const diffDays = Math.round((startOf(today) - startOf(d)) / dayMs);
+  if (diffDays === 0) return "Idag";
+  if (diffDays === 1) return "Igår";
+  // Within the current year: "8 juni"; older: include the year.
+  const sameYear = d.getFullYear() === today.getFullYear();
+  return d.toLocaleDateString("sv-SE", {
+    day: "numeric",
+    month: "long",
+    ...(sameYear ? {} : { year: "numeric" }),
+  });
+}
+
+// Stable yyyy-mm-dd key for comparing two timestamps' calendar day (local).
+function dayKey(ts) {
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+// Builds a day-separator element for a given timestamp.
+function makeDaySeparator(ts) {
+  const sep = document.createElement("div");
+  sep.className = "day-separator";
+  sep.dataset.dayKey = dayKey(ts);
+  sep.textContent = formatDaySeparator(ts);
+  return sep;
+}
+
+// Inserts a day separator before `ping` when its calendar day differs from the
+// previous rendered message's day (or when prev is null — first message of the
+// page). When beforeNode is given, insert before it (prepend path); otherwise
+// append to the board (initial-load path).
+function renderDaySeparatorIfNeeded(ping, prev, beforeNode = null) {
+  if (prev && dayKey(prev.created_at) === dayKey(ping.created_at)) return;
+  const sep = makeDaySeparator(ping.created_at);
+  if (beforeNode) {
+    board.insertBefore(sep, beforeNode);
+  } else {
+    board.appendChild(sep);
+  }
 }
 
 // Escapes for both text and attribute contexts. Quotes are included because
@@ -2195,6 +2506,13 @@ window.addEventListener("hashchange", async () => {
     sessionStorage.setItem(INVITE_STASH_KEY, token);
     showAuthInviteBanner();
   }
+});
+
+// A received message counts as read when its chat is open AND the tab is
+// focused. Selecting a contact handles the open case; this handles the
+// "chat already open, user tabs back in" case.
+window.addEventListener("focus", () => {
+  markChatRead();
 });
 
 function playPing() {
