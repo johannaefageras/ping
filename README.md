@@ -19,8 +19,12 @@ want a quick way to swap a URL or a file without going through a chat app.
   `/` to focus the composer, `Alt+↑/↓` to switch contacts, `Esc` to close the
   topmost overlay, and `?` for a shortcuts cheatsheet
 - Real-time delivery via Supabase Realtime
-- Per-side dismiss: each user hides their copy independently; the message and
-  any attached file are deleted from storage once both sides dismiss it
+- Durable conversation history: messages persist as a scrollable log with date
+  separators and paged scrollback (latest 50, "ladda äldre" for older)
+- Read/unread + delivery receipts: per-message sent/delivered/read status, and
+  a sidebar unread badge that survives reload
+- Delete a message: ✕ removes your copy; the message and any attached file are
+  deleted from storage once both sides delete it
 - Files stored in a private Supabase Storage bucket — only sender and
   receiver can download them
 - Retro terminal aesthetic, Swedish UI
@@ -51,7 +55,7 @@ supabase/schema.sql     Full Supabase schema: tables, RLS, triggers, RPC
 2. In the SQL editor, run [supabase/schema.sql](supabase/schema.sql). This
    creates the `profiles`, `contacts`, `pings`, and `invites` tables, RLS
    policies, the `ping-files` storage bucket, and the `dismiss_ping`,
-   `create_invite`, and `redeem_invite` RPCs.
+   `mark_read`, `mark_delivered`, `create_invite`, and `redeem_invite` RPCs.
 3. Copy the project URL and the **anon** public key from
    *Project Settings → API*.
 
