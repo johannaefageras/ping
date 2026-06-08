@@ -1603,6 +1603,29 @@ footer {
   color: var(--fg-dim);
 }
 
+/* Trigger button in the chat header and the titlebar close button: borderless
+   icon buttons, mirroring #settings-close. */
+#gallery-btn,
+#gallery-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--fg-dim);
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  flex: none;
+  transition: color 0.15s, background 0.15s;
+}
+
+#gallery-btn:hover,
+#gallery-close:hover {
+  color: var(--fg);
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
+}
+
 #gallery-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
