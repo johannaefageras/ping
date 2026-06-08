@@ -1148,8 +1148,11 @@ function renderGalleryItem(ping) {
   const thumb = cell.querySelector(".gallery-thumb");
   if (thumb) {
     fetchObjectUrl(ping.file_path).then((url) => {
-      // Gallery was closed mid-fetch — revoke and bail.
-      if (!galleryModal || galleryModal.classList.contains("hidden")) {
+      // Cell was detached while the fetch was in flight (gallery closed, or
+      // reopened — which clears the grid). Revoke and bail so a stale URL from
+      // a previous open session never lands on a detached <img> or pushes into
+      // the current session's array. Mirrors renderPing's isConnected guard.
+      if (!thumb.isConnected) {
         if (url) URL.revokeObjectURL(url);
         return;
       }
