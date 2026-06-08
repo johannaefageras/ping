@@ -501,3 +501,64 @@ end;
 $$;
 
 grant execute on function public.mark_delivered(uuid) to authenticated;
+
+-- ============================================================
+-- 12. DISAPPEARING MESSAGES — per-pair TTL + set_disappearing RPC
+-- (purge_expired_pings() + the pg_cron sweep are added later in this section.)
+-- Idempotent: existing deployments can run just this section.
+-- Per-conversation, opt-in disappearing messages: one timer per pair, stored on
+-- the single contacts row. disappearing_ttl is a Postgres interval; null = off.
+-- Offered values client-side are 24h and 7d. Either side of the pair may change
+-- it (set_disappearing, below). Expired messages are hidden client-side at load
+-- time (belt) and physically deleted by a daily pg_cron sweep calling
+-- purge_expired_pings() (suspenders); deletion fires the section-8 storage
+-- cleanup trigger so attached files are removed too.
+-- NOTE: contacts has an UPDATE RLS policy ONLY for the addressee changing
+-- status, so clients CANNOT update disappearing_ttl directly — it is written
+-- exclusively through the set_disappearing security-definer RPC below, matching
+-- the dismiss_ping (section 9) mutation pattern with an explicit either-side
+-- membership check.
+-- ============================================================
+
+alter table public.contacts
+  add column if not exists disappearing_ttl interval;  -- null = off
+
+-- set_disappearing: set (or clear) the pair's disappearing-messages timer.
+-- p_contact_id is the contacts row id; p_ttl is the new interval (null = off,
+-- e.g. '24 hours', '7 days'). Authorized to EITHER side of the pair: the caller
+-- must be the requester_id or addressee_id of that row (mirrors dismiss_ping's
+-- explicit auth.uid() membership check). Security definer so it can update a row
+-- the caller's RLS UPDATE policy would otherwise block.
+create or replace function public.set_disappearing(p_contact_id uuid, p_ttl interval)
+returns void
+language plpgsql
+security definer set search_path = ''
+as $$
+declare
+  v_requester uuid;
+  v_addressee uuid;
+begin
+  -- Only accepted pairs have a conversation; setting a timer on a pending row
+  -- is meaningless (no pings can be sent until accepted). Silent return on a
+  -- missing-or-pending row, matching the not-found idiom of dismiss_ping.
+  select requester_id, addressee_id
+    into v_requester, v_addressee
+    from public.contacts
+    where id = p_contact_id
+      and status = 'accepted';
+
+  if not found then
+    return;
+  end if;
+
+  if auth.uid() <> v_requester and auth.uid() <> v_addressee then
+    raise exception 'not authorized';
+  end if;
+
+  update public.contacts
+    set disappearing_ttl = p_ttl
+    where id = p_contact_id;
+end;
+$$;
+
+grant execute on function public.set_disappearing(uuid, interval) to authenticated;
