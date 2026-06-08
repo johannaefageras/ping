@@ -442,6 +442,14 @@ grant execute on function public.redeem_invite(uuid) to authenticated;
 alter table public.pings add column if not exists delivered_at timestamptz;
 alter table public.pings add column if not exists read_at      timestamptz;
 
+-- Sender-side read/delivery receipts rely on Realtime UPDATE events carrying
+-- the FULL new row (not just the PK + changed columns). With the default
+-- replica identity, an UPDATE payload omits unchanged columns like receiver_id,
+-- so the client's "is this message in the open chat?" guard (which reads
+-- payload.new.receiver_id) would see undefined and drop the live receipt.
+-- REPLICA IDENTITY FULL makes Postgres emit every column on UPDATE. Idempotent.
+alter table public.pings replica identity full;
+
 -- Partial index: the durable unread-count query filters on
 -- (receiver_id, read_at is null) and the receiver's own non-dismissed rows.
 create index if not exists pings_unread_idx
