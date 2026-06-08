@@ -513,11 +513,13 @@ grant execute on function public.mark_delivered(uuid) to authenticated;
 -- time (belt) and physically deleted by a daily pg_cron sweep calling
 -- purge_expired_pings() (suspenders); deletion fires the section-8 storage
 -- cleanup trigger so attached files are removed too.
--- NOTE: contacts has an UPDATE RLS policy ONLY for the addressee changing
--- status, so clients CANNOT update disappearing_ttl directly — it is written
--- exclusively through the set_disappearing security-definer RPC below, matching
--- the dismiss_ping (section 9) mutation pattern with an explicit either-side
--- membership check.
+-- NOTE: contacts' only UPDATE RLS policy authorizes the ADDRESSEE
+-- (with check addressee_id = auth.uid()); it is not column-restricted, so the
+-- addressee could technically update disappearing_ttl directly, but the
+-- REQUESTER has no UPDATE policy at all and would be blocked. To let EITHER side
+-- set the timer through one path, it is written exclusively through the
+-- set_disappearing security-definer RPC below, matching the dismiss_ping
+-- (section 9) mutation pattern with an explicit either-side membership check.
 -- ============================================================
 
 alter table public.contacts
@@ -600,8 +602,14 @@ begin
 end;
 $$;
 
--- Intentionally NOT granted to authenticated (open-question #1: cron-only). Only
--- the service role / pg_cron invokes purge_expired_pings(). Do not add a grant.
+-- Cron/service-role only (open-question #1). Postgres grants EXECUTE to PUBLIC
+-- by default, and `authenticated`/`anon` are PUBLIC members — so simply NOT
+-- adding a `grant ... to authenticated` is NOT enough: we must REVOKE the
+-- default PUBLIC grant, otherwise any logged-in user could trigger a global
+-- purge across all pairs (the function is security definer and bypasses RLS).
+-- The service role is not constrained by these grants, so pg_cron still runs it.
+revoke execute on function public.purge_expired_pings() from public;
+revoke execute on function public.purge_expired_pings() from anon, authenticated;
 
 -- Daily pg_cron sweep. REQUIRES the pg_cron extension to be enabled in the
 -- Supabase Dashboard (Database -> Extensions) before this runs — a DEFERRED
