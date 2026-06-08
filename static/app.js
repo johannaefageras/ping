@@ -72,6 +72,13 @@ const recordAgain = document.getElementById("record-again");
 const recordCancel = document.getElementById("record-cancel");
 const textForm = document.getElementById("text-form");
 const textInput = document.getElementById("text-input");
+const emojiBtn = document.getElementById("emoji-btn");
+const emojiPicker = document.getElementById("emoji-picker");
+const emojiSearch = document.getElementById("emoji-search");
+const emojiCatRow = document.getElementById("emoji-cat-row");
+const emojiCatLabel = document.getElementById("emoji-cat-label");
+const emojiGrid = document.getElementById("emoji-grid");
+const emojiStatus = document.getElementById("emoji-status");
 const pingSound = document.getElementById("ping-sound");
 const lightbox = document.getElementById("lightbox");
 const lightboxImg = document.getElementById("lightbox-img");
@@ -1576,6 +1583,108 @@ imageUploadBtn.addEventListener("click", () => {
 });
 
 // imageCaptureBtn opens the capture modal — wired in the capture-modal block (later task).
+
+// ============================================================
+// EMOJI PICKER
+// ============================================================
+
+let emojiData = null;        // parsed emoji-data.json { categories: [...] }
+let emojiSelectedCat = null; // currently shown category id (when not searching)
+let emojiLoaded = false;     // data successfully loaded & UI built once
+// emojiIndex (Map "folder/id" -> item) is declared near the top-of-file state.
+
+// Fetch + cache the emoji data on first open. Returns true on success. Builds
+// the folder/id index (used by renderContent's emojiLabel) and the category
+// row. Shows an inline error and returns false on failure.
+async function loadEmojiData() {
+  if (emojiLoaded) return true;
+  emojiSetStatus("Laddar…");
+  try {
+    const res = await fetch("/data/emoji-data.json");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    emojiData = await res.json();
+  } catch (err) {
+    console.error("Failed to load emoji data:", err);
+    emojiSetStatus("Kunde inte ladda emojis.");
+    return false;
+  }
+  // Build the "folder/id" -> item index. folder is item.file's first segment.
+  emojiIndex = new Map();
+  for (const cat of emojiData.categories) {
+    for (const item of cat.items) {
+      const folder = item.file.split("/")[0];
+      emojiIndex.set(`${folder}/${item.id}`, item);
+    }
+  }
+  emojiBuildCatRow();
+  emojiLoaded = true;
+  emojiClearStatus();
+  return true;
+}
+
+// Show / hide the inline status line (loading / error / empty-search).
+function emojiSetStatus(msg) {
+  emojiStatus.textContent = msg;
+  emojiStatus.classList.remove("hidden");
+}
+function emojiClearStatus() {
+  emojiStatus.textContent = "";
+  emojiStatus.classList.add("hidden");
+}
+
+// Build the 7 category icon buttons from the data (order = data order).
+function emojiBuildCatRow() {
+  emojiCatRow.innerHTML = "";
+  emojiData.categories.forEach((cat, i) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "emoji-cat-btn" + (i === 0 ? " sel" : "");
+    btn.title = cat.label;
+    btn.setAttribute("aria-label", cat.label);
+    btn.dataset.catId = cat.id;
+    const img = document.createElement("img");
+    img.src = `/icons/emojis/${encodeURI(cat.icon)}`;
+    img.alt = cat.label;
+    btn.appendChild(img);
+    emojiCatRow.appendChild(btn);
+  });
+}
+
+// Render a list of emoji items into the grid as clickable cells.
+function emojiRenderGrid(items) {
+  emojiGrid.innerHTML = "";
+  const frag = document.createDocumentFragment();
+  for (const item of items) {
+    const cell = document.createElement("button");
+    cell.type = "button";
+    cell.className = "emoji-grid-cell";
+    cell.title = item.label;
+    cell.setAttribute("aria-label", item.label);
+    // folder/id token payload, stored on the element for the click handler.
+    const folder = item.file.split("/")[0];
+    cell.dataset.token = `${folder}/${item.id}`;
+    const img = document.createElement("img");
+    img.src = `/icons/emojis/${encodeURI(item.file)}`;
+    img.alt = item.label;
+    img.loading = "lazy";
+    cell.appendChild(img);
+    frag.appendChild(cell);
+  }
+  emojiGrid.appendChild(frag);
+}
+
+// Show one category's emojis and mark its icon selected.
+function emojiShowCategory(catId) {
+  const cat = emojiData.categories.find((c) => c.id === catId);
+  if (!cat) return;
+  emojiSelectedCat = catId;
+  emojiCatLabel.textContent = cat.label;
+  emojiRenderGrid(cat.items);
+  emojiClearStatus();
+  for (const btn of emojiCatRow.querySelectorAll(".emoji-cat-btn")) {
+    btn.classList.toggle("sel", btn.dataset.catId === catId);
+  }
+}
 
 // --- Photo capture modal ---
 let captureStream = null;   // active MediaStream (video only)
