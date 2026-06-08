@@ -2,10 +2,10 @@
 
 Ping is a fast, private, lightweight messaging app with a durable conversation
 history. Messages persist by default as a scrollable log with read/unread and
-delivery status; ephemerality is opt-in via disappearing messages (off / 24h /
-7d, coming soon). The strongest ideas below keep that quick, focused, two-person
-feel — Ping stays a lightweight direct-message tool, not a sprawling social
-network.
+delivery status; ephemerality is opt-in via per-conversation disappearing
+messages (off / 24h / 7d). The strongest ideas below keep that quick, focused,
+two-person feel — Ping stays a lightweight direct-message tool, not a sprawling
+social network.
 
 ## Small / High-Impact
 

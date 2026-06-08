@@ -501,3 +501,140 @@ end;
 $$;
 
 grant execute on function public.mark_delivered(uuid) to authenticated;
+
+-- ============================================================
+-- 12. DISAPPEARING MESSAGES — per-pair TTL + set_disappearing / purge RPCs
+-- + a daily pg_cron sweep (set_disappearing, then purge_expired_pings + cron).
+-- Idempotent: existing deployments can run just this section.
+-- Per-conversation, opt-in disappearing messages: one timer per pair, stored on
+-- the single contacts row. disappearing_ttl is a Postgres interval; null = off.
+-- Offered values client-side are 24h and 7d. Either side of the pair may change
+-- it (set_disappearing, below). Expired messages are hidden client-side at load
+-- time (belt) and physically deleted by a daily pg_cron sweep calling
+-- purge_expired_pings() (suspenders); deletion fires the section-8 storage
+-- cleanup trigger so attached files are removed too.
+-- NOTE: contacts' only UPDATE RLS policy authorizes the ADDRESSEE
+-- (with check addressee_id = auth.uid()); it is not column-restricted, so the
+-- addressee could technically update disappearing_ttl directly, but the
+-- REQUESTER has no UPDATE policy at all and would be blocked. To let EITHER side
+-- set the timer through one path, it is written exclusively through the
+-- set_disappearing security-definer RPC below, matching the dismiss_ping
+-- (section 9) mutation pattern with an explicit either-side membership check.
+-- ============================================================
+
+alter table public.contacts
+  add column if not exists disappearing_ttl interval;  -- null = off
+
+-- A disappearing_ttl change must propagate live to the OTHER side's open chat
+-- (the client's contacts realtime subscriptions, filtered on requester_id /
+-- addressee_id, call loadContacts → refreshDisappearingControl on a contacts
+-- UPDATE). REPLICA IDENTITY FULL makes Postgres emit the full row on UPDATE so
+-- the realtime payload + server-side row filter see every column — the same
+-- reason pings carries it (section 11). This is the first live contacts UPDATE
+-- path the client relies on. Idempotent.
+alter table public.contacts replica identity full;
+
+-- set_disappearing: set (or clear) the pair's disappearing-messages timer.
+-- p_contact_id is the contacts row id; p_ttl is the new interval (null = off,
+-- e.g. '24 hours', '7 days'). Authorized to EITHER side of the pair: the caller
+-- must be the requester_id or addressee_id of that row (mirrors dismiss_ping's
+-- explicit auth.uid() membership check). Security definer so it can update a row
+-- the caller's RLS UPDATE policy would otherwise block.
+create or replace function public.set_disappearing(p_contact_id uuid, p_ttl interval)
+returns void
+language plpgsql
+security definer set search_path = ''
+as $$
+declare
+  v_requester uuid;
+  v_addressee uuid;
+begin
+  -- Only accepted pairs have a conversation; setting a timer on a pending row
+  -- is meaningless (no pings can be sent until accepted). Silent return on a
+  -- missing-or-pending row, matching the not-found idiom of dismiss_ping.
+  select requester_id, addressee_id
+    into v_requester, v_addressee
+    from public.contacts
+    where id = p_contact_id
+      and status = 'accepted';
+
+  if not found then
+    return;
+  end if;
+
+  if auth.uid() <> v_requester and auth.uid() <> v_addressee then
+    raise exception 'not authorized';
+  end if;
+
+  update public.contacts
+    set disappearing_ttl = p_ttl
+    where id = p_contact_id;
+end;
+$$;
+
+grant execute on function public.set_disappearing(uuid, interval) to authenticated;
+
+-- purge_expired_pings: physically delete every ping older than its pair's
+-- disappearing_ttl. A ping's pair is the unordered {sender_id, receiver_id}
+-- couple; the contacts row for that pair has {requester_id, addressee_id} equal
+-- to it in either direction. Pairs with a null disappearing_ttl (timer off) are
+-- skipped by the inner join + the explicit `is not null` guard. Deletion fires
+-- the section-8 on_ping_deleted trigger, so attached storage objects are removed
+-- too. Security definer so it can delete across pairs regardless of caller RLS.
+-- NOT granted to authenticated: only the daily pg_cron sweep (service role)
+-- runs this. Clients rely on the load-time expiry filter for promptness; this
+-- function is the suspenders that actually reclaims rows + storage.
+create or replace function public.purge_expired_pings()
+returns void
+language plpgsql
+security definer set search_path = ''
+as $$
+begin
+  delete from public.pings p
+  using public.contacts c
+  where c.disappearing_ttl is not null
+    and (
+      (c.requester_id = p.sender_id and c.addressee_id = p.receiver_id)
+      or
+      (c.requester_id = p.receiver_id and c.addressee_id = p.sender_id)
+    )
+    and now() - p.created_at > c.disappearing_ttl;
+end;
+$$;
+
+-- Cron/service-role only (open-question #1). Postgres grants EXECUTE to PUBLIC
+-- by default, and `authenticated`/`anon` are PUBLIC members — so simply NOT
+-- adding a `grant ... to authenticated` is NOT enough: we must REVOKE the
+-- default PUBLIC grant, otherwise any logged-in user could trigger a global
+-- purge across all pairs (the function is security definer and bypasses RLS).
+-- The service role is not constrained by these grants, so pg_cron still runs it.
+revoke execute on function public.purge_expired_pings() from public;
+revoke execute on function public.purge_expired_pings() from anon, authenticated;
+
+-- Daily pg_cron sweep. REQUIRES the pg_cron extension to be enabled in the
+-- Supabase Dashboard (Database -> Extensions) before this runs — a DEFERRED
+-- HUMAN step. The DO block below makes re-running section 12 safe: it unschedules
+-- any existing job of the same name first, then schedules a fresh 03:17 UTC daily
+-- run. If pg_cron is not yet enabled, this block emits a NOTICE and skips the
+-- schedule call (it does NOT fail), so the rest of section 12 (column,
+-- set_disappearing, purge_expired_pings) applies fine on its own, and the
+-- client-side load-time filter keeps expiry prompt meanwhile.
+do $$
+begin
+  if exists (select 1 from pg_extension where extname = 'pg_cron') then
+    -- Unschedule any prior job of this name so re-running the section doesn't
+    -- error on a duplicate; an explicit IF EXISTS guard is clearer than relying
+    -- on cron.unschedule's no-op-on-missing behavior across pg_cron versions.
+    if exists (select 1 from cron.job where jobname = 'purge-expired-pings') then
+      perform cron.unschedule('purge-expired-pings');
+    end if;
+    perform cron.schedule(
+      'purge-expired-pings',
+      '17 3 * * *',
+      $cron$ select public.purge_expired_pings(); $cron$
+    );
+  else
+    raise notice 'pg_cron not enabled; skipping cron.schedule for purge-expired-pings. Enable the pg_cron extension and re-run section 12.';
+  end if;
+end;
+$$;

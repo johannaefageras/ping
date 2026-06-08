@@ -35,6 +35,9 @@ const chatView = document.getElementById("chat-view");
 const mobileContactsToggle = document.getElementById("mobile-contacts-toggle");
 const chatContactName = document.getElementById("chat-contact-name");
 const galleryBtn = document.getElementById("gallery-btn");
+const disappearingBtn = document.getElementById("disappearing-btn");
+const disappearingMenu = document.getElementById("disappearing-menu");
+const disappearingLabel = document.getElementById("disappearing-label");
 const galleryModal = document.getElementById("gallery-modal");
 const galleryClose = document.getElementById("gallery-close");
 const galleryTitle = document.getElementById("gallery-title");
@@ -105,7 +108,7 @@ const inviteError = document.getElementById("invite-error");
 // --- App state ---
 let sb = null; // Supabase client
 let currentUser = null; // { id, username }
-let selectedContact = null; // { contactId, recipientId, username, displayName }
+let selectedContact = null; // { contactId, recipientId, username, displayName, disappearingTtl }
 let contacts = [];
 let lastSentText = null; // last text the user sent, for /last recall
 let unreadCounts = {}; // recipientId -> count of unread, non-dismissed pings from that contact; loaded from the DB on entry (durable across reload) and kept live by realtime
@@ -546,7 +549,7 @@ async function loadContacts() {
   const { data, error } = await sb
     .from("contacts")
     .select(
-      `id, status, requester_id, addressee_id, created_at,
+      `id, status, requester_id, addressee_id, created_at, disappearing_ttl,
        requester:profiles!contacts_requester_id_fkey(username, display_name),
        addressee:profiles!contacts_addressee_id_fkey(username, display_name)`
     )
@@ -559,11 +562,13 @@ async function loadContacts() {
   }
 
   contacts = data || [];
-  // A contact may have changed their display name since we opened their chat;
-  // re-sync the selected contact and its header from the fresh data.
+  // A contact may have changed their display name OR the pair's disappearing
+  // timer since we opened the chat; re-sync both from the fresh data.
   syncSelectedContactDisplayName();
+  syncSelectedContactDisappearingTtl();
   renderContacts();
   refreshChatHeader();
+  refreshDisappearingControl();
 }
 
 // Re-reads the currently selected contact's display_name from the freshly
@@ -581,6 +586,21 @@ function syncSelectedContactDisplayName() {
   const other =
     match.requester_id === currentUser.id ? match.addressee : match.requester;
   selectedContact.displayName = other.display_name || null;
+}
+
+// Re-reads the open pair's disappearing_ttl from the freshly loaded `contacts`
+// array (matched by the other party's user id), so a remote timer change shows
+// live. No-op when no contact is selected or the contact is no longer listed.
+function syncSelectedContactDisappearingTtl() {
+  if (!selectedContact) return;
+  const match = contacts.find(
+    (c) =>
+      c.status === "accepted" &&
+      (c.requester_id === selectedContact.recipientId ||
+        c.addressee_id === selectedContact.recipientId)
+  );
+  if (!match) return;
+  selectedContact.disappearingTtl = match.disappearing_ttl || null;
 }
 
 // Re-renders the open chat header from the selected contact's current name.
@@ -772,7 +792,14 @@ async function rejectContact(contactId) {
 
 async function selectContact(contactId, recipientId, username, displayName) {
   closeFileGallery();
-  selectedContact = { contactId, recipientId, username, displayName: displayName || null };
+  const contactRow = contacts.find((c) => c.id === contactId);
+  selectedContact = {
+    contactId,
+    recipientId,
+    username,
+    displayName: displayName || null,
+    disappearingTtl: contactRow ? contactRow.disappearing_ttl || null : null,
+  };
 
   document.querySelectorAll(".contact-item").forEach((el) => {
     el.classList.toggle("active", el.dataset.recipientId === recipientId);
@@ -783,6 +810,8 @@ async function selectContact(contactId, recipientId, username, displayName) {
   appEl.classList.add("chat-active");
   setMobileContactsCollapsed(true);
   chatContactName.innerHTML = contactNameHtml(username, selectedContact.displayName);
+
+  refreshDisappearingControl();
 
   await loadPings();
   textInput.focus();
@@ -828,10 +857,23 @@ async function loadPings() {
     return;
   }
 
-  const page = (pings || []).slice().reverse(); // oldest → newest
+  const ttlSeconds = parseTtlSeconds(selectedContact.disappearingTtl);
+  // hasMoreOlder reflects the raw page size (whether the DB had a full page),
+  // independent of how many survive the expiry filter — otherwise filtering the
+  // whole page to empty would wrongly stop paging.
   hasMoreOlder = (pings || []).length === PINGS_PAGE_SIZE;
-  oldestCursor = page.length
-    ? { ts: page[0].created_at, id: page[0].id }
+  const page = (pings || [])
+    .slice()
+    .reverse() // oldest → newest
+    .filter((ping) => !isExpired(ping, ttlSeconds));
+  // Cursor anchors on the oldest RAW row (not the oldest surviving one) so the
+  // next page continues from the true page boundary even if the top rows were
+  // filtered out as expired.
+  const rawOldest = (pings || []).length
+    ? (pings || [])[(pings || []).length - 1]
+    : null;
+  oldestCursor = rawOldest
+    ? { ts: rawOldest.created_at, id: rawOldest.id }
     : null;
 
   board.innerHTML = "";
@@ -903,10 +945,22 @@ async function loadOlderPings() {
       return;
     }
 
-    const older = (pings || []).slice().reverse(); // oldest → newest
+    const ttlSeconds = parseTtlSeconds(selectedContact.disappearingTtl);
     hasMoreOlder = (pings || []).length === PINGS_PAGE_SIZE;
+    // Advance the cursor to the raw oldest row of THIS fetch before filtering, so
+    // paging continues from the true boundary even if every fetched row expired.
+    const rawOldest = (pings || []).length
+      ? (pings || [])[(pings || []).length - 1]
+      : null;
+    const older = (pings || [])
+      .slice()
+      .reverse() // oldest → newest
+      .filter((ping) => !isExpired(ping, ttlSeconds));
+    if (rawOldest) {
+      oldestCursor = { ts: rawOldest.created_at, id: rawOldest.id };
+    }
     if (!older.length) {
-      renderLoadOlderControl(); // removes the button if history is now exhausted
+      renderLoadOlderControl(); // refresh/remove the button per hasMoreOlder
       return;
     }
 
@@ -936,7 +990,6 @@ async function loadOlderPings() {
       prev = ping;
     });
 
-    oldestCursor = { ts: older[0].created_at, id: older[0].id };
     // `prev` is now the last (newest) inserted message. If the pre-existing
     // leading separator is for the same day, it's a duplicate — remove it.
     if (
@@ -1862,6 +1915,109 @@ function renderDaySeparatorIfNeeded(ping, prev, beforeNode = null) {
   }
 }
 
+// Parses a Postgres interval string into seconds. Handles two shapes: the
+// PostgREST-normalized serialization that comes back from the DB ("HH:MM:SS",
+// "N days", "N day(s) HH:MM:SS") AND the literal interval strings the client
+// sends to set_disappearing before a reload normalizes them (e.g. the "24h"
+// menu option's "24 hours", and "N minutes"). This dual handling matters for
+// optimistic UI: after picking 24h we reflect the label from the raw "24 hours"
+// string, not the normalized "24:00:00" we only see on the next chat open.
+// Deliberately does NOT handle month/year units or fractional seconds; those
+// can't occur via the offered values, and an unparseable string falls through
+// to null (timer off) rather than erroring. Null/empty → null (timer off).
+function parseTtlSeconds(ttl) {
+  if (!ttl) return null;
+  let seconds = 0;
+  const dayMatch = /(\d+)\s+days?/.exec(ttl);
+  if (dayMatch) seconds += parseInt(dayMatch[1], 10) * 86400;
+  const hourMatch = /(\d+)\s+hours?/.exec(ttl);
+  if (hourMatch) seconds += parseInt(hourMatch[1], 10) * 3600;
+  const minMatch = /(\d+)\s+min(?:ute)?s?/.exec(ttl);
+  if (minMatch) seconds += parseInt(minMatch[1], 10) * 60;
+  const timeMatch = /(\d{1,2}):(\d{2}):(\d{2})/.exec(ttl);
+  if (timeMatch) {
+    seconds +=
+      parseInt(timeMatch[1], 10) * 3600 +
+      parseInt(timeMatch[2], 10) * 60 +
+      parseInt(timeMatch[3], 10);
+  }
+  return seconds > 0 ? seconds : null;
+}
+
+// True if a ping is older than the pair's disappearing TTL (in seconds). A null
+// ttlSeconds (timer off) means nothing expires. Compares against created_at.
+function isExpired(ping, ttlSeconds) {
+  if (!ttlSeconds) return false;
+  const ageSeconds = (Date.now() - new Date(ping.created_at).getTime()) / 1000;
+  return ageSeconds > ttlSeconds;
+}
+
+// Short label for the header control given a Postgres interval (or null = off).
+// Buckets to the offered values; falls back to a compact form for odd values.
+function ttlToLabel(ttl) {
+  const seconds = parseTtlSeconds(ttl);
+  if (!seconds) return "av";
+  if (seconds === 86400) return "24h";
+  if (seconds === 604800) return "7d";
+  // Non-standard value (set via SQL): show whole days if clean, else hours.
+  if (seconds % 86400 === 0) return `${seconds / 86400}d`;
+  return `${Math.round(seconds / 3600)}h`;
+}
+
+// Renders the header control's label + active state from the open chat's ttl.
+// Also folds the current state into the button's aria-label so screen-reader
+// users hear it (the visible label span is otherwise masked by aria-label).
+// No-op when no chat is open or the control isn't in the DOM.
+function refreshDisappearingControl() {
+  if (!disappearingBtn || !disappearingLabel || !selectedContact) return;
+  const ttl = selectedContact.disappearingTtl;
+  const label = ttlToLabel(ttl);
+  disappearingLabel.textContent = label;
+  disappearingBtn.classList.toggle("active", !!parseTtlSeconds(ttl));
+  disappearingBtn.setAttribute(
+    "aria-label",
+    `Försvinnande meddelanden: ${label}`
+  );
+}
+
+// Sets (or clears) the open pair's disappearing timer via the security-definer
+// RPC, then reflects the new state locally: updates selectedContact, the header
+// label, and drops an in-thread confirmation line. p_ttl is a Postgres interval
+// string or null (off). No-op if no chat is open.
+async function setDisappearing(ttl) {
+  if (!selectedContact) return;
+  // Capture the target pair before the await: if the user switches chats while
+  // the RPC is in flight, we must not write the new ttl onto a different pair or
+  // drop a confirmation line into the wrong thread.
+  const target = selectedContact;
+  const p_ttl = ttl || null; // "" (the "Av" option) → null
+  const { error } = await sb.rpc("set_disappearing", {
+    p_contact_id: target.contactId,
+    p_ttl,
+  });
+  if (error) {
+    console.error("set_disappearing failed:", error);
+    systemLine("Kunde inte ändra försvinnande meddelanden.");
+    return;
+  }
+  // Keep the loaded contacts array in sync so a later re-open reads the new ttl,
+  // even if the user has since navigated away from this pair.
+  const row = contacts.find((c) => c.id === target.contactId);
+  if (row) row.disappearing_ttl = p_ttl;
+  target.disappearingTtl = p_ttl;
+  // The visible control + confirmation only make sense if this pair is still
+  // open; if the user switched chats mid-flight, the DB + contacts row are
+  // already updated and the new chat will reflect it on its own.
+  if (selectedContact !== target) return;
+  refreshDisappearingControl();
+  const label = ttlToLabel(p_ttl);
+  systemLine(
+    p_ttl
+      ? `Försvinnande meddelanden: ${label}`
+      : "Försvinnande meddelanden: av"
+  );
+}
+
 // Escapes for both text and attribute contexts. Quotes are included because
 // this output is interpolated into HTML attributes (href, data-path, etc.) as
 // well as element text — leaving " unescaped would let a crafted value break
@@ -1985,6 +2141,17 @@ imageUploadBtn.addEventListener("click", () => {
 });
 
 // imageCaptureBtn opens the capture modal — wired in the capture-modal block (later task).
+
+// --- Disappearing-messages header control popup ---
+if (disappearingBtn && disappearingMenu) {
+  const disappearingMenuCtl = createPopupMenu(disappearingBtn, disappearingMenu);
+  disappearingMenu.querySelectorAll("button[data-ttl]").forEach((item) => {
+    item.addEventListener("click", () => {
+      disappearingMenuCtl.close();
+      setDisappearing(item.dataset.ttl);
+    });
+  });
+}
 
 // --- Photo capture modal ---
 let captureStream = null;   // active MediaStream (video only)
