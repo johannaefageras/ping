@@ -503,8 +503,8 @@ $$;
 grant execute on function public.mark_delivered(uuid) to authenticated;
 
 -- ============================================================
--- 12. DISAPPEARING MESSAGES — per-pair TTL + set_disappearing RPC
--- (purge_expired_pings() + the pg_cron sweep are added later in this section.)
+-- 12. DISAPPEARING MESSAGES — per-pair TTL + set_disappearing / purge RPCs
+-- + a daily pg_cron sweep (set_disappearing, then purge_expired_pings + cron).
 -- Idempotent: existing deployments can run just this section.
 -- Per-conversation, opt-in disappearing messages: one timer per pair, stored on
 -- the single contacts row. disappearing_ttl is a Postgres interval; null = off.
@@ -562,3 +562,62 @@ end;
 $$;
 
 grant execute on function public.set_disappearing(uuid, interval) to authenticated;
+
+-- purge_expired_pings: physically delete every ping older than its pair's
+-- disappearing_ttl. A ping's pair is the unordered {sender_id, receiver_id}
+-- couple; the contacts row for that pair has {requester_id, addressee_id} equal
+-- to it in either direction. Pairs with a null disappearing_ttl (timer off) are
+-- skipped by the inner join + the explicit `is not null` guard. Deletion fires
+-- the section-8 on_ping_deleted trigger, so attached storage objects are removed
+-- too. Security definer so it can delete across pairs regardless of caller RLS.
+-- NOT granted to authenticated: only the daily pg_cron sweep (service role)
+-- runs this. Clients rely on the load-time expiry filter for promptness; this
+-- function is the suspenders that actually reclaims rows + storage.
+create or replace function public.purge_expired_pings()
+returns void
+language plpgsql
+security definer set search_path = ''
+as $$
+begin
+  delete from public.pings p
+  using public.contacts c
+  where c.disappearing_ttl is not null
+    and (
+      (c.requester_id = p.sender_id and c.addressee_id = p.receiver_id)
+      or
+      (c.requester_id = p.receiver_id and c.addressee_id = p.sender_id)
+    )
+    and now() - p.created_at > c.disappearing_ttl;
+end;
+$$;
+
+-- Intentionally NOT granted to authenticated (open-question #1: cron-only). Only
+-- the service role / pg_cron invokes purge_expired_pings(). Do not add a grant.
+
+-- Daily pg_cron sweep. REQUIRES the pg_cron extension to be enabled in the
+-- Supabase Dashboard (Database -> Extensions) before this runs — a DEFERRED
+-- HUMAN step. The DO block below makes re-running section 12 safe: it unschedules
+-- any existing job of the same name first, then schedules a fresh 03:17 UTC daily
+-- run. If pg_cron is not yet enabled, this block emits a NOTICE and skips the
+-- schedule call (it does NOT fail), so the rest of section 12 (column,
+-- set_disappearing, purge_expired_pings) applies fine on its own, and the
+-- client-side load-time filter keeps expiry prompt meanwhile.
+do $$
+begin
+  if exists (select 1 from pg_extension where extname = 'pg_cron') then
+    -- Unschedule any prior job of this name so re-running the section doesn't
+    -- error on a duplicate; an explicit IF EXISTS guard is clearer than relying
+    -- on cron.unschedule's no-op-on-missing behavior across pg_cron versions.
+    if exists (select 1 from cron.job where jobname = 'purge-expired-pings') then
+      perform cron.unschedule('purge-expired-pings');
+    end if;
+    perform cron.schedule(
+      'purge-expired-pings',
+      '17 3 * * *',
+      $cron$ select public.purge_expired_pings(); $cron$
+    );
+  else
+    raise notice 'pg_cron not enabled; skipping cron.schedule for purge-expired-pings. Enable the pg_cron extension and re-run section 12.';
+  end if;
+end;
+$$;
