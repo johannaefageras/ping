@@ -1077,11 +1077,19 @@ async function downloadFile(path, filename) {
 
 // --- File input & drag-and-drop ---
 
+// Attach (paperclip) is for non-media files: images and videos have their
+// own composer buttons, so reject those here by MIME type and allow
+// everything else (files with no detectable type count as "other").
+// Drag-and-drop is intentionally left unrestricted.
 fileInput.addEventListener("change", () => {
-  if (fileInput.files.length) {
-    uploadFiles(fileInput.files);
-    fileInput.value = "";
+  const others = Array.from(fileInput.files).filter(
+    (f) => !f.type.startsWith("image/") && !f.type.startsWith("video/")
+  );
+  if (others.length < fileInput.files.length) {
+    alert("Bilder och videor laddas upp via kamera- och videoknapparna.");
   }
+  if (others.length) uploadFiles(others);
+  fileInput.value = "";
 });
 
 // Attach (paperclip) reuses the existing multi-file picker.
