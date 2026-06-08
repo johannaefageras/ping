@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512.05 512">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: url(#radial-gradient-7);
+      }
+
+      .cls-2 {
+        fill: url(#radial-gradient-6);
+      }
+
+      .cls-3 {
+        fill: url(#radial-gradient-5);
+      }
+
+      .cls-4 {
+        fill: url(#radial-gradient-4);
+      }
+
+      .cls-5 {
+        fill: url(#radial-gradient-3);
+      }
+
+      .cls-6 {
+        fill: url(#radial-gradient-2);
+      }
+
+      .cls-7 {
+        fill: url(#radial-gradient);
+      }
+
+      .cls-8 {
+        fill: url(#linear-gradient);
+      }
+    </style>
+    <radialGradient id="radial-gradient" cx="252.11" cy="224.26" fx="210.88" fy="224.26" r="115.08" gradientTransform="translate(-1.03 649.44) scale(1 -1.18)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#faf2f0"/>
+      <stop offset=".19" stop-color="#f6ece4"/>
+      <stop offset=".54" stop-color="#eddcc4"/>
+      <stop offset="1" stop-color="#dec291"/>
+    </radialGradient>
+    <linearGradient id="linear-gradient" x1="254.71" y1="2.01" x2="254.71" y2="270.79" gradientTransform="translate(0 514.01) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset=".36" stop-color="#bd9d62" stop-opacity="0"/>
+      <stop offset=".76" stop-color="#bd9d62"/>
+    </linearGradient>
+    <radialGradient id="radial-gradient-2" cx="188.8" cy="240.54" fx="188.8" fy="240.54" r="256.89" gradientTransform="translate(-1.03 276.05) scale(1 -.7)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff3b3b"/>
+      <stop offset=".28" stop-color="#fc3838"/>
+      <stop offset=".53" stop-color="#f32d2d"/>
+      <stop offset=".76" stop-color="#e31b1b"/>
+      <stop offset=".99" stop-color="#cd0302"/>
+      <stop offset="1" stop-color="#cc0100"/>
+    </radialGradient>
+    <radialGradient id="radial-gradient-3" cx="182.85" cy="481.88" fx="182.85" fy="481.88" r="352.74" gradientTransform="translate(-1.03 514.13) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffefeb"/>
+      <stop offset=".35" stop-color="#fdece8"/>
+      <stop offset=".6" stop-color="#f6e4df"/>
+      <stop offset=".82" stop-color="#ebd6cf"/>
+      <stop offset="1" stop-color="#dec5bc"/>
+    </radialGradient>
+    <radialGradient id="radial-gradient-4" cx="182.84" cy="481.89" fx="182.84" fy="481.89" r="352.75" gradientTransform="translate(-1.03 514.13) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffefeb"/>
+      <stop offset=".35" stop-color="#fdece8"/>
+      <stop offset=".6" stop-color="#f6e4df"/>
+      <stop offset=".82" stop-color="#ebd6cf"/>
+      <stop offset="1" stop-color="#dec5bc"/>
+    </radialGradient>
+    <radialGradient id="radial-gradient-5" cx="182.87" cy="481.88" fx="182.87" fy="481.88" r="352.71" gradientTransform="translate(-1.03 514.13) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffefeb"/>
+      <stop offset=".35" stop-color="#fdece8"/>
+      <stop offset=".6" stop-color="#f6e4df"/>
+      <stop offset=".82" stop-color="#ebd6cf"/>
+      <stop offset="1" stop-color="#dec5bc"/>
+    </radialGradient>
+    <radialGradient id="radial-gradient-6" cx="182.82" cy="481.89" fx="182.82" fy="481.89" r="352.74" gradientTransform="translate(-1.03 514.13) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffefeb"/>
+      <stop offset=".35" stop-color="#fdece8"/>
+      <stop offset=".6" stop-color="#f6e4df"/>
+      <stop offset=".82" stop-color="#ebd6cf"/>
+      <stop offset="1" stop-color="#dec5bc"/>
+    </radialGradient>
+    <radialGradient id="radial-gradient-7" cx="182.85" cy="481.87" fx="182.85" fy="481.87" r="352.74" gradientTransform="translate(-1.03 514.13) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffefeb"/>
+      <stop offset=".35" stop-color="#fdece8"/>
+      <stop offset=".6" stop-color="#f6e4df"/>
+      <stop offset=".82" stop-color="#ebd6cf"/>
+      <stop offset="1" stop-color="#dec5bc"/>
+    </radialGradient>
+  </defs>
+  <path class="cls-7" d="M357.85,432.69c5.55,105.74-211.91,105.74-206.28,0,1.79-34.82,29.19-103.86,29.19-138.68,0-69.3,147.9-66.14,147.9,0-.09,34.82,27.31,103.95,29.19,138.68Z"/>
+  <path class="cls-8" d="M357.85,432.69c5.55,105.74-211.91,105.74-206.28,0,1.79-34.82,29.19-103.86,29.19-138.68,0-69.3,147.9-66.14,147.9,0-.09,34.82,27.31,103.95,29.19,138.68Z"/>
+  <path class="cls-6" d="M257.23,0C115.13,0,0,106.59,0,219.33s510.95,116.92,510.95-.17S399.32,0,257.23,0Z"/>
+  <path class="cls-5" d="M221.72,18.95c-4.01-5.89-8.19-10.75-13.23-14.76-44.21,4.95-96.27,28.42-121.7,53.68-15.19,59.23,177.52,23.04,134.93-38.92Z"/>
+  <path class="cls-4" d="M327.12,179.99c12.8,83.81-164.71,91.32-144.91,1.54,16.73-75.96,134.67-69.04,144.91-1.54Z"/>
+  <path class="cls-3" d="M443.45,109.41c-12.55,44.98-121.36-25.35-75.02-52.57,34.91-20.57,82.44,25.94,75.02,52.57Z"/>
+  <path class="cls-2" d="M111.03,191c-15.96,80.05-117.35,79.46-101.64-.6,17.67-89.78,116.49-74.08,101.64.6Z"/>
+  <path class="cls-1" d="M511.72,223.94c1.11-12.29-.68-28.33-4.1-38.58-25.86-21.68-77.32-10.75-89.27,50.1-4.61,23.38,1.02,40.2,11.35,50.01,45.15-12.12,79.28-32.35,82.02-61.53Z"/>
+</svg>

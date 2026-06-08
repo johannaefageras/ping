@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 853.33 512">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: url(#linear-gradient-4);
+      }
+
+      .cls-2 {
+        fill: url(#linear-gradient-3);
+      }
+
+      .cls-3 {
+        fill: url(#linear-gradient-2);
+      }
+
+      .cls-4 {
+        fill: #99a8ae;
+      }
+
+      .cls-5 {
+        fill: url(#linear-gradient);
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="426.67" y1="2" x2="426.67" y2="514" gradientTransform="translate(0 514) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#e6ebed"/>
+      <stop offset=".51" stop-color="#dbe2e5"/>
+      <stop offset="1" stop-color="#ccd5d9"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-2" x1="426.67" y1="2" x2="426.67" y2="411.6" gradientTransform="translate(0 514) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#e6ebed"/>
+      <stop offset=".26" stop-color="#e3e9eb"/>
+      <stop offset=".45" stop-color="#dae1e4"/>
+      <stop offset=".58" stop-color="#cfd8dd"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-3" x1="426.67" y1="176.33" x2="426.67" y2="1447.09" gradientTransform="translate(0 514) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#b9c2c7"/>
+      <stop offset=".05" stop-color="#c2cacf"/>
+      <stop offset=".2" stop-color="#dce2e5"/>
+      <stop offset=".3" stop-color="#e6ebed"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-4" x1="426.67" y1="164.31" x2="426.67" y2="514" gradientTransform="translate(0 514) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#e6ebed"/>
+      <stop offset=".58" stop-color="#e3e9ec"/>
+      <stop offset="1" stop-color="#dae3e8"/>
+    </linearGradient>
+  </defs>
+  <rect class="cls-5" width="853.33" height="512"/>
+  <polygon class="cls-4" points="426.67 85.33 0 512 853.33 512 426.67 85.33"/>
+  <polygon class="cls-3" points="426.67 102.4 0 512 853.33 512 426.67 102.4"/>
+  <path class="cls-4" d="M407.89,357.86L0,0h853.33l-407.92,357.86c-10.72,9.42-26.77,9.42-37.52,0Z"/>
+  <path class="cls-2" d="M408.36,343.03L0,0h853.33l-408.39,343.03c-10.58,8.89-26,8.89-36.58,0Z"/>
+  <path class="cls-1" d="M408.36,343.03L0,0h853.33l-408.39,343.03c-10.58,8.89-26,8.89-36.58,0Z"/>
+</svg>

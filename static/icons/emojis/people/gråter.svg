@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #d69600;
+      }
+
+      .cls-2 {
+        fill: url(#linear-gradient-2);
+      }
+
+      .cls-3 {
+        fill: #1a1626;
+      }
+
+      .cls-4 {
+        fill: url(#radial-gradient);
+      }
+
+      .cls-5 {
+        fill: url(#linear-gradient);
+      }
+
+      .cls-6 {
+        fill: #fff;
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="-899.47" y1="533.28" x2="-899.47" y2="524.75" gradientTransform="translate(54224.1504 -31484.9297) scale(60)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff9500"/>
+      <stop offset=".19" stop-color="#ffad00"/>
+      <stop offset=".55" stop-color="#ffd500"/>
+      <stop offset=".83" stop-color="#ffed00"/>
+      <stop offset="1" stop-color="#fff600"/>
+    </linearGradient>
+    <radialGradient id="radial-gradient" cx="474.43" cy="783.9" fx="474.43" fy="798.25" r="19.8" gradientTransform="translate(-1366.0214 3909.3023) scale(3.154 -4.4839)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#73efff"/>
+      <stop offset=".19" stop-color="#6fecff"/>
+      <stop offset=".36" stop-color="#64e3ff"/>
+      <stop offset=".54" stop-color="#51d3ff"/>
+      <stop offset=".71" stop-color="#36bdff"/>
+      <stop offset=".87" stop-color="#14a1ff"/>
+      <stop offset=".96" stop-color="#0091ff"/>
+    </radialGradient>
+    <linearGradient id="linear-gradient-2" x1="420.87" y1="711.79" x2="443.59" y2="731.87" gradientTransform="translate(-1052.7736 2633.2509) scale(2.7319 -3.0921)" gradientUnits="userSpaceOnUse">
+      <stop offset=".05" stop-color="#c4eeff" stop-opacity="0"/>
+      <stop offset=".45" stop-color="#cdf0ff" stop-opacity=".42"/>
+      <stop offset="1" stop-color="#d4f2ff"/>
+    </linearGradient>
+  </defs>
+  <circle id="Oval" class="cls-5" cx="256" cy="256" r="256"/>
+  <circle id="Oval-2" data-name="Oval" class="cls-6" cx="349.87" cy="247.47" r="59.73"/>
+  <path id="Oval-3" data-name="Oval" class="cls-3" d="M349.87,207.62c22.02,0,39.85,17.83,39.85,39.85s-17.83,39.85-39.85,39.85-39.85-17.83-39.85-39.85,17.83-39.85,39.85-39.85Z"/>
+  <path id="Oval-4" data-name="Oval" class="cls-6" d="M360.19,255.57c10.33,0,18.69,9.64,18.69,21.59s-8.36,21.59-18.69,21.59-18.69-9.64-18.69-21.59,8.36-21.59,18.69-21.59Z"/>
+  <ellipse id="Oval-5" data-name="Oval" class="cls-6" cx="335.1" cy="247.47" rx="10.92" ry="12.63"/>
+  <circle id="Oval-6" data-name="Oval" class="cls-6" cx="162.13" cy="247.47" r="59.73"/>
+  <path id="Oval-7" data-name="Oval" class="cls-3" d="M162.13,207.62c22.02,0,39.85,17.83,39.85,39.85s-17.83,39.85-39.85,39.85-39.85-17.83-39.85-39.85,17.83-39.85,39.85-39.85Z"/>
+  <path id="Oval-8" data-name="Oval" class="cls-6" d="M172.46,255.57c10.33,0,18.69,9.64,18.69,21.59s-8.36,21.59-18.69,21.59-18.69-9.64-18.69-21.59c0-11.95,8.36-21.59,18.69-21.59Z"/>
+  <ellipse id="Oval-9" data-name="Oval" class="cls-6" cx="147.37" cy="247.47" rx="10.92" ry="12.63"/>
+  <path class="cls-3" d="M195.33,420.1c31.23-21.93,87.55-23.38,121.26,0,7.85,5.38,20.74,1.62,17.83-4.69-29.53-64.34-127.57-64.17-157.01,0-2.82,6.31,10.15,10.15,17.92,4.69Z"/>
+  <path class="cls-1" d="M99.93,129.88c-73.64,63.15-19.37,64.43,49.41,18.69,38.74-25.86-.94-60.33-49.41-18.69Z"/>
+  <path class="cls-1" d="M412.07,129.96c-48.47-41.56-88.15-7.08-49.41,18.69,68.86,45.82,123.14,44.46,49.41-18.69Z"/>
+  <path class="cls-4" d="M135.51,340.14c-3.41-9.81-8.62-9.81-12.03,0-9.9,28.84-40.11,67.84-40.11,101.63,0,24.66,20.65,44.63,46.08,44.63s46.08-19.97,46.08-44.63c0-33.71-30.21-73.22-40.02-101.63Z"/>
+  <path class="cls-2" d="M133.21,337.83c-1.19-4.44-6.23-4.44-7.42,0-6.14,23.04-27.56,61.35-27.56,88.41,0,32.51,62.46,32.51,62.46,0,.09-26.97-21.42-65.62-27.48-88.41Z"/>
+</svg>

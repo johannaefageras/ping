@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #cfd8dd;
+      }
+
+      .cls-2 {
+        fill: url(#linear-gradient);
+      }
+
+      .cls-3 {
+        fill: #fff;
+      }
+
+      .cls-4 {
+        fill: #302c3b;
+      }
+
+      .cls-5 {
+        fill: #ff1c29;
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="256" y1="2" x2="256" y2="514" gradientTransform="translate(0 514) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#302c3b"/>
+      <stop offset=".5" stop-color="#312e3d"/>
+      <stop offset=".68" stop-color="#363543"/>
+      <stop offset=".81" stop-color="#3f404d"/>
+      <stop offset=".91" stop-color="#4c515c"/>
+      <stop offset="1" stop-color="#5b666e"/>
+    </linearGradient>
+  </defs>
+  <path class="cls-2" d="M505.96,62.23l-56.19-56.21c-3.31-3.31-9.88-6.02-14.57-6.02h-8.53v4.27s-114.22,20.82-284.44,0h-73.96V0H8.52C3.82,0,0,3.84,0,8.52v486.4c0,4.68,12.36,17.08,17.07,17.08h477.88c4.68,0,17.06-12.39,17.06-17.08V76.8c0-4.7-2.7-11.25-6.04-14.57Z"/>
+  <path class="cls-3" d="M85.32,464.59v-191.53c0-9.38,7.69-17.07,17.08-17.07h307.21c9.37,0,17.06,7.69,17.06,17.07v191.53H85.32Z"/>
+  <path class="cls-1" d="M142.22,4.27v175.88c0,9.38,9.58,18.96,18.96,18.96h246.52c9.37,0,18.96-9.59,18.96-18.96V4.27H142.22Z"/>
+  <rect class="cls-4" x="293.93" y="18.96" width="75.85" height="151.7"/>
+  <path class="cls-3" d="M494.94,469.33c0-4.7-3.85-8.53-8.53-8.53h-17.08c-4.7,0-8.53,3.83-8.53,8.53v17.06c0,4.68,3.83,8.53,8.53,8.53h17.08c4.68,0,8.53-3.85,8.53-8.53v-17.06Z"/>
+  <rect class="cls-5" x="85.32" y="464.59" width="341.34" height="47.41"/>
+  <rect class="cls-5" x="123.26" y="407.7" width="265.48" height="18.96"/>
+  <rect class="cls-5" x="123.26" y="350.81" width="265.48" height="18.96"/>
+  <rect class="cls-5" x="123.26" y="293.93" width="265.48" height="18.96"/>
+</svg>
