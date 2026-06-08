@@ -495,6 +495,9 @@ function exitApp() {
   // Same for the invite modal: close it so it doesn't linger over the auth
   // screen and so its countdown interval is cleared.
   closeInvite();
+  // And the file gallery, so it doesn't linger over the auth screen and its
+  // thumbnail blob URLs are revoked.
+  closeFileGallery();
 
   showAuthScreen();
 }
@@ -723,6 +726,7 @@ async function rejectContact(contactId) {
 // ============================================================
 
 async function selectContact(contactId, recipientId, username, displayName) {
+  closeFileGallery();
   selectedContact = { contactId, recipientId, username, displayName: displayName || null };
 
   if (unreadCounts[recipientId]) {
