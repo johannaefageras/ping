@@ -2714,3 +2714,14 @@ footer {
   opacity: 0.8;
 }
 .load-older:hover { opacity: 1; text-decoration: underline; }
+
+.ping-status {
+  margin-left: 0.4em;
+  font-size: 0.85em;
+  opacity: 0.6;
+  letter-spacing: -0.05em;
+}
+.ping-status.read {
+  color: var(--accent, #4f9eed);
+  opacity: 1;
+}

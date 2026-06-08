@@ -977,11 +977,12 @@ function dismissPing(el, ping) {
 function renderPing(ping, animate = true, beforeNode = null) {
   const isSelf = ping.sender_id === currentUser.id;
   const el = document.createElement("div");
+  el.dataset.pingId = ping.id;
 
   if (ping.type === "text") {
     el.className = `item ${isSelf ? "self" : "other"}${animate && !isSelf ? " ping" : ""}`;
     el.innerHTML = `
-      <div class="meta">${formatTime(ping.created_at)}</div>
+      <div class="meta">${formatTime(ping.created_at)}<span class="ping-status" aria-hidden="true"></span></div>
       <div class="content">${linkify(ping.content)}</div>
       <button class="dismiss-btn" aria-label="Ta bort"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     `;
@@ -990,7 +991,7 @@ function renderPing(ping, animate = true, beforeNode = null) {
     const dismissSvg = `<svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`;
     if (isVideoFile(ping.file_name)) {
       el.innerHTML = `
-        <div class="meta">${formatTime(ping.created_at)}</div>
+        <div class="meta">${formatTime(ping.created_at)}<span class="ping-status" aria-hidden="true"></span></div>
         <video class="video-inline loading" controls playsinline preload="metadata" aria-label="${escapeHtml(ping.file_name)}"></video>
         <div class="video-meta">
           <span>${escapeHtml(ping.file_name)} <span class="file-size">${formatSize(ping.file_size)}</span></span>
@@ -1003,7 +1004,7 @@ function renderPing(ping, animate = true, beforeNode = null) {
         ? `<img class="image-thumb loading" alt="${escapeHtml(ping.file_name)}" />`
         : `<span class="file-icon"><img class="file-type-icon" src="${fileTypeIcon(ping.file_name)}" alt="" width="20" height="20" loading="lazy" /></span>`;
       el.innerHTML = `
-        <div class="meta">${formatTime(ping.created_at)}</div>
+        <div class="meta">${formatTime(ping.created_at)}<span class="ping-status" aria-hidden="true"></span></div>
         <div class="file-info">
           ${iconOrThumb}
           <span>${escapeHtml(ping.file_name)} <span class="file-size">${formatSize(ping.file_size)}</span></span>
@@ -1019,6 +1020,8 @@ function renderPing(ping, animate = true, beforeNode = null) {
   } else {
     board.appendChild(el);
   }
+
+  if (isSelf) renderPingStatus(el, ping);
 
   // CSP forbids inline onerror; attach the fallback in JS so a missing icon
   // degrades to file.svg instead of a broken-image glyph.
@@ -1150,6 +1153,30 @@ function renderPingBefore(ping, beforeNode) {
   renderPing(ping, false, beforeNode);
 }
 
+// Renders the sender-side status indicator on one of MY messages:
+//   sent (no delivered_at)      → ✓
+//   delivered (delivered_at)    → ✓✓
+//   read (read_at)              → ✓✓ with a read style
+// No-op for messages I received (only the sender sees receipts).
+function renderPingStatus(el, ping) {
+  if (ping.sender_id !== currentUser.id) return;
+  const slot = el.querySelector(".ping-status");
+  if (!slot) return;
+  if (ping.read_at) {
+    slot.textContent = "✓✓";
+    slot.classList.add("read");
+    slot.title = "Läst";
+  } else if (ping.delivered_at) {
+    slot.textContent = "✓✓";
+    slot.classList.remove("read");
+    slot.title = "Levererad";
+  } else {
+    slot.textContent = "✓";
+    slot.classList.remove("read");
+    slot.title = "Skickad";
+  }
+}
+
 // ============================================================
 // SEND — text pings and file uploads
 // ============================================================
@@ -1187,7 +1214,9 @@ textForm.addEventListener("submit", async (e) => {
     return;
   }
 
+  renderDaySeparatorIfNeeded(data, lastRenderedPing);
   renderPing(data);
+  lastRenderedPing = data;
   scrollToBottom();
   lastSentText = text;
   textInput.value = "";
@@ -1233,7 +1262,9 @@ async function uploadFiles(files) {
       continue;
     }
 
+    renderDaySeparatorIfNeeded(data, lastRenderedPing);
     renderPing(data);
+    lastRenderedPing = data;
     scrollToBottom();
   }
 }
@@ -1500,26 +1531,60 @@ function subscribeToRealtime() {
       },
       (payload) => {
         const ping = payload.new;
+
+        // Record delivery regardless of which chat is open. pings has no UPDATE
+        // RLS policy, so we cannot write delivered_at with a direct client
+        // update — it goes through the mark_delivered security-definer RPC,
+        // which stamps now() only when the caller is the receiver and
+        // delivered_at is still null. Fire-and-forget: nothing here consumes the
+        // result, so we must NOT block rendering the arriving message on the RPC
+        // round-trip. delivered_at is never blocked on the chat being open
+        // (read_at is the open-and-focused signal).
+        if (ping.delivered_at == null) {
+          sb.rpc("mark_delivered", { p_id: ping.id }).then(({ error }) => {
+            if (error) console.error("mark_delivered failed:", error);
+          });
+        }
+
         const chatOpen = selectedContact && ping.sender_id === selectedContact.recipientId;
 
         if (chatOpen) {
+          renderDaySeparatorIfNeeded(ping, lastRenderedPing);
           renderPing(ping);
+          lastRenderedPing = ping;
           scrollToBottom();
+          // Chat is open; if the tab is focused, mark it read immediately.
+          markChatRead();
         } else {
-          // Chat not open: count it as unread and schedule a decrement when the
-          // ping would have auto-expired (keeps the badge consistent with the
-          // 20s ephemeral lifetime).
+          // Chat not open: it's a durable unread. No timed decrement — the
+          // badge persists until the chat is opened (mark_read) or the message
+          // is deleted.
           unreadCounts[ping.sender_id] = (unreadCounts[ping.sender_id] || 0) + 1;
           renderContacts();
-          setTimeout(() => {
-            if (unreadCounts[ping.sender_id] > 0) {
-              unreadCounts[ping.sender_id] -= 1;
-              renderContacts();
-            }
-          }, 20000);
         }
 
         playPing();
+      }
+    )
+    .on(
+      "postgres_changes",
+      {
+        // Sender-side read/delivery receipts: when a message WE sent gets its
+        // delivered_at / read_at stamped by the receiver, reflect it live. We
+        // filter on sender_id = me so we only react to our own outgoing rows.
+        event: "UPDATE",
+        schema: "public",
+        table: "pings",
+        filter: `sender_id=eq.${currentUser.id}`,
+      },
+      (payload) => {
+        const ping = payload.new;
+        // Only relevant if this message is in the currently open chat.
+        const inOpenChat =
+          selectedContact && ping.receiver_id === selectedContact.recipientId;
+        if (!inOpenChat) return;
+        const el = board.querySelector(`[data-ping-id="${ping.id}"]`);
+        if (el) renderPingStatus(el, ping);
       }
     )
     .on(
