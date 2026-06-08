@@ -967,7 +967,16 @@ function dismissPing(el, ping) {
         URL.revokeObjectURL(el._objectUrl);
         el._objectUrl = null;
       }
+      // Remember the preceding node so we can clean up a day separator that this
+      // delete leaves orphaned (a separator whose only message was this one).
+      const prev = el.previousElementSibling;
       el.remove();
+      // A leading separator is now orphaned if nothing follows it, or the next
+      // sibling is another separator (its day's last message just went away).
+      if (prev && prev.classList.contains("day-separator")) {
+        const next = prev.nextElementSibling;
+        if (!next || next.classList.contains("day-separator")) prev.remove();
+      }
       await sb.rpc("dismiss_ping", { p_id: ping.id });
     },
     { once: true }
@@ -1549,10 +1558,17 @@ function subscribeToRealtime() {
         const chatOpen = selectedContact && ping.sender_id === selectedContact.recipientId;
 
         if (chatOpen) {
-          renderDaySeparatorIfNeeded(ping, lastRenderedPing);
-          renderPing(ping);
-          lastRenderedPing = ping;
-          scrollToBottom();
+          // Dedup guard: the realtime channel lives for the whole session while
+          // loadPings runs per chat-open, so a row committing in the window
+          // around loadPings' SELECT can be both in the page AND delivered here.
+          // Without auto-dismiss to mask it, that duplicate would persist until
+          // reload — skip if this id is already on the board.
+          if (!board.querySelector(`[data-ping-id="${ping.id}"]`)) {
+            renderDaySeparatorIfNeeded(ping, lastRenderedPing);
+            renderPing(ping);
+            lastRenderedPing = ping;
+            scrollToBottom();
+          }
           // Chat is open; if the tab is focused, mark it read immediately.
           markChatRead();
         } else {
