@@ -25,6 +25,8 @@ want a quick way to swap a URL or a file without going through a chat app.
   a sidebar unread badge that survives reload
 - Delete a message: ✕ removes your copy; the message and any attached file are
   deleted from storage once both sides delete it
+- Disappearing messages: per-conversation opt-in timer (av / 24h / 7d, either
+  side can set it); expired messages are hidden on load and swept daily
 - Files stored in a private Supabase Storage bucket — only sender and
   receiver can download them
 - Retro terminal aesthetic, Swedish UI
@@ -55,7 +57,11 @@ supabase/schema.sql     Full Supabase schema: tables, RLS, triggers, RPC
 2. In the SQL editor, run [supabase/schema.sql](supabase/schema.sql). This
    creates the `profiles`, `contacts`, `pings`, and `invites` tables, RLS
    policies, the `ping-files` storage bucket, and the `dismiss_ping`,
-   `mark_read`, `mark_delivered`, `create_invite`, and `redeem_invite` RPCs.
+   `mark_read`, `mark_delivered`, `set_disappearing`, `create_invite`, and
+   `redeem_invite` RPCs. It also defines `purge_expired_pings()` and a daily
+   `pg_cron` sweep for disappearing messages — enable the **pg_cron** extension
+   (Database → Extensions) for the sweep to run; without it, expired messages are
+   still hidden client-side at load time but not physically purged.
 3. Copy the project URL and the **anon** public key from
    *Project Settings → API*.
 
