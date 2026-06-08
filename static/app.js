@@ -113,6 +113,22 @@ let realtimeChannel = null;
 let presenceChannel = null;
 let onlineUserIds = new Set();
 
+const PINGS_PAGE_SIZE = 50;
+// Paging state for the open chat's scrollback. oldestCursor is a compound
+// keyset cursor { ts, id } for the topmost rendered message — created_at alone
+// isn't a stable key (two messages can share a microsecond, e.g. a multi-file
+// upload loop), so the next older page is fetched with a (created_at, id)
+// keyset to avoid skipping or duplicating co-timestamped rows. hasMoreOlder is
+// false once a page returns fewer than PINGS_PAGE_SIZE rows (we've reached the
+// start of history). loadingOlder guards against overlapping "ladda äldre"
+// fetches. lastRenderedPing tracks the newest message appended to the open
+// board so realtime/send paths can decide whether a fresh day separator is
+// needed.
+let oldestCursor = null;
+let hasMoreOlder = false;
+let loadingOlder = false;
+let lastRenderedPing = null;
+
 // ============================================================
 // BOOTSTRAP
 // ============================================================
@@ -461,6 +477,10 @@ function exitApp() {
   selectedContact = null;
   contacts = [];
   unreadCounts = {};
+  oldestCursor = null;
+  hasMoreOlder = false;
+  loadingOlder = false;
+  lastRenderedPing = null;
 
   if (realtimeChannel) sb.removeChannel(realtimeChannel);
   realtimeChannel = null;
@@ -752,6 +772,8 @@ async function loadPings() {
   if (!selectedContact) return;
 
   const { recipientId } = selectedContact;
+  // Fetch the most recent PINGS_PAGE_SIZE rows: order DESC + limit, then
+  // reverse so we render oldest→newest into the board.
   const { data: pings, error } = await sb
     .from("pings")
     .select("*")
@@ -759,16 +781,141 @@ async function loadPings() {
       `and(sender_id.eq.${currentUser.id},receiver_id.eq.${recipientId}),` +
         `and(sender_id.eq.${recipientId},receiver_id.eq.${currentUser.id})`
     )
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(PINGS_PAGE_SIZE);
 
   if (error) {
     console.error("Failed to load pings:", error);
     return;
   }
 
+  const page = (pings || []).slice().reverse(); // oldest → newest
+  hasMoreOlder = (pings || []).length === PINGS_PAGE_SIZE;
+  oldestCursor = page.length
+    ? { ts: page[0].created_at, id: page[0].id }
+    : null;
+
   board.innerHTML = "";
-  (pings || []).forEach((ping) => renderPing(ping, false));
+  lastRenderedPing = null;
+  renderLoadOlderControl();
+  let prev = null;
+  page.forEach((ping) => {
+    renderDaySeparatorIfNeeded(ping, prev);
+    renderPing(ping, false);
+    prev = ping;
+  });
+  lastRenderedPing = page.length ? page[page.length - 1] : null;
   scrollToBottom();
+}
+
+// Inserts (or refreshes) the "ladda äldre" button as the first child of #board.
+// Removed when there is no older history left. Returns the button element (or
+// null when there's no more history) so callers can anchor a prepend to it.
+function renderLoadOlderControl() {
+  let ctl = document.getElementById("load-older");
+  if (!hasMoreOlder) {
+    if (ctl) ctl.remove();
+    return null;
+  }
+  if (!ctl) {
+    ctl = document.createElement("button");
+    ctl.id = "load-older";
+    ctl.className = "load-older";
+    ctl.type = "button";
+    ctl.textContent = "ladda äldre";
+    ctl.addEventListener("click", loadOlderPings);
+  }
+  // Always keep it as the first child so it stays at the very top.
+  if (board.firstChild !== ctl) board.insertBefore(ctl, board.firstChild);
+  return ctl;
+}
+
+// Fetches the page of messages older than the oldestCursor keyset and prepends
+// them, preserving the user's scroll position (so the viewport doesn't jump).
+async function loadOlderPings() {
+  if (!selectedContact || loadingOlder || !hasMoreOlder || !oldestCursor) return;
+  loadingOlder = true;
+  try {
+    const { recipientId } = selectedContact;
+
+    // Compound keyset: rows strictly older than the cursor in (created_at, id)
+    // descending order — created_at < ts, OR same created_at with a smaller id.
+    // This won't skip or duplicate messages that share a created_at at the page
+    // boundary (a plain `.lt("created_at", ts)` would drop a co-timestamped
+    // sibling). The pair filter is applied with .or(); the keyset is a second
+    // .or() (PostgREST ANDs successive .or() groups together).
+    const { data: pings, error } = await sb
+      .from("pings")
+      .select("*")
+      .or(
+        `and(sender_id.eq.${currentUser.id},receiver_id.eq.${recipientId}),` +
+          `and(sender_id.eq.${recipientId},receiver_id.eq.${currentUser.id})`
+      )
+      .or(
+        `created_at.lt.${oldestCursor.ts},` +
+          `and(created_at.eq.${oldestCursor.ts},id.lt.${oldestCursor.id})`
+      )
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .limit(PINGS_PAGE_SIZE);
+
+    if (error) {
+      console.error("Failed to load older pings:", error);
+      return;
+    }
+
+    const older = (pings || []).slice().reverse(); // oldest → newest
+    hasMoreOlder = (pings || []).length === PINGS_PAGE_SIZE;
+    if (!older.length) {
+      renderLoadOlderControl(); // removes the button if history is now exhausted
+      return;
+    }
+
+    // Scroll anchoring: capture height/top before prepending, restore after, so
+    // the messages the user was looking at stay put instead of jumping.
+    const prevHeight = chatMain.scrollHeight;
+    const prevTop = chatMain.scrollTop;
+
+    // The button (if present) is board.firstChild; the anchor is the node right
+    // after it — i.e. the current top-of-history element the older page slots in
+    // front of. If the button isn't present, fall back to board.firstChild.
+    const btn = document.getElementById("load-older");
+    const anchor = btn ? btn.nextSibling : board.firstChild;
+
+    // `anchor` is the first pre-existing chat node. It is a `.day-separator` iff
+    // the existing top message began a day. Remember it so we can dedupe the
+    // boundary after inserting (the inserted page may end on that same day).
+    const preExistingLeadingSep =
+      anchor && anchor.classList && anchor.classList.contains("day-separator")
+        ? anchor
+        : null;
+
+    let prev = null;
+    older.forEach((ping) => {
+      renderDaySeparatorIfNeeded(ping, prev, anchor);
+      renderPingBefore(ping, anchor);
+      prev = ping;
+    });
+
+    oldestCursor = { ts: older[0].created_at, id: older[0].id };
+    // `prev` is now the last (newest) inserted message. If the pre-existing
+    // leading separator is for the same day, it's a duplicate — remove it.
+    if (
+      preExistingLeadingSep &&
+      prev &&
+      preExistingLeadingSep.dataset.dayKey === dayKey(prev.created_at)
+    ) {
+      preExistingLeadingSep.remove();
+    }
+
+    renderLoadOlderControl(); // refresh/remove the button per hasMoreOlder
+    chatMain.scrollTop = prevTop + (chatMain.scrollHeight - prevHeight);
+  } finally {
+    // Clear the guard only after all rendering completes, so the whole critical
+    // section is covered even if an await is later added to the render tail.
+    loadingOlder = false;
+  }
 }
 
 function dismissPing(el, ping) {
@@ -789,7 +936,7 @@ function dismissPing(el, ping) {
   );
 }
 
-function renderPing(ping, animate = true) {
+function renderPing(ping, animate = true, beforeNode = null) {
   const isSelf = ping.sender_id === currentUser.id;
   const el = document.createElement("div");
 
@@ -829,7 +976,11 @@ function renderPing(ping, animate = true) {
     }
   }
 
-  board.appendChild(el);
+  if (beforeNode) {
+    board.insertBefore(el, beforeNode);
+  } else {
+    board.appendChild(el);
+  }
 
   // CSP forbids inline onerror; attach the fallback in JS so a missing icon
   // degrades to file.svg instead of a broken-image glyph.
@@ -953,6 +1104,12 @@ function renderPing(ping, animate = true) {
     });
   }
 
+}
+
+// Convenience: render a ping inserted before an existing node (used when
+// prepending an older page). Never animates historical messages.
+function renderPingBefore(ping, beforeNode) {
+  renderPing(ping, false, beforeNode);
 }
 
 // ============================================================
@@ -1536,6 +1693,54 @@ function formatTime(ts) {
 function formatDate(ts) {
   const d = new Date(ts);
   return d.toLocaleDateString("sv-SE", { day: "2-digit", month: "2-digit" });
+}
+
+// Day-separator label for the conversation log: "Idag" / "Igår" / otherwise a
+// localized day. Reuses the sv-SE locale conventions of formatDate/formatTime.
+function formatDaySeparator(ts) {
+  const d = new Date(ts);
+  const today = new Date();
+  const startOf = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate());
+  const dayMs = 86400000;
+  const diffDays = Math.round((startOf(today) - startOf(d)) / dayMs);
+  if (diffDays === 0) return "Idag";
+  if (diffDays === 1) return "Igår";
+  // Within the current year: "8 juni"; older: include the year.
+  const sameYear = d.getFullYear() === today.getFullYear();
+  return d.toLocaleDateString("sv-SE", {
+    day: "numeric",
+    month: "long",
+    ...(sameYear ? {} : { year: "numeric" }),
+  });
+}
+
+// Stable yyyy-mm-dd key for comparing two timestamps' calendar day (local).
+function dayKey(ts) {
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+// Builds a day-separator element for a given timestamp.
+function makeDaySeparator(ts) {
+  const sep = document.createElement("div");
+  sep.className = "day-separator";
+  sep.dataset.dayKey = dayKey(ts);
+  sep.textContent = formatDaySeparator(ts);
+  return sep;
+}
+
+// Inserts a day separator before `ping` when its calendar day differs from the
+// previous rendered message's day (or when prev is null — first message of the
+// page). When beforeNode is given, insert before it (prepend path); otherwise
+// append to the board (initial-load path).
+function renderDaySeparatorIfNeeded(ping, prev, beforeNode = null) {
+  if (prev && dayKey(prev.created_at) === dayKey(ping.created_at)) return;
+  const sep = makeDaySeparator(ping.created_at);
+  if (beforeNode) {
+    board.insertBefore(sep, beforeNode);
+  } else {
+    board.appendChild(sep);
+  }
 }
 
 // Escapes for both text and attribute contexts. Quotes are included because
