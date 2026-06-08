@@ -1102,11 +1102,17 @@ imageInput.addEventListener("change", () => {
 });
 
 // Video file picker reuses the existing upload pipeline.
+// accept="video/*" is only a picker hint, so enforce video-only here by
+// MIME type: non-video selections (e.g. via "All files") are rejected.
 videoInput.addEventListener("change", () => {
-  if (videoInput.files.length) {
-    uploadFiles(videoInput.files);
-    videoInput.value = "";
+  const videos = Array.from(videoInput.files).filter((f) =>
+    f.type.startsWith("video/")
+  );
+  if (videos.length < videoInput.files.length) {
+    alert("Bara videofiler kan laddas upp här.");
   }
+  if (videos.length) uploadFiles(videos);
+  videoInput.value = "";
 });
 
 dropZone.addEventListener("dragover", (e) => {
