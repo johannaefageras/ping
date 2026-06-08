@@ -1626,6 +1626,12 @@ footer {
   background: color-mix(in srgb, var(--fg) 10%, transparent);
 }
 
+/* Match the composer icon buttons' icon size. */
+#gallery-btn .icon {
+  width: 20px;
+  height: 20px;
+}
+
 #gallery-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
