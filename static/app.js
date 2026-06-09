@@ -38,6 +38,8 @@ const galleryBtn = document.getElementById("gallery-btn");
 const disappearingBtn = document.getElementById("disappearing-btn");
 const disappearingMenu = document.getElementById("disappearing-menu");
 const disappearingLabel = document.getElementById("disappearing-label");
+const disappearingIconOn = document.getElementById("disappearing-icon-on");
+const disappearingIconOff = document.getElementById("disappearing-icon-off");
 const galleryModal = document.getElementById("gallery-modal");
 const galleryClose = document.getElementById("gallery-close");
 const galleryTitle = document.getElementById("gallery-title");
@@ -2098,9 +2100,15 @@ function ttlToLabel(ttl) {
 function refreshDisappearingControl() {
   if (!disappearingBtn || !disappearingLabel || !selectedContact) return;
   const ttl = selectedContact.disappearingTtl;
+  const on = !!parseTtlSeconds(ttl);
   const label = ttlToLabel(ttl);
+  // Off → show the timer-off icon and drop the "av" text; on (24h/7d) → timer
+  // icon plus the duration label.
   disappearingLabel.textContent = label;
-  disappearingBtn.classList.toggle("active", !!parseTtlSeconds(ttl));
+  disappearingLabel.classList.toggle("hidden", !on);
+  if (disappearingIconOn) disappearingIconOn.classList.toggle("hidden", !on);
+  if (disappearingIconOff) disappearingIconOff.classList.toggle("hidden", on);
+  disappearingBtn.classList.toggle("active", on);
   disappearingBtn.setAttribute(
     "aria-label",
     `Försvinnande meddelanden: ${label}`

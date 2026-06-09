@@ -26,16 +26,13 @@ if not SUPABASE_URL or not SUPABASE_ANON_KEY:
 # wss:// origin from the configured project URL.
 _supabase_ws = SUPABASE_URL.replace("https://", "wss://").replace("http://", "ws://")
 
-# sha256 hashes of the two static inline <script> blocks (theme bootstrap +
-# service-worker registration) in index.html. Allowing them by hash means
-# script-src needs no 'unsafe-inline'. If either inline block is edited,
+# sha256 hash of the static inline <script> block (theme bootstrap +
+# service-worker registration) in index.html. Allowing it by hash means
+# script-src needs no 'unsafe-inline'. If the inline block is edited,
 # recompute its hash or the script will be blocked. (privacy.html / terms.html
 # load their theme bootstrap from /assets/scripts/theme-init.js, which is
 # covered by script-src 'self' and needs no hash.)
-_INLINE_SCRIPT_HASHES = (
-    "'sha256-9gzr4b1GCYEvdAQT/SkW1lYKOAmuMLJXGndSzMY3WYQ='"
-    " 'sha256-P3upB5nSJgaMZ66JypQ23kO70VzvIaT2MSedNexWFNk='"
-)
+_INLINE_SCRIPT_HASHES = "'sha256-3JhmKwxKymAV1oveAZwwL+4vLpjxnFXtDbe6eB+elPY='"
 
 CSP = (
     "default-src 'self'; "
