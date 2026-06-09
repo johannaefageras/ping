@@ -85,8 +85,10 @@
   --accent: #5b9fc9;
   --card-bg: #111;
   --border: #222;
-  --self-bg: #0d1a12;
-  --other-bg: #0d1219;
+  /* Message bubble tints derive from the active theme so they re-tint
+     automatically: self picks up --fg, other picks up --accent. */
+  --self-bg: color-mix(in srgb, var(--fg) 8%, var(--bg));
+  --other-bg: color-mix(in srgb, var(--accent) 8%, var(--bg));
   --font-primary: 'Monaspace Radon', ui-monospace, monospace;
   --font-weight-xlight: 200;
   --font-weight-light: 300;
@@ -102,7 +104,7 @@
 [data-theme='amber'] {
   --fg: #ffb000;
   --fg-dim: #996600;
-  --accent: #c97f5b;
+  --accent: #5bbfc9;
 }
 
 [data-theme='cyan'] {
@@ -867,11 +869,21 @@ body {
   overflow-y: auto;
   padding: 16px 20px;
   position: relative;
+  /* Two-track grid: a capped message column on the left, the rest of the
+     width on the right for the drop zone. Grid (not flex) so the message
+     column width is guaranteed and a tall conversation can never overlap the
+     drop-zone column. */
+  display: grid;
+  grid-template-columns: minmax(0, 600px) 1fr;
+  align-content: start;
+  column-gap: 24px;
 }
 
 /* --- Board (messages) --- */
 
 #board {
+  grid-column: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -880,7 +892,9 @@ body {
 
 .item {
   flex: 0 0 auto;
-  max-width: min(680px, 88%);
+  align-self: stretch;
+  width: 100%;
+  max-width: 760px;
   padding: 10px 14px;
   padding-right: 36px;
   border: 1px solid var(--border);
@@ -891,15 +905,15 @@ body {
 }
 
 .item.self {
-  align-self: flex-end;
   background: var(--self-bg);
   border-left: 3px solid var(--fg);
+  margin-left: 48px;
 }
 
 .item.other {
-  align-self: flex-start;
   background: var(--other-bg);
   border-left: 3px solid var(--accent);
+  margin-right: 48px;
 }
 
 .dismiss-btn {
@@ -994,14 +1008,37 @@ body {
 
 #drop-zone {
   box-sizing: border-box;
+  /* Invisible sticky rail in the right grid track. It spans the visible chat
+     height and centers the dashed box inside it, so the box stays centered in
+     the viewport regardless of scroll position or composer height — no magic
+     vh offsets. It can't overlap the messages (separate grid column). */
+  grid-column: 2;
+  align-self: start;
+  position: sticky;
+  /* The rail sits inside the scrolling chat area (which already starts below
+     the header), spans roughly the scrollport height, and flex-centers the
+     dashed box. top is small so the rail's vertical midpoint lands in the
+     middle of what the user sees; height is tuned so it doesn't run under the
+     composer. */
+  top: 8px;
+  height: calc(100svh - 242px);
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: none;
-  border: 2px dashed var(--border);
-  min-height: 190px;
+  cursor: pointer;
+}
+
+/* The dashed box itself. */
+#drop-zone-inner {
+  box-sizing: border-box;
+  width: min(320px, 100%);
+  height: 270px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   padding: 0 20px;
-  margin: clamp(24px, 12vh, 96px) 64px 0;
+  border: 2px dashed var(--border);
   text-align: center;
   font-size: 0.8rem;
   color: #444;
@@ -1009,18 +1046,20 @@ body {
     border-color 0.2s,
     color 0.2s,
     background 0.2s;
-  cursor: pointer;
 }
 
-#board:not(:empty) + #drop-zone {
+/* Empty chat (no messages yet): let the message column collapse and the drop
+   zone span both tracks, the box centered as the welcome target. */
+#board:empty {
   display: none;
 }
 
-#drop-zone-inner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+#board:empty + #drop-zone {
+  grid-column: 1 / -1;
+}
+
+#board:empty + #drop-zone #drop-zone-inner {
+  width: min(680px, 100%);
 }
 
 #drop-zone .drop-icon {
@@ -1029,26 +1068,33 @@ body {
   transition: color 0.2s;
 }
 
-#drop-zone.drag-over {
-  border-color: var(--fg);
+#drop-zone.drag-over .drop-icon,
+#chat-view.drag-over .drop-icon {
   color: var(--fg);
-  background: rgba(51, 255, 153, 0.03);
 }
 
+/* During a drag the rail becomes a full-area overlay covering the whole chat,
+   and the dashed box stretches to fill it and lights up. Anchored to the
+   sticky scrollport via fixed-ish positioning so it covers the visible area
+   even when there are only a few messages. */
 #chat-view.drag-over #drop-zone {
-  position: absolute;
-  inset: 16px 20px;
+  position: sticky;
+  top: 16px;
   z-index: 10;
-  display: flex;
-  min-height: 0;
+  grid-column: 1 / -1;
+  width: auto;
+  height: calc(100svh - 92px);
   margin: 0;
-  padding: 0 20px;
   pointer-events: none;
   background: color-mix(in srgb, var(--fg) 5%, rgba(0, 0, 0, 0.86));
 }
 
-#drop-zone.drag-over .drop-icon {
+#chat-view.drag-over #drop-zone-inner {
+  width: 100%;
+  height: 100%;
+  border-color: var(--fg);
   color: var(--fg);
+  background: rgba(51, 255, 153, 0.03);
 }
 
 .file-label {
@@ -1442,14 +1488,43 @@ footer {
     color: var(--fg);
   }
 
+  /* Too narrow for a side rail: collapse to a single grid column so messages
+     are full-width and the drop zone stacks below them (hidden once a
+     conversation exists — the composer handles uploads). */
   #chat-main {
     padding: 12px 14px;
+    grid-template-columns: 1fr;
+    column-gap: 0;
+  }
+
+  #board {
+    grid-column: 1;
   }
 
   #drop-zone {
-    min-height: 120px;
+    grid-column: 1;
+    position: static;
+    top: auto;
+    height: auto;
     margin: 18px 0 0;
+  }
+
+  #drop-zone-inner {
+    width: 100%;
+    height: 120px;
     padding: 0 14px;
+  }
+
+  #board:not(:empty) + #drop-zone {
+    display: none;
+  }
+
+  #board:empty + #drop-zone {
+    grid-column: 1;
+  }
+
+  #board:empty + #drop-zone #drop-zone-inner {
+    width: 100%;
   }
 
   #chat-view.drag-over #drop-zone {
@@ -1458,6 +1533,14 @@ footer {
 
   .item {
     padding: 10px 12px;
+  }
+
+  .item.self {
+    margin-left: 24px;
+  }
+
+  .item.other {
+    margin-right: 24px;
   }
 
   .item.file-item .file-info {
