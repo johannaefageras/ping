@@ -579,6 +579,21 @@ Suggested prompt for a future chat:
         unacceptable, create a separate Supabase project for staging and record
         that decision plus the extra configuration here instead.
     - Document preview deployment and rollback/removal instructions.
+    - **Read "Deployment state" in `docs/SVELTEKIT_PARITY_BASELINE.md` first.**
+      Three facts recorded during Step 5 constrain this step:
+      - The production Render service was **suspended** at that point (503 with
+        `x-render-routing: suspend`), so Steps 1-5 may never have deployed and
+        Step 2's relocation has not been exercised on a live server. Confirm
+        production is healthy before adding a second service on top of it.
+      - A second service is what exhausts free instance hours. If that is what
+        suspended the first one, this step needs a paid instance or a different
+        preview target — decide explicitly rather than discovering it.
+      - `render.yaml` pins no Python version and sets no `autoDeploy`. CI pins
+        3.14; production floats. Pin it here or accept the drift in writing.
+    - The cleanup path removes **messages only**. Invites and uploaded files
+      cannot be deleted by any authorized client (Step 4), so the staging
+      hygiene rules above are amended to match, and staging file uploads must
+      stay small.
 
     **Verification:** Run the full server contract and browser smoke suite
     against the deployed URL. Manually verify Supabase Auth redirects, Realtime,
@@ -658,6 +673,18 @@ Suggested prompt for a future chat:
     - Parse and retain invite tokens from URL hashes without exposing them in
       logs or losing them during authentication.
     - Port auth-focused accessibility behavior, focus handling, and tests.
+    - **Blocked until the Supabase Auth URL configuration is fixed** — see that
+      section in `docs/SVELTEKIT_PARITY_BASELINE.md`. Site URL points at
+      `localhost`, and `http://localhost:5173/**` (the Vite dev server, not
+      FastAPI's 8000) must be in the Redirect URLs allowlist before any auth
+      flow can be tested locally. Verify this before writing code, not after.
+    - Pass `emailRedirectTo` explicitly on signup, the way the legacy
+      `resetPasswordForEmail` call already does. The legacy `signUp` omits it
+      and silently falls back to Site URL, which is the bug above. The port
+      should not inherit that dependency on a dashboard setting.
+    - Note that Auth *Confirm email* is enabled, so a newly signed-up account
+      has **no session** until the link is clicked. Sign-up and login are not
+      symmetric, and the UI must not assume a session follows signUp.
 
     **Verification:** Test new account creation, existing login, invalid login,
     logout, recovery email flow, password reset, refresh persistence, and an
