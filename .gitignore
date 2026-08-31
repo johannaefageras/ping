@@ -1,6 +1,7 @@
 # Environment files
 .env
 .env.*
+!.env.example
 
 # Python artifacts
 __pycache__/
@@ -34,11 +35,16 @@ uploads/
 
 # Brainstorm visual companion
 .superpowers/
-docs/
+docs/superpowers/
 
 .claude/
 
-package-lock.json
+# Node / SvelteKit
+node_modules/
+/.svelte-kit
+/build
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
 
 .DS_Store
 
