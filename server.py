@@ -26,8 +26,13 @@ if not SUPABASE_URL or not SUPABASE_ANON_KEY:
 # wss:// origin from the configured project URL.
 _supabase_ws = SUPABASE_URL.replace("https://", "wss://").replace("http://", "ws://")
 
+# The legacy HTML shell lives outside static/ so it cannot be served as a
+# public asset at /index.html and cannot collide with the generated root route
+# of a future SvelteKit build. It is still served at "/" and "/app" below.
+LEGACY_INDEX = "legacy/index.html"
+
 # sha256 hash of the static inline <script> block (theme bootstrap +
-# service-worker registration) in index.html. Allowing it by hash means
+# service-worker registration) in legacy/index.html. Allowing it by hash means
 # script-src needs no 'unsafe-inline'. If the inline block is edited,
 # recompute its hash or the script will be blocked. (privacy.html / terms.html
 # load their theme bootstrap from /assets/scripts/theme-init.js, which is
@@ -93,14 +98,14 @@ async def config():
 
 @app.get("/")
 async def root():
-    return FileResponse("static/index.html")
+    return FileResponse(LEGACY_INDEX)
 
 
 @app.get("/app")
 async def app_page():
     # Alias for "/". Kept so existing links and the OAuth / password-reset
     # redirects (redirectTo: origin + "/app") keep working.
-    return FileResponse("static/index.html")
+    return FileResponse(LEGACY_INDEX)
 
 
 @app.get("/privacy")
