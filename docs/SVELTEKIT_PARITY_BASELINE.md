@@ -156,17 +156,17 @@ before any application code runs, so `window.location.origin` is always the
 `render.yaml` deploys FastAPI to Render, and Cloudflare fronts it at
 `myping.se`, redirecting the apex to `www`.
 
-**The service is currently suspended.** Every route returns 503 with
-`x-render-routing: suspend`, which is distinct from `no-server` (a deploy in
-flight) and `hibernate` (a free instance spun down). Suspension is caused by
-exhausted free instance hours, a failed payment, or a manual suspend — never by
-a push.
+**Production was not serving as of Step 5.** Every route returned 503 with
+`x-render-routing: suspend` — distinct from `no-server` (a deploy in flight) and
+`hibernate` (a free instance spun down). The repository owner reports the
+service is not suspended and that the deployment has not been created yet, so
+the header most likely reflects a hostname Cloudflare still points at rather
+than a running service. Either way it is not caused by a push.
 
 Two consequences worth carrying forward:
 
-- Steps 1 through 5 are on `main` but may never have deployed; Render queues or
-  skips deploys for a suspended service. **Step 2's relocation has therefore
-  not been exercised on a live server.** It is verified locally — `/` and
+- Steps 1 through 5 are on `main` but have not been observed running anywhere.
+  **Step 2's relocation has therefore not been exercised on a live server.** It is verified locally — `/` and
   `/app` byte-identical, 38 tests green, and `FileResponse("legacy/index.html")`
   resolves from the repo root exactly as `static/index.html` did — but that is
   not the same as production evidence.
@@ -1035,14 +1035,50 @@ trail of undeletable contact pairs.
 
 ### One-time manual setup
 
-Because Confirm email is on (above), create both accounts once in the Supabase
-dashboard: **Authentication > Users > Add user**, with **Auto Confirm User**
-checked, and User Metadata set to `{ "username": "ping_e2e_a" }` and
-`{ "username": "ping_e2e_b" }` respectively.
+Two constraints make this less obvious than it looks:
 
-The username must be present at creation: `on_auth_user_created` reads
-`raw_user_meta_data ->> 'username'` and aborts the signup without it, so an
-account created without metadata gets no profile row at all.
+1. Confirm email is on, so `signUp` returns no session and a script cannot log
+   in as an account it just created.
+2. The username must be present **at creation**. `on_auth_user_created` reads
+   `raw_user_meta_data ->> 'username'` and aborts without it, so an account
+   created with no metadata gets no profile row — and the dashboard's
+   *Add user* dialog offers only email, password, and auto-confirm. It has no
+   user-metadata field, so it cannot create a usable account on its own.
+
+**Use the application's own signup form.** It already sends the metadata
+correctly, and it exercises the real flow rather than a parallel one:
+
+```bash
+uvicorn server:app --reload      # http://localhost:8000
+```
+
+Sign up twice — usernames `ping_e2e_a` and `ping_e2e_b`, with emails and
+passwords you choose. Then confirm both without touching the broken
+confirmation link, in the SQL editor:
+
+```sql
+update auth.users
+   set email_confirmed_at = now()
+ where email in ('<A email>', '<B email>')
+   and email_confirmed_at is null;
+```
+
+Only `email_confirmed_at` is writable — `confirmed_at` is a generated column.
+
+Verify both accounts came out whole before relying on them:
+
+```sql
+select u.email, u.email_confirmed_at is not null as confirmed, p.username
+  from auth.users u
+  left join public.profiles p on p.id = u.id
+ where p.username like 'ping\_e2e\_%' escape '\';
+```
+
+Two rows, both `confirmed = true`, each with a username. A missing username
+means the trigger did not run and the account is unusable as a fixture.
+
+Finally put the four `PING_E2E_*` values in `.env` and run
+`npm run test:fixtures:seed`.
 
 ### Credentials
 

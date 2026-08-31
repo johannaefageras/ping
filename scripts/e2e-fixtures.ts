@@ -50,13 +50,19 @@ The fixture accounts must be created by hand, once. Auth *Confirm email* is
 enabled on this project, so signUp returns no session and this script cannot
 create them unattended.
 
-In the Supabase dashboard, Authentication > Users > Add user, create two users
-with "Auto Confirm User" checked. For each, set User Metadata to:
+Use the application's own signup form, which sends the username metadata that
+the on_auth_user_created trigger requires. The dashboard's "Add user" dialog
+cannot do this: it has no user-metadata field, so accounts created there get
+no profile row.
 
-    { "username": "ping_e2e_a" }      and      { "username": "ping_e2e_b" }
+    uvicorn server:app --reload      # then sign up at http://localhost:8000
+    #   usernames: ping_e2e_a and ping_e2e_b
 
-The username must be set at creation time: the on_auth_user_created trigger
-reads raw_user_meta_data->>'username' and aborts the signup without it.
+Then confirm both in the SQL editor, since the emailed link depends on the
+Site URL setting:
+
+    update auth.users set email_confirmed_at = now()
+     where email in ('<A>', '<B>') and email_confirmed_at is null;
 
 Then put their credentials in .env (never commit them):
 
