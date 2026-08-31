@@ -1080,6 +1080,26 @@ means the trigger did not run and the account is unusable as a fixture.
 Finally put the four `PING_E2E_*` values in `.env` and run
 `npm run test:fixtures:seed`.
 
+### Three dead ends, recorded so nobody repeats them
+
+Each of these looks like the obvious approach and does not work:
+
+| Approach | What happens |
+| --- | --- |
+| Dashboard **Authentication → Users → Add user** | The dialog has only email, password and auto-confirm. No user-metadata field, so the trigger gets no username and the account ends up with no profile row. |
+| `delete from auth.users …` in the SQL editor | Returned "Success. No rows returned" while the rows plainly existed. The `auth` schema is owned by `supabase_auth_admin`. **Delete through the dashboard's ⋮ → Delete user instead**, which goes via the Admin API. |
+| `signUp` to test whether an account exists | It is a *write*, and it sends email. Supabase returns `invalid_credentials` identically for "no such user" and "wrong password", so it tells you nothing you can trust — and the built-in SMTP allows only **2 emails per hour**. |
+
+Distinguishing the failure modes on sign-in:
+
+| Error | Meaning |
+| --- | --- |
+| `invalid_credentials` | no such account, **or** wrong password — deliberately conflated |
+| `email_not_confirmed` | account and password are correct, only confirmation is missing |
+
+That second one is the useful signal: seeing it means everything except the
+`email_confirmed_at` update is already right.
+
 ### Credentials
 
 Read from the environment, never committed. Names only:
@@ -1177,9 +1197,11 @@ contracts awaiting Steps 6, 8, 9 and 10; 6 security-header assertions awaiting
 Step 11; the app-shell smoke test awaiting Step 13; and the two-user test, which
 skipped because `PING_E2E_*` were not set in that run.
 
-**With `PING_E2E_*` set but the accounts not yet created, the same suite reports
-13 passed, 20 skipped, 1 failed.** That is the intended design, not a
-regression — the three states are deliberately distinct:
+**With working fixture credentials the suite reports 14 passed, 20 skipped:**
+the two-user test executes rather than skipping. With `PING_E2E_*` set but the
+accounts broken it reports 13 passed, 20 skipped, 1 failed. That is the
+intended design, not a regression — the three states are deliberately
+distinct:
 
 | Fixture credentials | Result |
 | --- | --- |

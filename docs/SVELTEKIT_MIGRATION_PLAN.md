@@ -191,7 +191,7 @@ Suggested prompt for a future chat:
    **Complete when:** Both runtimes can be developed locally and production is
    still configured to use FastAPI.
 
-4. [ ] **Create the SvelteKit test harness, fixtures, and contract tests**
+4. [x] **Create the SvelteKit test harness, fixtures, and contract tests**
 
    **Prerequisite:** Step 3.
 
@@ -289,7 +289,7 @@ Suggested prompt for a future chat:
    add parity tests before changing implementation, and a two-user test can be
    written without inventing its own account setup.
 
-   **Status (2026-08-31): implemented and verified except one criterion.**
+   **Status (2026-08-31): complete, verified against live fixtures.**
 
    Passing: `npm run check` (416 files, 0 errors), `npm run test:unit` (6),
    `npm run test:e2e` (13 passed, 21 pending by step), `npm run build`, and
@@ -297,24 +297,28 @@ Suggested prompt for a future chat:
    seed/cleanup scripts, and the package scripts are all in place, and a
    two-user test can now be written against `e2e/fixtures/accounts.ts`.
 
-   Outstanding: **"running the seed script twice in a row succeeds" has not
-   been run against live accounts.** This is an environmental prerequisite, not
-   a code gap — the two fixture accounts do not exist yet in the Supabase
-   project. The script's failure path is verified (it reports the missing
-   variables and the manual setup procedure), and the two-user suite skips
-   loudly without credentials.
+   The fixture criteria were verified against the real Supabase project once
+   `ping_e2e_a` and `ping_e2e_b` existed:
 
-   To close this out: create the two accounts per "Two-user fixture strategy"
-   in `docs/SVELTEKIT_PARITY_BASELINE.md`, set the four `PING_E2E_*` variables,
-   then run `npm run test:fixtures:seed` twice, `npm run test:fixtures:clean`,
-   and `npm run test:e2e`. Tick the checkbox above only once those pass.
+   | Run | Result |
+   | --- | --- |
+   | `test:fixtures:seed` (1st) | profiles found, `create_invite` / `redeem_invite`, contact accepted in both directions |
+   | `test:fixtures:seed` (2nd) | "contact: already accepted, nothing to do" — idempotent, exit 0 |
+   | `test:fixtures:clean` with one message present | dismissed from **both** sides, row gone, verified by an independent `check` |
+   | `test:e2e` | 14 passed, 20 skipped — the two-user test now executes |
 
-   Cautionary note for whoever does it: `signUp` is a **write** against the
-   live project and sends confirmation emails to real addresses. Do not use it
-   to probe whether an account exists — Supabase returns `invalid_credentials`
-   identically for "no such user" and "wrong password" by design, and probing
-   around that created two unusable accounts and exhausted the 2/hour email
-   rate limit. Check the dashboard instead.
+   The cleanup test is the one worth keeping: an earlier run passed trivially
+   with zero messages, which proves nothing. A message was inserted first, so
+   the both-sides `dismiss_ping` path actually ran. `check` reported the one
+   retained invite row, as designed.
+
+   Cautionary note, learned the expensive way: `signUp` is a **write** against
+   the live project and sends confirmation email. Do not use it to probe
+   whether an account exists — Supabase returns `invalid_credentials`
+   identically for "no such user" and "wrong password". Probing that way
+   created two unusable accounts and spent the 2/hour email rate limit. Note
+   that `email_not_confirmed` *is* returned distinctly, so an unconfirmed
+   account is distinguishable; only the first two cases are conflated.
 
 5. [x] **Run the test suites automatically in continuous integration**
 
