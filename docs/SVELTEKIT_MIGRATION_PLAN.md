@@ -14,6 +14,17 @@ step at a time.
    the user explicitly asks for it.
 5. Run every verification listed for the step.
 6. Mark the step complete only when all of its completion criteria pass.
+   Steps 4 and 5 added machinery every later step should use:
+   - `src/lib/contract/routes.ts` holds the route contract as data. When your
+     step implements a route, flip its `done` to `true` and its Playwright
+     assertions start running. Never weaken an expectation to make a test
+     pass — a genuine divergence is an entry in "Approved intentional
+     differences", not an edited contract.
+   - CI runs on every push (`.github/workflows/ci.yml`). A step is not
+     complete while it is red.
+   - Two-user tests use the fixtures in `e2e/fixtures/accounts.ts`. Never
+     invent account setup; run `npm run test:fixtures:seed` if they are
+     missing.
 7. In the handoff, report changed files, commands run, test results, decisions,
    and any remaining risks. Do not commit or deploy unless explicitly asked.
 
@@ -408,6 +419,14 @@ Suggested prompt for a future chat:
    - Do not add a service-role key.
    - Note in the parity document that this endpoint exists to keep the legacy
      frontend working unchanged, and that Step 29 retires the runtime fetch.
+   - Flip the `/config` entry in `src/lib/contract/routes.ts` to `done: true`.
+     Its recorded contract is **exactly** the keys `supabaseUrl` and
+     `supabaseAnonKey` — the test asserts the exact key set, so any extra
+     environment value leaking into the response fails it, which is the point.
+   - CI already supplies placeholder `SUPABASE_URL` / `SUPABASE_ANON_KEY` at
+     job level, so the endpoint has values to serve there. The missing-config
+     test must not depend on those being absent; construct that case in the
+     test rather than by unsetting the environment.
 
    **Verification:** The SvelteKit `/config` response matches the recorded
    FastAPI contract and no server-only value appears in client bundles.
