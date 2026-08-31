@@ -51,3 +51,6 @@ vite.config.ts.timestamp-*
 FIXES.md
 
 FEATURE_IDEAS.md
+# Playwright
+test-results
+playwright-report

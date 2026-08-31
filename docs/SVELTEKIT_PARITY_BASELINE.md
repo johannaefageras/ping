@@ -53,10 +53,34 @@ serving a broken client. `python-dotenv` loads a local `.env` in development.
 `.gitignore`, is no longer ignored and is ready to commit. `.env` itself stays
 ignored.
 
-Its contents were **confirmed by the repository owner, not by an agent**: local
-permission settings deny reading any `.env*` file, so Step 3 could not inspect
-it. Step 29 must re-check that it lists `SUPABASE_URL` and `SUPABASE_ANON_KEY`
-by name only, with no values.
+**Verified during Step 4, and the earlier description was slightly wrong.** Local
+permission settings deny *reading* any `.env*` file, so Step 3 relied on the
+repository owner's description: "the two names only, with no values". A shape
+check that reports no file content shows it actually holds two lines, both with
+**placeholder values** — 38 and 22 characters, neither matching the real values
+in `.env`, neither shaped like a JWT, both matching a placeholder pattern.
+
+That is fine, and arguably better than bare names: it shows the expected format.
+The correction matters only so Step 29 checks the right thing. What must stay
+true is that **no real credential** appears there, which is verifiable without
+reading the file:
+
+```
+python3 - <<'EOF'
+import re
+def parse(p):
+    return {m.group(1): m.group(2).strip().strip('"\'')
+            for m in (re.match(r'^\s*([A-Za-z_]\w*)\s*=\s*(.*)$', l)
+                      for l in open(p).read().splitlines()) if m}
+ex, real = parse('.env.example'), parse('.env')
+for k in ('SUPABASE_URL', 'SUPABASE_ANON_KEY'):
+    print(k, 'LEAKS REAL VALUE' if ex.get(k) == real.get(k) else 'ok (placeholder)')
+EOF
+```
+
+Also note `PING_E2E_*` (see [Two-user fixture strategy](#two-user-fixture-strategy-step-4))
+are read from `.env` locally and from CI secrets. They are **not** added to
+`.env.example` as real values and never leave the environment.
 
 `SUPABASE_URL` also determines two CSP `connect-src` origins: the URL itself,
 and the same origin with `https://` rewritten to `wss://` for Realtime.
@@ -629,6 +653,12 @@ no equivalent automatic validation layer. Either status is acceptable provided
 it is 4xx and documented; record the chosen status here when Step 8 implements
 it, and make the contract test assert that choice rather than 422 by default.
 
+**Chosen, pre-registered by Step 4: `400` with `{ "error": … }`.** This makes a
+missing `url` indistinguishable from an invalid one, which is already how every
+other rejection on these routes behaves, and leaves the frontend a single error
+shape to handle. `src/lib/contract/routes.ts` encodes that choice; Steps 8 and 9
+implement it and flip those entries to `done`.
+
 ### AID-4 — `/index.html` no longer served as a static asset (Step 2)
 
 Before Step 2 the shell lived at `static/index.html` and was therefore reachable
@@ -643,6 +673,29 @@ product linked to `/index.html`: `static/sw.js` precaches `/` and `/app`, and
 the shell's own asset references are all root-relative. This removes the
 collision with SvelteKit's generated root route, which is the entire point of
 Step 2.
+
+### AID-5 — 404 response body (Step 4, verified Step 10)
+
+FastAPI answers an unmatched path with **404** and a JSON `{detail}` body, since
+every route it serves is an API-style route. SvelteKit renders its **HTML error
+page** with the same 404 status.
+
+**Consequence:** only the *status* is contractual. Nothing in the product parses
+a 404 body — `static/app.js` never requests an unknown path, and `static/sw.js`
+falls back on cached navigations rather than inspecting error bodies. An HTML
+404 is also better for the humans who actually hit one. The contract entry for
+`/does-not-exist` asserts the status and ignores the body.
+
+### AID-6 — `/sitemap.xml` content type (Step 4)
+
+FastAPI serves `application/xml`; adapter-node's static handler serves
+`text/xml`. Both are valid XML media types, and both Google and Bing accept
+either for a sitemap.
+
+**Consequence:** none in practice. Forcing `application/xml` would mean adding a
+server hook that rewrites the header for one static file, which is more moving
+parts than the difference is worth. Verified against `node build/index.js`;
+every other route in the captured contract matches FastAPI's content type.
 
 ## Features the plan initially missed
 
@@ -789,24 +842,52 @@ sets one per-side flag and hard-deletes the row only when
 routine that calls it as one user leaves every row in place, still visible to
 the other. Cleanup must authenticate as both accounts.
 
-Deleting the row fires the section 8 trigger, which removes the attached
-storage object as a security-definer operation. So **file cleanup is automatic**
-once both sides dismiss; there is no client-side delete policy on
-`storage.objects` and none is needed.
+Deleting the row fires the section 8 `handle_ping_delete` trigger, which removes
+the attached storage object. **This no longer means file cleanup is automatic**
+— see the correction immediately below.
 
-### Invite rows cannot be deleted at all — unresolved
+### Correction (Step 4): uploaded files are *not* cleaned up
+
+An earlier draft of this section stated that file cleanup happens automatically
+once both sides dismiss a message. That was read off section 8 alone and is
+**wrong for the current schema**, because section 12 supersedes it:
+
+1. `archive_file_ping` copies **every** file ping into `file_archive` on insert.
+2. Section 12 redefines `handle_ping_delete` so it deletes the storage object
+   only `if not exists (select 1 from public.file_archive where file_path = …)`.
+   For any file sent through the app, an archive row always exists, so the
+   object is deliberately **kept** when the ping row is deleted.
+3. `file_archive` has a SELECT policy and **no DELETE policy**.
+4. `storage.objects` has INSERT and SELECT policies for `ping-files` and **no
+   DELETE policy**.
+
+So neither the archive row nor the stored object can be removed by any
+authorized client. This is correct product behavior — the per-contact archive
+is supposed to outlive dismissed messages — but it means fixture cleanup cannot
+reclaim uploaded files.
+
+**Consequence for tests:** file-upload tests (Steps 21 and 22) must upload only
+small fixture files, on the order of a few hundred bytes. Unlike invite rows,
+stored objects cost money and count against project storage, so an unbounded
+50 MiB upload test would accumulate permanently.
+
+### Invite rows cannot be deleted at all — resolved
 
 `invites` has SELECT and INSERT policies and **no UPDATE or DELETE policy**.
 Nothing a client is authorized to do removes an invite row. They expire after
 10 minutes and become invisible, but they accumulate forever.
 
-This contradicts Step 4's requirement that cleanup "removes messages, invites,
-and uploaded files". The other two are achievable; invites are not, and the
-migration rules forbid both the workarounds — adding a cleanup RPC is a schema
-change, and a service-role key is barred outright. **This needs an explicit
-decision before Step 4's cleanup path is written.** The likely answer is to
-accept the accumulation and say so in the plan, since the rows are tiny,
-expired, and unreachable.
+**Decision (approved by the repository owner, Step 4): accept the
+accumulation.** Step 4's requirement that cleanup remove "messages, invites,
+and uploaded files" is amended to messages only. Both workarounds are barred by
+the migration rules — a cleanup RPC is a schema change, and a service-role key
+is forbidden outright — and the rows are tiny, expired, and unreachable. The
+same reasoning is extended to uploaded files above, with the size constraint
+noted there.
+
+`scripts/e2e-fixtures.ts` states this rather than hiding it: `clean` reports how
+many invite rows and archived files it is leaving behind, so the accumulation
+stays visible instead of becoming a silent surprise.
 
 ### Failure mode that hides all of the above
 
@@ -815,10 +896,204 @@ not an error. A cleanup script that issues `DELETE FROM pings` will report that
 it worked while deleting nothing. Every fixture and cleanup operation must
 assert the affected-row count rather than trusting a 2xx.
 
-### Unverifiable from here: Auth email confirmation
+### Auth email confirmation — checked, and it is ON
 
-If the project has *Confirm email* enabled, `auth.signUp` returns no session and
-an automated seed cannot log in as the new account. Whether it is enabled is a
-dashboard setting, not visible in `schema.sql`. Step 4 must check it first and,
-if it is on, either create the test accounts manually once or turn confirmation
-off for them. This determines whether the seed script can work unattended.
+Resolved during Step 4 by querying the project's own public settings endpoint:
+
+```
+GET {SUPABASE_URL}/auth/v1/settings   (apikey: anon key)
+-> { "mailer_autoconfirm": false, "disable_signup": false, … }
+```
+
+`mailer_autoconfirm: false` means **Confirm email is enabled**. Therefore
+`auth.signUp` returns no session, and a seed script cannot authenticate as an
+account it just created.
+
+**Consequence:** the two fixture accounts are created **by hand, once**, and the
+seed script only signs in to them. It never calls `signUp`. If it cannot sign
+in, it fails with the manual setup instructions rather than trying to work
+around the setting.
+
+Re-run that request if the seed ever starts failing for no clear reason: someone
+turning confirmation off would change the answer, though the seed does not need
+it to be off.
+
+## Two-user fixture strategy (Step 4)
+
+The strategy Steps 15 through 27 build on. Defined here so no test invents its
+own account setup.
+
+### The accounts
+
+Two durable, reserved accounts — not ad-hoc sign-ups per run.
+
+| | Username | Why fixed |
+| --- | --- | --- |
+| A | `ping_e2e_a` | 10 chars, fits `^[a-z0-9_]{3,20}$` |
+| B | `ping_e2e_b` | same |
+
+Reserved prefix: `ping_e2e_`. No hyphens — the format check forbids them.
+
+They are **permanent by necessity**, not by preference: `contacts` has no DELETE
+policy for accepted rows, so once A and B are contacts the relationship cannot
+be undone by any client. Creating fresh accounts per run would leave a growing
+trail of undeletable contact pairs.
+
+### One-time manual setup
+
+Because Confirm email is on (above), create both accounts once in the Supabase
+dashboard: **Authentication > Users > Add user**, with **Auto Confirm User**
+checked, and User Metadata set to `{ "username": "ping_e2e_a" }` and
+`{ "username": "ping_e2e_b" }` respectively.
+
+The username must be present at creation: `on_auth_user_created` reads
+`raw_user_meta_data ->> 'username'` and aborts the signup without it, so an
+account created without metadata gets no profile row at all.
+
+### Credentials
+
+Read from the environment, never committed. Names only:
+
+| Name | Purpose |
+| --- | --- |
+| `PING_E2E_EMAIL_A` | fixture account A email |
+| `PING_E2E_PASSWORD_A` | fixture account A password |
+| `PING_E2E_EMAIL_B` | fixture account B email |
+| `PING_E2E_PASSWORD_B` | fixture account B password |
+| `PING_E2E_USERNAME_A` | optional override, defaults to `ping_e2e_a` |
+| `PING_E2E_USERNAME_B` | optional override, defaults to `ping_e2e_b` |
+
+`SUPABASE_URL` and `SUPABASE_ANON_KEY` are reused from the application's own
+configuration. **No service-role key is involved anywhere in the fixtures.**
+
+### Isolation boundary
+
+These accounts live in the **live Supabase project**. There is no separate test
+project and no local Supabase. Therefore:
+
+- A test must never assume an empty database.
+- A test must never read, modify, or delete a row it did not create.
+- Every assertion must be scoped to the two fixture accounts.
+
+### Seeding
+
+`npm run test:fixtures:seed` signs in as both accounts, verifies each profile
+row and username, and ensures the accepted contact relationship using the
+**production RPCs** — A calls `create_invite()`, B calls `redeem_invite(token)`.
+No parallel setup path exists, so the seed exercises the same code the product
+uses.
+
+Idempotent by construction: `redeem_invite` promotes a pending row, leaves an
+accepted row alone, and treats "already contacts" as success. When the contact
+is already accepted the seed skips the invite entirely.
+
+### Cleanup and its cadence
+
+`npm run test:fixtures:clean` dismisses every message between A and B **as both
+accounts**, since `dismiss_ping` hard-deletes a row only once both per-side
+flags are set.
+
+**Cadence: on demand, and per suite for suites that write messages.** Not per
+test — each cleanup needs two authenticated sessions and a round trip per row,
+which would dominate the runtime of a suite that sends a handful of messages.
+Not never — messages would otherwise accumulate across runs and break any
+assertion about conversation length.
+
+### What fixture cleanup cannot remove
+
+| Data | Why it survives |
+| --- | --- |
+| `invites` rows | no UPDATE or DELETE policy; expire in 10 minutes, then unreachable |
+| `file_archive` rows | SELECT policy only |
+| `storage.objects` in `ping-files` | INSERT and SELECT policies only |
+
+Accepted deliberately (see the decision above). The practical rule this places
+on later steps: **upload only small fixture files**, since stored objects are
+permanent and metered.
+
+### Every mutation asserts its result
+
+A PostgREST write blocked by RLS returns **success with zero rows affected**,
+not an error. Both the seed and the cleanup therefore re-read the data and
+assert the intended end state rather than trusting a 2xx — for example, after
+`redeem_invite` returns `ok`, the seed confirms an accepted contact row is
+actually visible to both accounts.
+
+## Test harness (Step 4)
+
+| Command | What it runs |
+| --- | --- |
+| `npm run test:unit` | Vitest, `src/**/*.{test,spec}.ts` (node) and `src/**/*.svelte.{test,spec}.ts` (browser) |
+| `npm run test:e2e` | Playwright, `e2e/**/*.e2e.ts` |
+| `npm test` | unit (once) then e2e |
+| `npm run check` | `svelte-check` over `src/`, `e2e/`, `scripts/`, and both configs |
+| `npm run test:fixtures:seed` | create/repair the two-user fixtures |
+| `npm run test:fixtures:clean` | remove messages between the fixture accounts |
+| `npm run test:fixtures:check` | report fixture state, change nothing |
+| `.venv/bin/python -m pytest -q` | the 38 existing Python tests, kept until Step 29 |
+
+### Recorded run (Step 4, 2026-08-31)
+
+```
+npm run check                    416 files, 0 errors, 0 warnings
+npm run test:unit -- --run       6 passed (1 file)
+npm run test:e2e                 13 passed, 21 skipped (pending, by step)
+npm run build                    ok, adapter-node
+.venv/bin/python -m pytest -q    38 passed, 1 warning
+```
+
+The 21 skips are the pending contract entries, not absent coverage: 12 route
+contracts awaiting Steps 6, 8, 9 and 10; 6 security-header assertions awaiting
+Step 11; the app-shell smoke test awaiting Step 13; and the two-user test, which
+skipped because `PING_E2E_*` were not set in that run.
+
+**With `PING_E2E_*` set but the accounts not yet created, the same suite reports
+13 passed, 20 skipped, 1 failed.** That is the intended design, not a
+regression — the three states are deliberately distinct:
+
+| Fixture credentials | Result |
+| --- | --- |
+| absent | skip, with the missing variable names on stderr |
+| present but not usable | **fail** — a misconfigured fixture must not pass silently |
+| present and usable | run |
+
+Step 5 depends on that middle row: CI without secrets skips loudly, but CI with
+*broken* secrets goes red rather than reporting a clean run over an empty suite.
+
+Note that `npm run check` covered **238** files before `tsconfig.json` was
+extended and **416** after. The 13 type errors it then found in `e2e/` and
+`scripts/` had been invisible.
+
+### Playwright runs against the production server, not `vite preview`
+
+`playwright.config.ts` starts `npm run build && node build/index.js`.
+
+This is **not** interchangeable with the scaffold's `npm run preview`.
+`vite preview` serves static files without `ETag` or `Last-Modified`, so the
+conditional-request contract recorded in
+[Per-route cache headers](#per-route-cache-headers) cannot be tested against it
+— the 304 assertion would silently see a 200. adapter-node's server sets both
+and answers 304, and it is what Render runs. Steps 11, 12, 26 and 28 depend on
+testing the real server.
+
+### Pending versus failing
+
+`src/lib/contract/routes.ts` holds the route contract as data: each entry
+records the expected status, content type, body shape, and the migration step
+that implements it. `e2e/route-contract.e2e.ts` turns each entry into a test and
+marks it `test.fixme` while `done` is false, so unimplemented behavior is
+reported as **pending with a named step**, never as a failure.
+
+A later step flips `done: true` for its routes and the real assertions begin
+running. Weakening an expectation to make a test pass is not the mechanism —
+a genuine divergence belongs in
+[Approved intentional differences](#approved-intentional-differences).
+
+`src/lib/contract/routes.spec.ts` guards the table itself: no duplicate paths,
+every pending entry carries a step, and nothing may claim `done` for a step that
+has not landed.
+
+### The browser suite is greenfield
+
+The 38 Python tests cover link previews only. There is no frontend coverage to
+port, so every assertion in `e2e/` is new. The two suites coexist until Step 29.

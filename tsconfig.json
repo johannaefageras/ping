@@ -11,10 +11,27 @@
 		"sourceMap": true,
 		"strict": true,
 		"moduleResolution": "bundler"
-	}
+	},
 	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
 	// except $lib which is handled by https://svelte.dev/docs/kit/configuration#files
 	//
-	// To make changes to top-level options such as include and exclude, we recommend extending
-	// the generated config; see https://svelte.dev/docs/kit/configuration#typescript
+	// `include` restates the generated list (with root-relative paths, since
+	// setting it here replaces rather than merges) and adds the test harness.
+	// Without this, .svelte-kit/tsconfig.json covers only src/, so `npm run
+	// check` would report zero errors while never looking at e2e/ or the
+	// fixture script — exactly the files a type error would hurt most.
+	"include": [
+		".svelte-kit/ambient.d.ts",
+		".svelte-kit/env.d.ts",
+		".svelte-kit/non-ambient.d.ts",
+		".svelte-kit/types/**/$types.d.ts",
+		"vite.config.ts",
+		"playwright.config.ts",
+		"src/**/*.js",
+		"src/**/*.ts",
+		"src/**/*.svelte",
+		"e2e/**/*.ts",
+		"scripts/**/*.ts"
+	],
+	"exclude": ["node_modules/**", "build/**", ".svelte-kit/output/**"]
 }
