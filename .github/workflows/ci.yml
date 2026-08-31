@@ -30,7 +30,7 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v4
         with:
@@ -93,13 +93,13 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # Pinned to the local development version. Note that Render does not pin
       # a Python version at all (render.yaml sets no PYTHON_VERSION and there
       # is no runtime.txt), so CI matches local but production may drift.
       # Steps 12 and 28 own the deployment runtime.
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.14'
           cache: pip

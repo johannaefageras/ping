@@ -316,7 +316,7 @@ Suggested prompt for a future chat:
    around that created two unusable accounts and exhausted the 2/hour email
    rate limit. Check the dashboard instead.
 
-5. [ ] **Run the test suites automatically in continuous integration**
+5. [x] **Run the test suites automatically in continuous integration**
 
    **Prerequisite:** Step 4.
 
@@ -373,9 +373,14 @@ Suggested prompt for a future chat:
    That last row is the one worth keeping honest: pending contract entries must
    never turn CI red, or later steps will be tempted to delete them.
 
-   Outstanding: **the workflow has not run on GitHub**, because nothing has been
-   pushed. "CI passes on the current branch" can only be confirmed after a push.
-   Tick the checkbox above once a run is green in the Actions tab.
+   Confirmed on GitHub: run `33435834792` on `main` is green. The web job took
+   77s and the Python job 15s. The e2e step logged the loud skip banner naming
+   the four missing `PING_E2E_*` variables, then reported 13 passed and 21
+   skipped — the intended fork-pull-request path.
+
+   `actions/checkout` and `actions/setup-python` were bumped to v5 and v6 after
+   that run: the originals target Node.js 20, which GitHub has deprecated, and
+   the run carried a warning annotation saying so.
 
    Note for Steps 12 and 28: CI pins Python 3.14 to match local development, but
    `render.yaml` pins nothing (no `PYTHON_VERSION`, no `runtime.txt`), so
