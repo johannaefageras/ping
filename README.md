@@ -91,6 +91,86 @@ uvicorn server:app --reload
 
 Open <http://localhost:8000>.
 
+## Tests
+
+Production still runs FastAPI. The SvelteKit suites below cover the migration in
+progress; the two coexist until the migration's final step.
+
+```bash
+.venv/bin/python -m pytest -q   # 38 link-preview tests (FastAPI)
+
+npm run check                   # types across src/, e2e/, scripts/
+npm run test:unit               # Vitest
+npm run test:e2e                # Playwright, against node build/index.js
+npm test                        # unit then e2e
+```
+
+Playwright deliberately runs the **production** server rather than
+`vite preview`, which serves static files without `ETag` and would make the
+caching assertions pass without testing anything.
+
+Many end-to-end tests are **pending**, not failing: they are marked with the
+migration step that implements them, and start running when that step lands.
+`src/lib/contract/routes.ts` is the route contract they read.
+
+### Two-user fixtures
+
+Tests that need two accounts use two reserved, durable ones (`ping_e2e_a` and
+`ping_e2e_b`) in the live Supabase project. Suites needing them skip loudly when
+their credentials are absent.
+
+```bash
+npm run test:fixtures:check     # report state, change nothing
+npm run test:fixtures:seed      # create/repair the contact relationship
+npm run test:fixtures:clean     # remove messages between the two accounts
+```
+
+Set `PING_E2E_EMAIL_A`, `PING_E2E_PASSWORD_A`, `PING_E2E_EMAIL_B`, and
+`PING_E2E_PASSWORD_B` in `.env` — never commit them. The accounts themselves are
+created by hand once, because *Confirm email* is enabled on the project; see
+"Two-user fixture strategy" in
+[docs/SVELTEKIT_PARITY_BASELINE.md](docs/SVELTEKIT_PARITY_BASELINE.md) for the
+full procedure and for what cleanup deliberately cannot remove.
+
+### Continuous integration
+
+[.github/workflows/ci.yml](.github/workflows/ci.yml) runs on every push and
+pull request, in two parallel jobs: **web** (types, unit, build, Playwright on
+Node from [.nvmrc](.nvmrc)) and **python** (pytest on 3.14).
+
+#### Reproducing a CI failure locally
+
+CI runs the same commands you can run by hand. The differences that actually
+cause "passes locally, fails in CI" are all reproducible:
+
+```bash
+# 1. Install exactly what CI installs — from the lockfile, not your node_modules.
+npm ci
+
+# 2. Set CI=true. It is not cosmetic: it makes Playwright refuse test.only,
+#    stop reusing an already-running dev server, and switch reporters.
+CI=true npm run test:e2e
+
+# 3. Use placeholder Supabase config, as CI does. A stale .env can hide a
+#    missing-configuration bug that CI will find.
+SUPABASE_URL=https://example.supabase.co \
+SUPABASE_ANON_KEY=placeholder-anon-key \
+  npm run build
+
+# 4. Python in a clean environment.
+python3 -m venv /tmp/ci-venv && /tmp/ci-venv/bin/pip install -r requirements-dev.txt
+/tmp/ci-venv/bin/python -m pytest -q
+```
+
+To reproduce the *fork pull request* case — where fixture secrets are absent and
+the two-user suite must skip rather than fail — run the e2e suite with the four
+`PING_E2E_*` variables unset and no `.env` present.
+
+Note that the fixture suite has three distinct outcomes by design: credentials
+absent **skips loudly**, credentials present but unusable **fails**, and
+credentials present and working **runs**. A red two-user test means the fixture
+accounts need attention, not that the suite is broken.
+
 ## Deployment
 
 A [render.yaml](render.yaml) is included for one-click deploy on Render.com.

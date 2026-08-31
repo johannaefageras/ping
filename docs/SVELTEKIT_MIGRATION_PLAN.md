@@ -215,18 +215,25 @@ Suggested prompt for a future chat:
      `profiles`), an accepted contact can never be deleted, messages are
      removed only by `dismiss_ping` called as **both** users, and an
      RLS-blocked write returns success with zero rows rather than an error.
-   - Resolve the open question recorded there before writing the cleanup path:
-     **`invites` has no UPDATE or DELETE policy**, so invite rows cannot be
-     removed by any authorized client. Adding a cleanup RPC is a schema change
-     and a service-role key is barred, so this step cannot satisfy its own
-     "cleanup removes invites" requirement as written. Decide explicitly —
-     most likely accept the accumulation and amend that requirement — rather
-     than quietly skipping it.
-   - Check whether Supabase Auth has *Confirm email* enabled before writing the
-     seed script. If it is on, `signUp` returns no session and the seed cannot
-     authenticate as a freshly created account; the test accounts then have to
-     be created once by hand. This is a dashboard setting and is not visible in
-     the repository.
+   - **Resolved.** `invites` has no UPDATE or DELETE policy, so invite rows
+     cannot be removed by any authorized client. Both workarounds are barred by
+     the migration rules. Decision, approved by the repository owner: **accept
+     the accumulation** and amend the cleanup requirement below.
+   - **Resolved, and it was worse than recorded.** Uploaded files cannot be
+     cleaned up either. Section 12 of the schema supersedes section 8: every
+     file ping is copied into `file_archive` on insert, `handle_ping_delete`
+     deliberately keeps the storage object while an archive row exists, and
+     neither `file_archive` nor `storage.objects` has a DELETE policy. The
+     baseline's earlier claim that "file cleanup is automatic" is corrected
+     there. Same decision applies, with one added constraint: **tests may
+     upload only small fixture files**, since stored objects are permanent and
+     metered.
+   - **Resolved.** Supabase Auth *Confirm email* is **enabled**, verified
+     against the project's own `/auth/v1/settings` endpoint
+     (`mailer_autoconfirm: false`). `signUp` therefore returns no session, so
+     the two fixture accounts are created **by hand, once**, and the seed
+     script only signs in to them. It never calls `signUp`, and it fails with
+     the manual setup instructions rather than working around the setting.
    - Translate the route contract from Step 1 into automated assertions where
      practical, initially marking only genuinely unimplemented SvelteKit
      behavior as pending.
@@ -242,9 +249,15 @@ Suggested prompt for a future chat:
        (it promotes a pending row, leaves an accepted row alone, and treats
        "already contacts" as success), so the seed can use the production RPCs
        instead of a parallel setup path.
-     - Add a teardown/cleanup path that removes messages, invites, and
-       uploaded files created by test accounts, and decide explicitly whether
-       cleanup runs per test, per suite, or on demand.
+     - Add a teardown/cleanup path that removes the **messages** created by
+       test accounts, and decide explicitly whether cleanup runs per test, per
+       suite, or on demand. *Amended from "messages, invites, and uploaded
+       files": invites and files have no client-authorized DELETE and cannot be
+       removed without a schema change or a service-role key, both barred. The
+       cleanup script reports what it is leaving behind instead of hiding it.*
+       Chosen cadence: **on demand, and per suite for suites that write
+       messages** — per test costs two authenticated sessions plus a round trip
+       per row, and never would let messages accumulate across runs.
      - Keep fixture credentials out of the repository; read them from the
        environment and document the variable names only.
      - State the isolation boundary plainly: these accounts share the live
@@ -257,14 +270,51 @@ Suggested prompt for a future chat:
      every UI assertion written here is new.
    - Keep the Python tests; the two suites coexist until cleanup.
 
+   - Point Playwright at the **production server** (`node build/index.js`), not
+     the scaffold's `vite preview`. `vite preview` serves static files without
+     `ETag` or `Last-Modified`, so the conditional-request contract silently
+     passes as a 200 and goes untested. Steps 11, 12, 26 and 28 depend on
+     testing the server Render actually runs.
+   - Extend `tsconfig.json`'s `include` to cover `e2e/` and `scripts/`. The
+     generated `.svelte-kit/tsconfig.json` covers only `src/`, so `npm run
+     check` reports zero errors while never looking at the test harness.
+
    **Verification:** The test commands run deterministically, distinguish
    pending migration cases from failures, and are documented in the README or
    parity document. Running the seed script twice in a row succeeds, and
-   cleanup leaves no test-account rows behind.
+   cleanup leaves no test-account *messages* behind (see the amendment above
+   for what cleanup cannot remove).
 
    **Complete when:** Future endpoint and UI steps have an automated place to
    add parity tests before changing implementation, and a two-user test can be
    written without inventing its own account setup.
+
+   **Status (2026-08-31): implemented and verified except one criterion.**
+
+   Passing: `npm run check` (416 files, 0 errors), `npm run test:unit` (6),
+   `npm run test:e2e` (13 passed, 21 pending by step), `npm run build`, and
+   `pytest -q` (38). The harness, the contract table, the fixture strategy, the
+   seed/cleanup scripts, and the package scripts are all in place, and a
+   two-user test can now be written against `e2e/fixtures/accounts.ts`.
+
+   Outstanding: **"running the seed script twice in a row succeeds" has not
+   been run against live accounts.** This is an environmental prerequisite, not
+   a code gap — the two fixture accounts do not exist yet in the Supabase
+   project. The script's failure path is verified (it reports the missing
+   variables and the manual setup procedure), and the two-user suite skips
+   loudly without credentials.
+
+   To close this out: create the two accounts per "Two-user fixture strategy"
+   in `docs/SVELTEKIT_PARITY_BASELINE.md`, set the four `PING_E2E_*` variables,
+   then run `npm run test:fixtures:seed` twice, `npm run test:fixtures:clean`,
+   and `npm run test:e2e`. Tick the checkbox above only once those pass.
+
+   Cautionary note for whoever does it: `signUp` is a **write** against the
+   live project and sends confirmation emails to real addresses. Do not use it
+   to probe whether an account exists — Supabase returns `invalid_credentials`
+   identically for "no such user" and "wrong password" by design, and probing
+   around that created two unusable accounts and exhausted the 2/hour email
+   rate limit. Check the dashboard instead.
 
 5. [ ] **Run the test suites automatically in continuous integration**
 
@@ -291,6 +341,46 @@ Suggested prompt for a future chat:
 
    **Complete when:** No later step can be marked complete while the automated
    suites are red.
+
+   **Status (2026-08-31): implemented; verified locally, not yet on GitHub.**
+
+   `.github/workflows/ci.yml` runs two parallel jobs — **web** (npm ci, check,
+   unit, build, Playwright) and **python** (pytest 3.14). Node is pinned by
+   `.nvmrc` (24.16.0, matching local); Python is pinned in the workflow.
+
+   Verified by replaying the workflow against a clean copy of the tree with no
+   `node_modules`, no `.env`, and no `.git` — the closest local equivalent of a
+   fresh runner:
+
+   | Check | Result |
+   | --- | --- |
+   | `npm ci` from the committed lockfile | ok |
+   | `npm run check` | 416 files, 0 errors |
+   | `npm run test:unit -- --run` | 6 passed |
+   | `npm run build` | ok |
+   | `CI=true npm run test:e2e`, no fixture secrets | 13 passed, 21 skipped, exit 0 |
+   | fresh venv + `requirements-dev.txt` + `pytest -q` | 38 passed, Python 3.14.5 |
+
+   Deliberate-failure verification, each reverted afterwards:
+
+   | Break | Exit code |
+   | --- | --- |
+   | type error in `src/lib/contract/routes.ts` | `npm run check` → 1 |
+   | assertion flipped in `routes.spec.ts` | `npm run test:unit` → 1 |
+   | wrong URL in `public-navigation.e2e.ts` | `npm run test:e2e` → 1 |
+   | *no break* — pending `test.fixme` entries | e2e → 0, as intended |
+
+   That last row is the one worth keeping honest: pending contract entries must
+   never turn CI red, or later steps will be tempted to delete them.
+
+   Outstanding: **the workflow has not run on GitHub**, because nothing has been
+   pushed. "CI passes on the current branch" can only be confirmed after a push.
+   Tick the checkbox above once a run is green in the Actions tab.
+
+   Note for Steps 12 and 28: CI pins Python 3.14 to match local development, but
+   `render.yaml` pins nothing (no `PYTHON_VERSION`, no `runtime.txt`), so
+   production can drift from what CI tests. That belongs to the deployment
+   steps, not here.
 
 6. [ ] **Port environment handling and the `/config` endpoint**
 

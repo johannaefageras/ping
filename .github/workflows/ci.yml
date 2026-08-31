@@ -1,0 +1,116 @@
+name: CI
+
+# Every later migration step is checked by something other than the chat that
+# wrote it. Both suites run until the migration's final step removes the Python
+# one.
+on:
+  push:
+  pull_request:
+
+# A new push to the same branch cancels the previous run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Placeholders, not secrets. server.py raises at import time without these,
+  # and the SvelteKit /config endpoint will need them from Step 6. The real
+  # values are public client configuration anyway; these are deliberately fake
+  # so nothing in CI can reach the live project.
+  SUPABASE_URL: https://example.supabase.co
+  SUPABASE_ANON_KEY: placeholder-anon-key
+
+jobs:
+  web:
+    name: SvelteKit (types, unit, build, e2e)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # `npm ci` requires the committed lockfile. Do not replace with
+      # `npm install`: it would silently accept a drifted dependency tree.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run check
+
+      - name: Unit tests
+        run: npm run test:unit -- --run
+
+      - name: Production build
+        run: npm run build
+
+      # Cached separately from node_modules: the browser download is the
+      # slowest part of the job and changes only with the Playwright version.
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      # The two-user suite runs only when these secrets exist. Absent, it skips
+      # loudly (the missing variable names are printed). Present but unusable,
+      # it fails — a misconfigured fixture must not pass as a clean run.
+      # Secrets are unavailable to pull requests from forks, so those runs skip.
+      - name: End-to-end tests
+        run: npm run test:e2e
+        env:
+          PING_E2E_EMAIL_A: ${{ secrets.PING_E2E_EMAIL_A }}
+          PING_E2E_PASSWORD_A: ${{ secrets.PING_E2E_PASSWORD_A }}
+          PING_E2E_EMAIL_B: ${{ secrets.PING_E2E_EMAIL_B }}
+          PING_E2E_PASSWORD_B: ${{ secrets.PING_E2E_PASSWORD_B }}
+          # The two-user suite talks to the real project, so it needs the real
+          # public config rather than the placeholders above.
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://example.supabase.co' }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'placeholder-anon-key' }}
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  python:
+    name: FastAPI (pytest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Pinned to the local development version. Note that Render does not pin
+      # a Python version at all (render.yaml sets no PYTHON_VERSION and there
+      # is no runtime.txt), so CI matches local but production may drift.
+      # Steps 12 and 28 own the deployment runtime.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Tests
+        run: python -m pytest -q
+
+# Deliberately not gated on `npm audit`. It reports 3 low-severity advisories
+# for `cookie <0.7.0`, reached transitively through @sveltejs/kit, and
+# `npm audit fix --force` "resolves" them by downgrading SvelteKit to 0.0.30.
+# See "Known advisory, do not fix" in docs/SVELTEKIT_PARITY_BASELINE.md.
