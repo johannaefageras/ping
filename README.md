@@ -45,7 +45,9 @@ server.py               FastAPI app — serves /, /app, /config, /privacy, /term
 requirements.txt        Python deps
 render.yaml             Render.com deploy config
 scripts/                Small maintenance/generation scripts
-static/                 Frontend shell plus assets, fonts, icons, and pages
+src/                    SvelteKit app — in migration, not yet the production path
+legacy/index.html       The app shell served at / and /app (outside static/ on purpose)
+static/                 Assets, fonts, icons, and the standalone pages
 supabase/schema.sql     Full Supabase schema: tables, RLS, triggers, RPC
 ```
 
