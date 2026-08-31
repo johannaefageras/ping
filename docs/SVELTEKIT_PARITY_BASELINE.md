@@ -112,13 +112,30 @@ Authentication → URL Configuration:
 
 - **Site URL:** `https://www.myping.se` — the `www` form, since Cloudflare
   301s the apex to it.
-- **Redirect URLs:** `https://www.myping.se/**`, the Render-assigned
-  `https://<service>.onrender.com/**`, `http://localhost:8000/**` (FastAPI
-  dev), and `http://localhost:5173/**` (Vite dev).
+- **Redirect URLs**, five entries:
+
+  | URL | Why |
+  | --- | --- |
+  | `https://www.myping.se/**` | production |
+  | `https://<service>.onrender.com/**` | Render's own hostname |
+  | `http://localhost:8000/**` | FastAPI dev (`uvicorn server:app --reload`) |
+  | `http://localhost:5173/**` | Vite dev server (`npm run dev`) |
+  | `http://localhost:4173/**` | production-build preview **and Playwright** |
+
+The last one is easy to miss and breaks the automated suite rather than a human:
+`playwright.config.ts` sets `baseURL: 'http://localhost:4173'`, so every
+end-to-end auth test from Step 14 onward runs on that origin. Without it those
+tests fail on redirect while manual testing on 5173 looks fine.
 
 The Render hostname matters for debugging: when the custom domain or Cloudflare
 misbehaves, it is how you check whether the app itself is healthy, and auth
-would otherwise break exactly when you need it.
+would otherwise break exactly when you need it. Find it at the top of the
+service page in the Render dashboard — `render.yaml` only sets the service
+*name*, and Render appends a suffix when the name is already taken.
+
+The apex `https://myping.se/**` is not required: Cloudflare 301s it to `www`
+before any application code runs, so `window.location.origin` is always the
+`www` form. Adding it is harmless if you would rather not depend on that.
 
 ### Consequences for later steps
 

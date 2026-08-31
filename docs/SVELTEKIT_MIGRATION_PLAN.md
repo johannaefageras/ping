@@ -675,9 +675,12 @@ Suggested prompt for a future chat:
     - Port auth-focused accessibility behavior, focus handling, and tests.
     - **Blocked until the Supabase Auth URL configuration is fixed** — see that
       section in `docs/SVELTEKIT_PARITY_BASELINE.md`. Site URL points at
-      `localhost`, and `http://localhost:5173/**` (the Vite dev server, not
-      FastAPI's 8000) must be in the Redirect URLs allowlist before any auth
-      flow can be tested locally. Verify this before writing code, not after.
+      `localhost`, and two origins must be in the Redirect URLs allowlist
+      before any auth flow can be tested: `http://localhost:5173/**` (the Vite
+      dev server, not FastAPI's 8000) and `http://localhost:4173/**`, which is
+      Playwright's `baseURL` and therefore where every automated auth test
+      runs. Missing the second one fails the suite while manual testing looks
+      fine. Verify both before writing code, not after.
     - Pass `emailRedirectTo` explicitly on signup, the way the legacy
       `resetPasswordForEmail` call already does. The legacy `signUp` omits it
       and silently falls back to Site URL, which is the bug above. The port
