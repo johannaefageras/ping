@@ -1,10 +1,10 @@
-const CACHE = "ping-shell-v10";
+const CACHE = "ping-shell-v12";
 
 const SHELL = [
   "/",
   "/app",
-  "/style.css",
-  "/app.js",
+  "/style.css?v=7",
+  "/app.js?v=12",
   "/commands.js",
   "/keyboard.js",
   "/assets/scripts/invite-url.js",

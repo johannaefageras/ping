@@ -77,9 +77,8 @@
           ctx.systemLine("välj en kontakt först");
           return;
         }
-        const name = c.displayName ? c.displayName + " (@" + c.username + ")" : "@" + c.username;
         const status = ctx.isOnline(c.recipientId) ? "online" : "offline";
-        ctx.systemLine(name + " — " + status);
+        ctx.systemLine("@" + c.username + " — " + status);
       },
     },
     {

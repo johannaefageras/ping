@@ -96,9 +96,9 @@ const lightboxClose = document.getElementById("lightbox-close");
 const settingsBtn = document.getElementById("settings-btn");
 const settingsModal = document.getElementById("settings-modal");
 const settingsClose = document.getElementById("settings-close");
-const displayNameInput = document.getElementById("display-name-input");
-const displayNameSave = document.getElementById("display-name-save");
-const displayNameMsg = document.getElementById("display-name-msg");
+const usernameInput = document.getElementById("username-input");
+const usernameSave = document.getElementById("username-save");
+const usernameMsg = document.getElementById("username-msg");
 const newPasswordInput = document.getElementById("new-password");
 const newPasswordConfirm = document.getElementById("new-password-confirm");
 const passwordSave = document.getElementById("password-save");
@@ -117,7 +117,7 @@ const inviteError = document.getElementById("invite-error");
 // --- App state ---
 let sb = null; // Supabase client
 let currentUser = null; // { id, username }
-let selectedContact = null; // { contactId, recipientId, username, displayName, disappearingTtl }
+let selectedContact = null; // { contactId, recipientId, username, disappearingTtl }
 let contacts = [];
 let lastSentText = null; // last text the user sent, for /last recall
 let unreadCounts = {}; // recipientId -> count of unread, non-dismissed pings from that contact; loaded from the DB on entry (durable across reload) and kept live by realtime
@@ -460,7 +460,7 @@ function showResetPasswordScreen() {
 async function enterApp(user) {
   const { data: profile, error } = await sb
     .from("profiles")
-    .select("*")
+    .select("id, username")
     .eq("id", user.id)
     .single();
 
@@ -473,14 +473,13 @@ async function enterApp(user) {
   currentUser = {
     id: user.id,
     username: profile.username,
-    display_name: profile.display_name || null,
   };
 
   authScreen.classList.add("hidden");
   appEl.classList.remove("hidden");
   appEl.classList.remove("chat-active", "contacts-collapsed");
   currentUsernameEl.textContent = "@" + currentUser.username;
-  displayNameInput.value = currentUser.display_name || "";
+  if (usernameInput) usernameInput.value = currentUser.username;
 
   await loadUnreadCounts();
   await loadContacts();
@@ -526,7 +525,7 @@ function exitApp() {
 
   // Logout can be triggered from inside the settings modal, so close it on the
   // way out — otherwise it stays open over the auth screen. This also clears the
-  // typed-but-unsubmitted password/display-name fields.
+  // typed-but-unsubmitted password fields.
   closeSettings();
   // Same for the invite modal: close it so it doesn't linger over the auth
   // screen and so its countdown interval is cleared.
@@ -562,8 +561,8 @@ async function loadContacts() {
     .from("contacts")
     .select(
       `id, status, requester_id, addressee_id, created_at, disappearing_ttl,
-       requester:profiles!contacts_requester_id_fkey(username, display_name),
-       addressee:profiles!contacts_addressee_id_fkey(username, display_name)`
+       requester:profiles!contacts_requester_id_fkey(username),
+       addressee:profiles!contacts_addressee_id_fkey(username)`
     )
     .or(`requester_id.eq.${currentUser.id},addressee_id.eq.${currentUser.id}`)
     .order("created_at", { ascending: false });
@@ -574,19 +573,19 @@ async function loadContacts() {
   }
 
   contacts = data || [];
-  // A contact may have changed their display name OR the pair's disappearing
-  // timer since we opened the chat; re-sync both from the fresh data.
-  syncSelectedContactDisplayName();
+  // A contact may have changed their username OR the pair's disappearing
+  // timer since we opened the chat; re-sync from fresh data.
+  syncSelectedContactProfile();
   syncSelectedContactDisappearingTtl();
   renderContacts();
   refreshChatHeader();
   refreshDisappearingControl();
 }
 
-// Re-reads the currently selected contact's display_name from the freshly
-// loaded `contacts` array (matched by the other party's user id). No-op when
-// no contact is selected or the contact is no longer in the list.
-function syncSelectedContactDisplayName() {
+// Re-reads the currently selected contact's profile from the freshly loaded
+// `contacts` array (matched by the other party's user id). No-op when no
+// contact is selected or the contact is no longer in the list.
+function syncSelectedContactProfile() {
   if (!selectedContact) return;
   const match = contacts.find(
     (c) =>
@@ -597,7 +596,7 @@ function syncSelectedContactDisplayName() {
   if (!match) return;
   const other =
     match.requester_id === currentUser.id ? match.addressee : match.requester;
-  selectedContact.displayName = other.display_name || null;
+  selectedContact.username = other.username;
 }
 
 // Re-reads the open pair's disappearing_ttl from the freshly loaded `contacts`
@@ -619,10 +618,7 @@ function syncSelectedContactDisappearingTtl() {
 // No-op when no chat is open.
 function refreshChatHeader() {
   if (!selectedContact || chatView.classList.contains("hidden")) return;
-  chatContactName.innerHTML = contactNameHtml(
-    selectedContact.username,
-    selectedContact.displayName
-  );
+  chatContactName.innerHTML = contactNameHtml(selectedContact.username);
 }
 
 // Source of truth for the sidebar unread badges on load: how many messages
@@ -649,18 +645,9 @@ async function loadUnreadCounts() {
   unreadCounts = counts;
 }
 
-// Renders a contact label: display name as primary line (when set) with
-// @username as a smaller secondary line; @username only when no display name.
-// Both values are escaped (display names are free text).
-function contactNameHtml(username, displayName) {
-  const u = escapeHtml(username);
-  if (displayName) {
-    return (
-      `<span class="name-primary">${escapeHtml(displayName)}</span>` +
-      `<span class="name-secondary">@${u}</span>`
-    );
-  }
-  return `<span class="name-primary">@${u}</span>`;
+// Usernames are the single identity label throughout the app.
+function contactNameHtml(username) {
+  return `@${escapeHtml(username)}`;
 }
 
 function renderContacts() {
@@ -679,7 +666,7 @@ function renderContacts() {
     const el = document.createElement("div");
     el.className = "pending-item";
     el.innerHTML = `
-      <span class="contact-name">${contactNameHtml(c.requester.username, c.requester.display_name)}</span>
+      <span class="contact-name">${contactNameHtml(c.requester.username)}</span>
       <button class="accept-btn" data-id="${c.id}" aria-label="Acceptera" title="Acceptera"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button>
       <button class="reject-btn" data-id="${c.id}" aria-label="Neka" title="Neka"><svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     `;
@@ -700,7 +687,6 @@ function renderContacts() {
     const recipientId = isRequester ? c.addressee_id : c.requester_id;
     const other = isRequester ? c.addressee : c.requester;
     const username = other.username;
-    const displayName = other.display_name;
     const el = document.createElement("div");
     el.className =
       "contact-item" +
@@ -713,10 +699,10 @@ function renderContacts() {
     el.innerHTML =
       `<span class="contact-left">` +
         `<span class="presence-dot${online ? " online" : ""}" title="${online ? "Online" : "Offline"}"></span>` +
-        `<span class="contact-name">${contactNameHtml(username, displayName)}</span>` +
+        `<span class="contact-name">${contactNameHtml(username)}</span>` +
       `</span>` +
       (unread > 0 ? `<span class="unread-badge">${unread}</span>` : "");
-    el.addEventListener("click", () => selectContact(c.id, recipientId, username, displayName));
+    el.addEventListener("click", () => selectContact(c.id, recipientId, username));
     contactsList.appendChild(el);
   });
 
@@ -725,7 +711,7 @@ function renderContacts() {
     const el = document.createElement("div");
     el.className = "contact-item outgoing";
     el.innerHTML =
-      `<span class="contact-name">${contactNameHtml(c.addressee.username, c.addressee.display_name)}</span>` +
+      `<span class="contact-name">${contactNameHtml(c.addressee.username)}</span>` +
       ` <svg class="icon" role="img" aria-label="Väntar på svar" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>Väntar på svar</title><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg>`;
     contactsList.appendChild(el);
   });
@@ -802,14 +788,13 @@ async function rejectContact(contactId) {
 // CHAT — select contact, load pings, render
 // ============================================================
 
-async function selectContact(contactId, recipientId, username, displayName) {
+async function selectContact(contactId, recipientId, username) {
   closeFileGallery();
   const contactRow = contacts.find((c) => c.id === contactId);
   selectedContact = {
     contactId,
     recipientId,
     username,
-    displayName: displayName || null,
     disappearingTtl: contactRow ? contactRow.disappearing_ttl || null : null,
   };
 
@@ -821,7 +806,7 @@ async function selectContact(contactId, recipientId, username, displayName) {
   chatView.classList.remove("hidden");
   appEl.classList.add("chat-active");
   setMobileContactsCollapsed(true);
-  chatContactName.innerHTML = contactNameHtml(username, selectedContact.displayName);
+  chatContactName.innerHTML = contactNameHtml(username);
 
   refreshDisappearingControl();
 
@@ -2196,6 +2181,7 @@ let _settingsLastFocus = null;
 
 function openSettings() {
   _settingsLastFocus = document.activeElement;
+  if (usernameInput) usernameInput.value = currentUser ? currentUser.username : "";
   settingsModal.classList.remove("hidden");
   settingsClose.focus();
 }
@@ -2205,7 +2191,7 @@ function closeSettings() {
   // Discard any unsaved edits so a reopened modal reflects the saved state,
   // not stale typed-but-not-saved text. Also clear the password fields so a
   // typed-but-unsubmitted password isn't left sitting in the DOM.
-  displayNameInput.value = currentUser ? currentUser.display_name || "" : "";
+  if (usernameInput) usernameInput.value = currentUser ? currentUser.username : "";
   newPasswordInput.value = "";
   newPasswordConfirm.value = "";
   if (_settingsLastFocus) _settingsLastFocus.focus();
@@ -2816,31 +2802,60 @@ function showSettingsMsg(el, text, ok) {
   el.classList.toggle("err", !ok);
 }
 
-displayNameSave.addEventListener("click", async () => {
-  const raw = displayNameInput.value.trim();
-  if (raw.length > 40) {
-    showSettingsMsg(displayNameMsg, "Visningsnamn: max 40 tecken.", false);
-    return;
-  }
-  const value = raw === "" ? null : raw;
+// A previously cached HTML shell can briefly run a newer app.js while the new
+// service worker activates. Keep that version mismatch from aborting the whole
+// script before init(); the username controls become available on next reload.
+if (usernameInput && usernameSave && usernameMsg) {
+  usernameSave.addEventListener("click", async () => {
+    const username = usernameInput.value.trim().toLowerCase();
+    usernameInput.value = username;
 
-  const { error } = await sb
-    .from("profiles")
-    .update({ display_name: value })
-    .eq("id", currentUser.id);
+    if (!/^[a-z0-9_]{3,20}$/.test(username)) {
+      showSettingsMsg(
+        usernameMsg,
+        "Anv\u00e4ndarnamn: 3\u201320 tecken, sm\u00e5 bokst\u00e4ver, siffror, understreck.",
+        false
+      );
+      return;
+    }
 
-  if (error) {
-    // DB CHECK is the backstop for the same length rule enforced above.
-    showSettingsMsg(displayNameMsg, "Kunde inte spara visningsnamn.", false);
-    return;
-  }
+    if (username === currentUser.username) {
+      showSettingsMsg(usernameMsg, "Anv\u00e4ndarnamnet \u00e4r redan sparat.", true);
+      return;
+    }
 
-  currentUser.display_name = value;
-  displayNameInput.value = value || "";
-  showSettingsMsg(displayNameMsg, "Sparat!", true);
-  renderContacts();
-  refreshChatHeader();
-});
+    usernameSave.disabled = true;
+    const { data, error } = await sb
+      .from("profiles")
+      .update({ username })
+      .eq("id", currentUser.id)
+      .select("username")
+      .single();
+    usernameSave.disabled = false;
+
+    if (error) {
+      if (error.code === "23505") {
+        showSettingsMsg(usernameMsg, "Anv\u00e4ndarnamnet \u00e4r redan taget.", false);
+      } else if (error.code === "23514") {
+        showSettingsMsg(
+          usernameMsg,
+          "Anv\u00e4ndarnamn: 3\u201320 tecken, sm\u00e5 bokst\u00e4ver, siffror, understreck.",
+          false
+        );
+      } else {
+        showSettingsMsg(usernameMsg, "Kunde inte spara anv\u00e4ndarnamnet.", false);
+      }
+      return;
+    }
+
+    // profiles.username is the source of truth after account creation. Contacts,
+    // pings and invites keep pointing at the unchanged profile UUID.
+    currentUser.username = data.username;
+    usernameInput.value = data.username;
+    currentUsernameEl.textContent = "@" + data.username;
+    showSettingsMsg(usernameMsg, "Sparat!", true);
+  });
+}
 
 passwordSave.addEventListener("click", async () => {
   const pw = newPasswordInput.value;
@@ -3051,6 +3066,7 @@ window.addEventListener("hashchange", async () => {
 // "chat already open, user tabs back in" case.
 window.addEventListener("focus", () => {
   markChatRead();
+  if (currentUser) loadContacts();
 });
 
 function playPing() {
@@ -3327,7 +3343,6 @@ function getAcceptedContactsForKeyboard() {
         contactId: c.id,
         recipientId,
         username: other.username,
-        displayName: other.display_name || null,
         online: onlineUserIds.has(recipientId),
         unread: unreadCounts[recipientId] || 0,
       };

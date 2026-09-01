@@ -402,7 +402,7 @@ Suggested prompt for a future chat:
    production can drift from what CI tests. That belongs to the deployment
    steps, not here.
 
-6. [ ] **Port environment handling and the `/config` endpoint**
+6. [x] **Port environment handling and the `/config` endpoint**
 
    **Prerequisite:** Step 5.
 

@@ -48,9 +48,9 @@ describe('route contract table', () => {
 	});
 
 	it('only marks a route done once its implementing step could have run', () => {
-		// Steps 1 through 3 are complete. Nothing may claim to be done by a
+		// Steps 1 through 6 are complete. Nothing may claim to be done by a
 		// later step until that step actually lands and updates this table.
-		const LAST_COMPLETED_STEP = 3;
+		const LAST_COMPLETED_STEP = 6;
 
 		for (const route of activeRoutes()) {
 			if (route.implementedInStep <= LAST_COMPLETED_STEP) continue;

@@ -100,7 +100,7 @@ export const ROUTE_CONTRACT: RouteContract[] = [
 		contentType: 'application/json',
 		body: { kind: 'json', keys: ['supabaseAnonKey', 'supabaseUrl'] },
 		implementedInStep: 6,
-		done: false,
+		done: true,
 		note: 'Exact key set: no other environment value may leak into this response.'
 	},
 

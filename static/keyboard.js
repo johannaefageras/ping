@@ -64,11 +64,7 @@
     const all = ctx.getContacts();
     const q = query.trim().toLowerCase();
     if (!q) return all;
-    return all.filter((c) => {
-      const name = (c.displayName || "").toLowerCase();
-      const handle = (c.username || "").toLowerCase();
-      return name.includes(q) || handle.includes(q);
-    });
+    return all.filter((c) => (c.username || "").toLowerCase().includes(q));
   }
 
   function renderPalette(query) {
@@ -84,15 +80,13 @@
 
     paletteList.innerHTML = paletteRows
       .map((c, i) => {
-        const primary = c.displayName ? ctx.escapeHtml(c.displayName) : ctx.escapeHtml(c.username);
         const handle = ctx.escapeHtml(c.username);
         const dot = '<span class="presence-dot' + (c.online ? " online" : "") + '"></span>';
         const unread = c.unread > 0 ? '<span class="kbd-unread">' + c.unread + "</span>" : "";
         return (
           '<div class="kbd-row' + (i === 0 ? " active" : "") + '" role="option" data-index="' + i + '">' +
           dot +
-          '<span class="kbd-name">' + primary + "</span>" +
-          '<span class="kbd-handle">@' + handle + "</span>" +
+          '<span class="kbd-name">@' + handle + "</span>" +
           unread +
           "</div>"
         );
@@ -120,7 +114,7 @@
     const c = paletteRows[i];
     if (!c) return;
     closePalette();
-    ctx.selectContact(c.contactId, c.recipientId, c.username, c.displayName);
+    ctx.selectContact(c.contactId, c.recipientId, c.username);
   }
 
   // --- Alt+↑/↓ contact cycling --------------------------------------------
@@ -140,7 +134,7 @@
       next = (((idx + delta) % n) + n) % n;
     }
     const c = list[next];
-    ctx.selectContact(c.contactId, c.recipientId, c.username, c.displayName);
+    ctx.selectContact(c.contactId, c.recipientId, c.username);
   }
 
   // --- Cheatsheet (?) -----------------------------------------------------

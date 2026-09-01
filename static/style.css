@@ -1815,14 +1815,13 @@ footer {
   overflow: hidden;
 }
 
-/* Two-line contact name: primary line truncates, secondary is @username.
-   flex-column replaces the old single-line truncation rule. */
+/* Single username label; truncate defensively in narrow sidebars. */
 .contact-item .contact-name {
-  display: inline-flex;
-  flex-direction: column;
-  line-height: 1.15;
+  display: inline-block;
   min-width: 0;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .presence-dot {
@@ -2351,7 +2350,7 @@ footer {
   opacity: 0.5;
 }
 
-#display-name-save,
+#username-save,
 #password-save {
   background: var(--fg-dim);
   color: var(--bg);
@@ -2366,7 +2365,7 @@ footer {
   transition: background 0.15s;
 }
 
-#display-name-save:hover,
+#username-save:hover,
 #password-save:hover {
   background: var(--fg);
 }
@@ -2459,23 +2458,6 @@ footer {
   color: inherit;
   cursor: pointer;
   font-size: 1rem;
-}
-
-/* --- Two-line contact name sub-elements --- */
-.name-primary {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 100%;
-}
-.name-secondary {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 100%;
-  font-size: 0.75rem;
-  opacity: 0.55;
 }
 
 /* ── Link previews ─────────────────────────────────────────── */
@@ -2693,10 +2675,8 @@ footer {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--fg) 12%, transparent);
 }
 
-/* Primary action buttons: bg=--fg, text=--bg so label is always readable on
-   the bright accent. Mirrors the hover idiom of #display-name-save where hover
-   shifts to the full --fg. Here the default already IS --fg, so hover darkens
-   slightly with a color-mix overlay for feedback. */
+/* Primary action buttons: bg=--fg, text=--bg so the label is always readable.
+   The default already is --fg, so hover darkens slightly for feedback. */
 #invite-copy-btn,
 #invite-regen-btn {
   background: var(--fg, #33ff99);
@@ -2934,8 +2914,6 @@ footer {
 }
 .kbd-row.active .presence-dot.online { background: var(--bg, #0a0a0a); box-shadow: none; }
 .kbd-row .kbd-name { font-weight: bold; }
-.kbd-row .kbd-handle { opacity: 0.55; font-size: 0.8rem; }
-.kbd-row.active .kbd-handle { opacity: 0.85; }
 .kbd-row .kbd-unread {
   margin-left: auto;
   font-size: 0.72rem;

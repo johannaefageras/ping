@@ -257,6 +257,13 @@ auth, always 200 when the process is running (the process cannot start without
 the values). This is the only thing standing between the browser and its
 Supabase client.
 
+**SvelteKit migration status (Step 6):** the replacement endpoint now reads
+the two values from SvelteKit's server-only runtime environment module,
+validates that both are present, and returns exactly the same two-key JSON
+object with no cache header. It intentionally keeps the unchanged legacy
+frontend working during the migration. Step 29 retires this runtime fetch once
+the legacy client no longer depends on it.
+
 ### `GET /` and `GET /app`
 
 Both serve `legacy/index.html` byte-for-byte via `FileResponse`.
